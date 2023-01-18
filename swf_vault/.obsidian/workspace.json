@@ -4,16 +4,16 @@
     "type": "split",
     "children": [
       {
-        "id": "43aa36e54b5c23c8",
+        "id": "c21469223577cdee",
         "type": "tabs",
         "children": [
           {
-            "id": "1eb95860cf05f9cb",
+            "id": "2dd01a83afc09e39",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "TOOLS/Workflows/From RStudio to Quarto.md",
+                "file": "PRODUCTS/Scripts/data_prep_scaling.md",
                 "mode": "source",
                 "source": false
               }
@@ -94,7 +94,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "TOOLS/Workflows/From RStudio to Quarto.md",
+                "file": "PRODUCTS/Scripts/data_prep_scaling.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -111,7 +111,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "TOOLS/Workflows/From RStudio to Quarto.md"
+                "file": "PRODUCTS/Scripts/data_prep_scaling.md"
               }
             }
           },
@@ -155,7 +155,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 379
+    "width": 387
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -170,17 +170,17 @@
       "obsidian-excalidraw-plugin:New Excalidraw drawing": false
     }
   },
-  "active": "1eb95860cf05f9cb",
+  "active": "2dd01a83afc09e39",
   "lastOpenFiles": [
-    "TOOLS/Workflows/Workflows.md",
-    "TOOLS/TOOLS.md",
-    "TOOLS/Assets/Data/Data.md",
-    "TOOLS/Assets/Docs/Teams_convo/Teams_convo.md",
-    "PEOPLE/Stephanie Fulton/Stephanie Fulton.md",
-    "PEOPLE/Peishi Jiang/Peishi Jiang.md",
     "Untitled.md",
-    "TOOLS/Assets/Figs/scaling_land_use.png",
-    "TOOLS/Assets/Figs/Figs.md",
-    "PRODUCTS/Website/Untitled.md"
+    "PRODUCTS/Scripts/data_prep_scaling.md",
+    "PRODUCTS/Scripts/Scripts.md",
+    "PRODUCTS/Scripts/scaling_figures.md",
+    "PEOPLE/Amy Goldman/Amy Goldman.md",
+    "PEOPLE/PEOPLE.md",
+    "PLATFORMS/PLATFORMS.md",
+    "PRODUCTS/PRODUCTS.md",
+    "TOOLS/Rnotes/Rnotes.md",
+    "TOOLS/Workflows/From RStudio to Quarto.md"
   ]
 }

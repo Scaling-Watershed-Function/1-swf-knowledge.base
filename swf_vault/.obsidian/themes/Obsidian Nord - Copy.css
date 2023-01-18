@@ -132,7 +132,7 @@ body {
 }
 .graph-view.color-line
 {
-  color: var(--dark2);
+  color: var(--background-modifier-border);
 }
 */
 
