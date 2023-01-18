@@ -13,7 +13,7 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "TOOLS/Workflows/From RStudio to Quarto.md",
+                "file": "TOOLS/TOOLS.md",
                 "mode": "source",
                 "source": false
               }
@@ -94,7 +94,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "TOOLS/Workflows/From RStudio to Quarto.md",
+                "file": "TOOLS/TOOLS.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -111,7 +111,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "TOOLS/Workflows/From RStudio to Quarto.md"
+                "file": "TOOLS/TOOLS.md"
               }
             }
           },
@@ -172,15 +172,15 @@
   },
   "active": "1eb95860cf05f9cb",
   "lastOpenFiles": [
+    "TASKS/TASKS.md",
+    "PRODUCTS/PRODUCTS.md",
+    "PLATFORMS/PLATFORMS.md",
+    "PEOPLE/PEOPLE.md",
+    "TOOLS/Workflows/From RStudio to Quarto.md",
     "TOOLS/Workflows/Workflows.md",
     "TOOLS/TOOLS.md",
     "TOOLS/Assets/Data/Data.md",
     "TOOLS/Assets/Docs/Teams_convo/Teams_convo.md",
-    "PEOPLE/Stephanie Fulton/Stephanie Fulton.md",
-    "PEOPLE/Peishi Jiang/Peishi Jiang.md",
-    "Untitled.md",
-    "TOOLS/Assets/Figs/scaling_land_use.png",
-    "TOOLS/Assets/Figs/Figs.md",
-    "PRODUCTS/Website/Untitled.md"
+    "PEOPLE/Stephanie Fulton/Stephanie Fulton.md"
   ]
 }
