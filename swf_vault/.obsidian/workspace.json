@@ -14,6 +14,7 @@
               "type": "markdown",
               "state": {
                 "file": "PRODUCTS/Scripts/data_prep_scaling.md",
+                "file": "TOOLS/TOOLS.md",
                 "mode": "source",
                 "source": false
               }
@@ -95,6 +96,7 @@
               "type": "backlink",
               "state": {
                 "file": "PRODUCTS/Scripts/data_prep_scaling.md",
+                "file": "TOOLS/TOOLS.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -112,6 +114,7 @@
               "type": "outline",
               "state": {
                 "file": "PRODUCTS/Scripts/data_prep_scaling.md"
+                "file": "TOOLS/TOOLS.md"
               }
             }
           },
@@ -182,5 +185,15 @@
     "PRODUCTS/PRODUCTS.md",
     "TOOLS/Rnotes/Rnotes.md",
     "TOOLS/Workflows/From RStudio to Quarto.md"
-  ]
+    "TASKS/TASKS.md",
+    "PRODUCTS/PRODUCTS.md",
+    "PLATFORMS/PLATFORMS.md",
+    "PEOPLE/PEOPLE.md",
+    "TOOLS/Workflows/From RStudio to Quarto.md",
+    "TOOLS/Workflows/Workflows.md",
+    "TOOLS/TOOLS.md",
+    "TOOLS/Assets/Data/Data.md",
+    "TOOLS/Assets/Docs/Teams_convo/Teams_convo.md",
+    "PEOPLE/Stephanie Fulton/Stephanie Fulton.md"
+	]
 }
