@@ -9,8 +9,9 @@
 
 The raw data that will go into the analysis include the following files:
 
-230117_yrb_comid_landuse_2011
-230117_yrb_cumul_respirat
-230118_yrb_hbgch_variabls
+230117_yrb_cmid_land_2011.csv
+230117_yrb_respt_vars.csv
+230118_yrb_hbgc_vars.csv
 
+The QA/QC should start with a summary of each of the datasets, adjusting variable names (including header explanations), and creating pair plots. 
 #### Tasks
