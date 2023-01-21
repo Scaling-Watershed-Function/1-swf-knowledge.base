@@ -11,8 +11,12 @@
             "id": "1eb95860cf05f9cb",
             "type": "leaf",
             "state": {
-              "type": "graph",
-              "state": {}
+              "type": "markdown",
+              "state": {
+                "file": "TOOLS/Rnotes/Rnotes.md",
+                "mode": "source",
+                "source": false
+              }
             }
           }
         ]
@@ -90,6 +94,7 @@
             "state": {
               "type": "backlink",
               "state": {
+                "file": "TOOLS/Rnotes/Rnotes.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -105,7 +110,9 @@
             "type": "leaf",
             "state": {
               "type": "outline",
-              "state": {}
+              "state": {
+                "file": "TOOLS/Rnotes/Rnotes.md"
+              }
             }
           },
           {
@@ -165,15 +172,15 @@
   },
   "active": "1eb95860cf05f9cb",
   "lastOpenFiles": [
+    "PEOPLE/James Stegen/James Stegen.md",
+    "TOOLS/TOOLS.md",
     "TOOLS/Lit_review/Lit_review.md",
     "TOOLS/Lit_review/River Networks.md",
-    "TOOLS/TOOLS.md",
     "PRODUCTS/Website/Website.md",
     "PRODUCTS/Website/About.md",
     "PRODUCTS/Website/Wolheim_etal_summary/Wolheim_etal_summary.md",
     "TOOLS/Workflows/Workflows.md",
     "PRODUCTS/Scripts/data_prep_scaling.md",
-    "TOOLS/Assets/Data/Data.md",
-    "TOOLS/Assets/Docs/Teams_convo/Teams_convo.md"
+    "TOOLS/Assets/Data/Data.md"
   ]
 }
