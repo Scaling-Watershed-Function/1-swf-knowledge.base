@@ -13,7 +13,7 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "TOOLS/Rnotes/Rnotes.md",
+                "file": "TOOLS/Logs/Logs.md",
                 "mode": "source",
                 "source": false
               }
@@ -94,7 +94,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "TOOLS/Rnotes/Rnotes.md",
+                "file": "TOOLS/Logs/Logs.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -111,7 +111,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "TOOLS/Rnotes/Rnotes.md"
+                "file": "TOOLS/Logs/Logs.md"
               }
             }
           },
@@ -172,15 +172,15 @@
   },
   "active": "1eb95860cf05f9cb",
   "lastOpenFiles": [
-    "PEOPLE/James Stegen/James Stegen.md",
+    "PEOPLE/Xinming Lin/Xinming Lin.md",
+    "PEOPLE/Wil Wollheim/Wil Wollheim.md",
+    "PEOPLE/PEOPLE.md",
+    "TOOLS/Logs/Logs.md",
     "TOOLS/TOOLS.md",
-    "TOOLS/Lit_review/Lit_review.md",
-    "TOOLS/Lit_review/River Networks.md",
-    "PRODUCTS/Website/Website.md",
-    "PRODUCTS/Website/About.md",
-    "PRODUCTS/Website/Wolheim_etal_summary/Wolheim_etal_summary.md",
-    "TOOLS/Workflows/Workflows.md",
-    "PRODUCTS/Scripts/data_prep_scaling.md",
-    "TOOLS/Assets/Data/Data.md"
+    "TOOLS/Assets/Data/Data.md",
+    "TOOLS/Assets/Assets.md",
+    "TOOLS/Rnotes/Rnotes.md",
+    "TASKS/TASKS.md",
+    "PEOPLE/Jerry Tagestad/Jerry Tagestad.md"
   ]
 }

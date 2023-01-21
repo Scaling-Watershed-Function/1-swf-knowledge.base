@@ -19,6 +19,9 @@ Potential science topics for open workflows with funding from NASA. If NASA reje
 We would be looking at the different components of the metabolic system across the basin. 
 [[Francisco Guerrero]] also proposes to calculate local slopes and estimate the contribution of the local scaling to the superlinear slope across the entire watershed. 
 
-## Tasks
+## Tasks/Actions
+- [[James Stegen]] to send email to [[Huiying Ren]] and [[Xinming Lin]] to discuss the use of ML algorithms to fill some of the spatial gaps in both the Yakima and Willamette River basin
+- [[James Stegen]] to send email to [[Micah Taylor]] and [[Jerry Tagestad]] to discuss GIS based analysis for landscape heterogeneity. 
+
 
  
