@@ -1,5 +1,31 @@
 # Logs 
  [[Logs]] are used to document general progress in the development of [[PRODUCTS]].  They will consist of a series of [[Quick Note]] documents for individual [[PEOPLE]] to develop ideas that can lead to the creation of new [[Workflows]] or other [[TOOLS]]
+ ----------------------------------------------------------------------
+
+
+## Quick note
+**Date**: 2023-01_23
+**People:** [[Francisco Guerrero]]
+**Products:** [[data_prep_scaling]],[[scaling_figures]]
+**Platforms:** [[Obsidian]], [[GitHub]], [[RStudio]]
+
+#### Note
+[[Francisco Guerrero]] reorganized files between different [[PRODUCTS]]. Particularly separating the [[Scripts]] for data analysis and those corresponding to [[Website]].
+
+Renaming [[Scripts]] convention:  "script_filename.R"
+Something similar could be use for data, and other assets: 
+
+"yymmdd_data_filename.csv"
+"yymmdd_plot_filename.png"
+"yymmdd_docs_filename.pdf"
+"yymmdd_figs_filename.png" (For conceptual figures)
+"yymmdd_pics_filename.jepg"
+
+I have reorganized content across the folders within the [[Production_hub]], so that data, documents, and figures generated within the hub will belong to the folder assets (different from the assets repository). I think I may have to rename these two folders to avoid confusion. 
+
+I started working on  the [[scaling_figures]] script and made it to the paired plots. There is a strong correlation between watershed area and percentage forest with d50, which could allow us to fill in some of the gaps for variables like hyporheic exchange and residence time. 
+
+#### Tasks
 ## Quick note
 **Date**: 2023-01_20
 **People:** [[Francisco Guerrero]]
@@ -18,4 +44,5 @@ We will merge the resulting dataset with the data from the landscape heterogenei
 Finallly we will merge the resulting dataset from above with with "230110_yrb_spatial_camp.csv" to explore the influence of local scaling with watershed scaling as discussed by [[Wil Wollheim]]
 
 #### Tasks
-- [ ] Merge data sets for exploratory analysis in the YRB 🛫 2023-01-20 ⏳ 2023-01-20 📅 2023-01-24
+- [x] Merge data sets for exploratory analysis in the YRB 🛫 2023-01-20 ⏳ 2023-01-20 📅 2023-01-24 ✅ 2023-01-23
+
