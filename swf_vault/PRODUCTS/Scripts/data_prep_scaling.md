@@ -1,6 +1,6 @@
 ## Quick note
 **Date**: 2023-01_18
-**People:** [[Francisco Guerrero]]
+**People:** [[Francisco J. Guerrero]]
 **Products:** [[Scripts]], [[data_prep_scaling]]
 **Platforms:** [[GitHub]]
 

@@ -1,16 +1,26 @@
 # Logs 
  [[Logs]] are used to document general progress in the development of [[PRODUCTS]].  They will consist of a series of [[Quick Note]] documents for individual [[PEOPLE]] to develop ideas that can lead to the creation of new [[Workflows]] or other [[TOOLS]]
  ----------------------------------------------------------------------
+## Quick note
+**Date**: 2023-01_26
+**People:**[[Francisco J. Guerrero]], [[Kyongho Son]]
+**Products:**[[data_prep_scaling]]
+**Platforms:**[[Obsidian]], [[GitHub]], [[RStudio]]
 
+#### Note
+[[Kyongho Son]] supplied data from the Willamette River Basin. Yet, the data is spread across multiple files, so [[Francisco J. Guerrero]] started to work on harmonizing the dataset. This to avoid having to create multiple scripts to adjust to the different formats. 
+
+#### Tasks
+- [ ] Complete data harmonization for exploratory analysis in the Willamette River Basin and the Yakama River Basin 🛫 2023-01-26 ⏳ 2023-01-26 📅 2023-01-27
 
 ## Quick note
 **Date**: 2023-01_23
-**People:** [[Francisco Guerrero]]
+**People:** [[Francisco J. Guerrero]]
 **Products:** [[data_prep_scaling]],[[scaling_figures]]
 **Platforms:** [[Obsidian]], [[GitHub]], [[RStudio]]
 
 #### Note
-[[Francisco Guerrero]] reorganized files between different [[PRODUCTS]]. Particularly separating the [[Scripts]] for data analysis and those corresponding to [[Website]].
+[[Francisco J. Guerrero]] reorganized files between different [[PRODUCTS]]. Particularly separating the [[Scripts]] for data analysis and those corresponding to [[Website]].
 
 Renaming [[Scripts]] convention:  "script_filename.R"
 Something similar could be use for data, and other assets: 
@@ -28,7 +38,7 @@ I started working on  the [[scaling_figures]] script and made it to the paired p
 #### Tasks
 ## Quick note
 **Date**: 2023-01_20
-**People:** [[Francisco Guerrero]]
+**People:** [[Francisco J. Guerrero]]
 **Products:** [[data_prep_scaling]]
 **Platforms:** [[Obsidian]], [[GitHub]], [[RStudio]]
 

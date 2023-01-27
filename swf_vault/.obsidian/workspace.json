@@ -94,7 +94,6 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "TOOLS/Logs/Logs.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -110,9 +109,7 @@
             "type": "leaf",
             "state": {
               "type": "outline",
-              "state": {
-                "file": "TOOLS/Logs/Logs.md"
-              }
+              "state": {}
             }
           },
           {
@@ -155,7 +152,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 379
+    "width": 789.5
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -170,17 +167,17 @@
       "publish:Publish changes": false
     }
   },
-  "active": "1eb95860cf05f9cb",
+  "active": "9193c5931a1ebde7",
   "lastOpenFiles": [
-    "PLATFORMS/Tech_platforms/Production_hub/Production_hub.md",
     "TOOLS/Logs/Logs.md",
+    "TASKS/TASKS.md",
+    "PEOPLE/Francisco J. Guerrero/Francisco J. Guerrero.md",
+    "PLATFORMS/Tech_platforms/Production_hub/Production_hub.md",
     "PEOPLE/James Stegen/James Stegen.md",
     "PEOPLE/Xinming Lin/Xinming Lin.md",
     "PEOPLE/Wil Wollheim/Wil Wollheim.md",
     "PEOPLE/PEOPLE.md",
     "TOOLS/TOOLS.md",
-    "TOOLS/Assets/Data/Data.md",
-    "TOOLS/Assets/Assets.md",
-    "TOOLS/Rnotes/Rnotes.md"
+    "TOOLS/Assets/Data/Data.md"
   ]
 }

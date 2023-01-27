@@ -9,7 +9,7 @@ The initial group of [[PEOPLE]] for this project includes
 
 [[James Stegen]]
 
-[[Francisco Guerrero]]
+[[Francisco J. Guerrero]]
 
 [[Tim Scheibe]]
 
