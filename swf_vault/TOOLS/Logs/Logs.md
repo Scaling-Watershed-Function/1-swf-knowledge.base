@@ -11,7 +11,7 @@
 [[Kyongho Son]] supplied data from the Willamette River Basin. Yet, the data is spread across multiple files, so [[Francisco J. Guerrero]] started to work on harmonizing the dataset. This to avoid having to create multiple scripts to adjust to the different formats. 
 
 #### Tasks
-- [ ] Complete data harmonization for exploratory analysis in the Willamette River Basin and the Yakama River Basin 🛫 2023-01-26 ⏳ 2023-01-26 📅 2023-01-27
+- [x] Complete data harmonization for exploratory analysis in the Willamette River Basin and the Yakama River Basin 🛫 2023-01-26 ⏳ 2023-01-26 📅 2023-01-27 ✅ 2023-01-27
 
 ## Quick note
 **Date**: 2023-01_23
