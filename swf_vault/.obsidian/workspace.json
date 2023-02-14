@@ -13,13 +13,38 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "TOOLS/Logs/Logs.md",
+                "file": "PLATFORMS/Org_platforms/Org_platforms.md",
+                "mode": "source",
+                "source": false
+              }
+            }
+          },
+          {
+            "id": "4de530d0525fc250",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "PLATFORMS/Org_platforms/Data analysis first meeting.md",
+                "mode": "source",
+                "source": false
+              }
+            }
+          },
+          {
+            "id": "f39fda04ddca2052",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "PLATFORMS/Org_platforms/Data analysis first meeting.md",
                 "mode": "source",
                 "source": false
               }
             }
           }
-        ]
+        ],
+        "currentTab": 2
       }
     ],
     "direction": "vertical"
@@ -78,7 +103,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 211.49999809265137
+    "width": 316.5
   },
   "right": {
     "id": "6f1ec7f15ae2f928",
@@ -94,6 +119,10 @@
             "state": {
               "type": "backlink",
               "state": {
+<<<<<<< Updated upstream
+=======
+                "file": "PLATFORMS/Org_platforms/Data analysis first meeting.md",
+>>>>>>> Stashed changes
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -109,7 +138,13 @@
             "type": "leaf",
             "state": {
               "type": "outline",
+<<<<<<< Updated upstream
               "state": {}
+=======
+              "state": {
+                "file": "PLATFORMS/Org_platforms/Data analysis first meeting.md"
+              }
+>>>>>>> Stashed changes
             }
           },
           {
@@ -167,6 +202,7 @@
       "publish:Publish changes": false
     }
   },
+<<<<<<< Updated upstream
   "active": "9193c5931a1ebde7",
   "lastOpenFiles": [
     "TOOLS/Logs/Logs.md",
@@ -179,5 +215,19 @@
     "PEOPLE/PEOPLE.md",
     "TOOLS/TOOLS.md",
     "TOOLS/Assets/Data/Data.md"
+=======
+  "active": "f39fda04ddca2052",
+  "lastOpenFiles": [
+    "PLATFORMS/Tech_platforms/Teams/Teams.md",
+    "PLATFORMS/Org_platforms/Data analysis first meeting.md",
+    "PEOPLE/Zhangshuan Hou/Zhangshuan Hou.md",
+    "PEOPLE/Zhangshuan Hou/Untitled.md",
+    "PLATFORMS/Org_platforms/Org_platforms.md",
+    "PLATFORMS/PLATFORMS.md",
+    "PEOPLE/PEOPLE.md",
+    "TOOLS/Logs/Logs.md",
+    "PLATFORMS/Tech_platforms/Production_hub/Production_hub.md",
+    "PEOPLE/James Stegen/James Stegen.md"
+>>>>>>> Stashed changes
   ]
 }
