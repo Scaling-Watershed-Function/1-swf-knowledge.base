@@ -2,6 +2,20 @@
  [[Logs]] are used to document general progress in the development of [[PRODUCTS]].  They will consist of a series of [[Quick Note]] documents for individual [[PEOPLE]] to develop ideas that can lead to the creation of new [[Workflows]] or other [[TOOLS]]
  ----------------------------------------------------------------------
 ## Quick note
+**Date**: 2023-03_02
+**People:**[[Francisco J. Guerrero]]
+**Products:**[[data_prep_scaling]]
+**Platforms:**[[Obsidian]], [[GitHub]], [[RStudio]]
+
+#### Note
+[[Francisco J. Guerrero]] implemented paths to import data from GitHub.com and to export data into 
+local directories following the instructions detailed in the pages:
+
+https://stackoverflow.com/questions/41271176/access-a-file-outside-of-working-directory-without-referencing-full-path 
+
+https://www.tutorialspoint.com/how-to-import-csv-file-data-from-github-in-r
+
+## Quick note
 **Date**: 2023-01_26
 **People:**[[Francisco J. Guerrero]], [[Kyongho Son]]
 **Products:**[[data_prep_scaling]]
