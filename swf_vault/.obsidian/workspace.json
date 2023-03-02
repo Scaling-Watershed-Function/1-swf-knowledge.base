@@ -94,7 +94,6 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "TOOLS/Logs/Logs.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -110,9 +109,7 @@
             "type": "leaf",
             "state": {
               "type": "outline",
-              "state": {
-                "file": "TOOLS/Logs/Logs.md"
-              }
+              "state": {}
             }
           },
           {
@@ -170,8 +167,9 @@
       "obsidian-excalidraw-plugin:Create new drawing": false
     }
   },
-  "active": "1eb95860cf05f9cb",
+  "active": "9193c5931a1ebde7",
   "lastOpenFiles": [
+    "TOOLS/Logs/Logs.md",
     "TOOLS/TOOLS.md",
     "TOOLS/Assets/Data/Data.md",
     "TOOLS/Assets/Docs/Teams_convo/Teams_convo.md",
@@ -180,9 +178,6 @@
     "Untitled.md",
     "TOOLS/Assets/Figs/scaling_land_use.png",
     "TOOLS/Assets/Figs/Figs.md",
-    "PRODUCTS/Website/Untitled.md",
-    "PEOPLE/Kyongho Son/Kyongho Son.md",
-    "TOOLS/Assets/Docs/Docs.md",
-    "TOOLS/Assets/Assets.md"
+    "PRODUCTS/Website/Untitled.md"
   ]
 }
