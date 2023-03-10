@@ -5,10 +5,14 @@
   "graph",
   "backlink",
   "canvas",
+  "outgoing-link",
+  "tag-pane",
   "page-preview",
+  "daily-notes",
   "templates",
   "note-composer",
   "command-palette",
+  "slash-command",
   "editor-status",
   "starred",
   "markdown-importer",
@@ -16,7 +20,6 @@
   "word-count",
   "slides",
   "audio-recorder",
-  "file-recovery",
-  "publish",
-  "sync"
+  "workspaces",
+  "file-recovery"
 ]

@@ -8,13 +8,13 @@
       "key": "T"
     }
   ],
-  "insert-template": [
+  "obsidian-tasks-plugin:toggle-done": [
     {
       "modifiers": [
         "Alt",
         "Mod"
       ],
-      "key": "P"
+      "key": "D"
     }
   ]
 }

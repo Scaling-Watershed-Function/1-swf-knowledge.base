@@ -1,0 +1,5 @@
+{
+  "globalFilter": "#todo",
+  "removeGlobalFilter": true,
+  "setDoneDate": true
+}

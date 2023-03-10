@@ -1,16 +1,17 @@
 {
   "main": {
-    "id": "695339b501943497",
+    "id": "febcdbd5ca6a738d",
     "type": "split",
     "children": [
       {
-        "id": "1eb95860cf05f9cb",
+        "id": "7da4640af1ae462f",
         "type": "leaf",
         "state": {
           "type": "markdown",
           "state": {
-            "file": "TOOLS/Assets/Data/Data.md",
+            "file": "PEOPLE/Tim Scheibe/Tim Scheibe.md",
             "mode": "source",
+            "backlinks": true,
             "source": false
           }
         }
@@ -19,23 +20,23 @@
     "direction": "vertical"
   },
   "left": {
-    "id": "97432260b8d253d5",
+    "id": "c4d8c030a300286c",
     "type": "split",
     "children": [
       {
-        "id": "d7163c03f5ddfabd",
+        "id": "189a04b2053b8d34",
         "type": "tabs",
         "children": [
           {
-            "id": "33f8a4bccd508457",
+            "id": "26d5e0aa5891343b",
             "type": "leaf",
             "state": {
-              "type": "empty",
+              "type": "file-explorer",
               "state": {}
             }
           },
           {
-            "id": "2229bd2dda4a0d5c",
+            "id": "d4bfb2e24ff54035",
             "type": "leaf",
             "state": {
               "type": "search",
@@ -50,65 +51,89 @@
             }
           },
           {
-            "id": "43a9b6be13e2b4bc",
+            "id": "08d2ec53348aed4d",
             "type": "leaf",
             "state": {
               "type": "starred",
               "state": {}
             }
-          },
-          {
-            "id": "79ed10192daec279",
-            "type": "leaf",
-            "state": {
-              "type": "file-explorer",
-              "state": {}
-            }
           }
-        ],
-        "currentTab": 3
+        ]
       }
     ],
     "direction": "horizontal",
-    "width": 211.49999809265137
+    "width": 262.5
   },
   "right": {
-    "id": "6f1ec7f15ae2f928",
+    "id": "43e729f2cd5f4c53",
     "type": "split",
     "children": [
       {
-        "id": "6d84cf55faaa4d7b",
+        "id": "e0d7f8eb3f22932d",
         "type": "tabs",
         "children": [
           {
-            "id": "fc9b120e481b5176",
+            "id": "918f7e84ca5a6eb2",
             "type": "leaf",
             "state": {
               "type": "backlink",
               "state": {
-                "file": "TOOLS/Assets/Data/Data.md",
+                "file": "PEOPLE/Tim Scheibe/Tim Scheibe.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
                 "showSearch": false,
                 "searchQuery": "",
                 "backlinkCollapsed": false,
+                "unlinkedCollapsed": false
+              }
+            }
+          },
+          {
+            "id": "0d22ef25ea55a586",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true
+              }
+            }
+          },
+          {
+            "id": "3f2703ba2f804d9c",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "PEOPLE/Tim Scheibe/Tim Scheibe.md",
+                "linksCollapsed": false,
                 "unlinkedCollapsed": true
               }
             }
           },
           {
-            "id": "904615c40666ed4f",
+            "id": "e1983ea851c1a8c3",
             "type": "leaf",
             "state": {
               "type": "outline",
               "state": {
-                "file": "TOOLS/Assets/Data/Data.md"
+                "file": "PEOPLE/Tim Scheibe/Tim Scheibe.md"
               }
             }
           },
           {
-            "id": "f1b23e261eb98530",
+            "id": "0792491ed57425ab",
+            "type": "leaf",
+            "pinned": true,
+            "state": {
+              "type": "empty",
+              "state": {},
+              "pinned": true
+            }
+          },
+          {
+            "id": "1eddb15646d3d767",
             "type": "leaf",
             "state": {
               "type": "calendar",
@@ -116,50 +141,54 @@
             }
           }
         ],
-        "currentTab": 2
+        "currentTab": 5
       },
       {
-        "id": "b09c349d5c9ae7d6",
+        "id": "99878d31acf7e27c",
         "type": "tabs",
         "children": [
           {
-            "id": "c509a7628b5a5e62",
+            "id": "1d047d1cba27f085",
             "type": "leaf",
+            "pinned": true,
             "state": {
               "type": "markdown",
               "state": {
                 "file": "TASKS/TASKS.md",
                 "mode": "source",
+                "backlinks": true,
                 "source": false
-              }
+              },
+              "pinned": true
             }
           },
           {
-            "id": "9193c5931a1ebde7",
+            "id": "fd413e7b8b97d839",
             "type": "leaf",
+            "pinned": true,
             "state": {
               "type": "graph",
-              "state": {}
+              "state": {},
+              "pinned": true
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "horizontal",
-    "width": 379
+    "width": 312.5
   },
-  "active": "1eb95860cf05f9cb",
+  "active": "7da4640af1ae462f",
   "lastOpenFiles": [
-    "TOOLS/Assets/Docs/Teams_convo/Teams_convo.md",
-    "PEOPLE/Stephanie Fulton/Stephanie Fulton.md",
-    "PEOPLE/Peishi Jiang/Peishi Jiang.md",
-    "Untitled.md",
-    "TOOLS/Assets/Figs/scaling_land_use.png",
-    "TOOLS/Assets/Figs/Figs.md",
-    "PRODUCTS/Website/Untitled.md",
-    "PEOPLE/Kyongho Son/Kyongho Son.md",
-    "TOOLS/Assets/Docs/Docs.md",
-    "TOOLS/Assets/Assets.md"
+    "PEOPLE/Jessica Neff/Jessica Neff.md",
+    "PLATFORMS/Org_platforms/ICON/ICON Regular Meetings.md",
+    "PLATFORMS/Org_platforms/ICON/ICON Rebranding.md",
+    "PLATFORMS/Org_platforms/ICON/ICON.md",
+    "PEOPLE/Tim Scheibe/Tim Scheibe.md",
+    "PLATFORMS/Org_platforms/ICON/Nandita Basu Talk.md",
+    "PLATFORMS/Org_platforms/ICON/Advisory Board Meeting/Advisory Board Meeting.md",
+    "PLATFORMS/Org_platforms/ICON/ICON-ModEx.md",
+    "PRODUCTS/AGU_DataComm/AGU_Abstracts-SY019.md",
+    "PRODUCTS/AGU_DataComm/AGU_Abstracts-EP008.md"
   ]
 }
