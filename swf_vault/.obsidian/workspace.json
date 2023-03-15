@@ -13,7 +13,7 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "TOOLS/Workflows/Workflows.md",
+                "file": "Tools/Workflows/Workflows.md",
                 "mode": "source",
                 "backlinks": true,
                 "source": false
@@ -26,7 +26,20 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "TOOLS/Workflows/Connecting R with GitHub.md",
+                "file": "Tools/Workflows/Connecting R with GitHub.md",
+                "mode": "source",
+                "backlinks": true,
+                "source": false
+              }
+            }
+          },
+          {
+            "id": "2204b7ca424c56ac",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Tools/Logs/Logs.md",
                 "mode": "source",
                 "backlinks": true,
                 "source": false
@@ -42,7 +55,7 @@
             }
           }
         ],
-        "currentTab": 1
+        "currentTab": 2
       }
     ],
     "direction": "vertical"
@@ -71,7 +84,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "",
+                "query": "Francisco Guerrero",
                 "matchingCase": false,
                 "explainSearch": false,
                 "collapseAll": false,
@@ -108,7 +121,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "TOOLS/Workflows/Connecting R with GitHub.md",
+                "file": "Tools/Logs/Logs.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -136,7 +149,7 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "TOOLS/Workflows/Connecting R with GitHub.md",
+                "file": "Tools/Logs/Logs.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               }
@@ -148,7 +161,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "TOOLS/Workflows/Connecting R with GitHub.md"
+                "file": "Tools/Logs/Logs.md"
               }
             }
           },
@@ -207,11 +220,19 @@
       "workspaces:Manage workspace layouts": false
     }
   },
-  "active": "831a8c319f7aeafd",
+  "active": "2204b7ca424c56ac",
   "lastOpenFiles": [
-    "TOOLS/Workflows/Workflows.md",
-    "TOOLS/Workflows/Connecting R with GitHub.md",
-    "TOOLS/Workflows/From RStudio to Quarto.md",
+    "TASKS/TASKS.md",
+    "Tools/Logs/Logs.md",
+    "PLATFORMS/Tech_platforms/GitHub/GitHub.md",
+    "PRODUCTS/PRODUCTS.md",
+    "PRODUCTS/Data",
+    "Tools/TOOLS.md",
+    "PLATFORMS/Org_platforms/Data analysis first meeting.md",
+    "Francisco Guerrero.md",
+    "Tools/Workflows/Workflows.md",
+    "Tools/Workflows/Connecting R with GitHub.md",
+    "Tools/Workflows/From RStudio to Quarto.md",
     "PEOPLE/Tim Scheibe/Tim Scheibe.md",
     "PLATFORMS/Org_platforms/ICON/ICON Regular Meetings.md",
     "Tools/readings/Stakeholder_mappings/Vogler_etal_17_stakeholder_analysis_environmental_conservation_planning.md",
@@ -239,22 +260,14 @@
     "Tools/excalidraw/some text.md",
     "Tools/excalidraw/excalidraw.md",
     "Tools/excalidraw/Drawing 2022-06-08 18.50.16.excalidraw.md",
-    "Tools/TOOLS.md",
     "Tools/templates",
     "Tools/readings",
     "Tools/files",
     "Tools/excalidraw",
     "Tools",
     "Tasks/TASKS.md",
-    "Tasks",
     "Workflows/Workflows.md",
     "Untitled.canvas",
-    "PLATFORMS/Org_platforms/ICON/ICON-ModEx.md",
-    "PRODUCTS/ICON-ModEx_workshops/ICON-ModEx_workshops.md",
-    "PRODUCTS/AGU_DataComm/AGU_Abstracts-EP008.md",
-    "PRODUCTS/AGU_DataComm/AGU_Abstracts-SY019.md",
-    "PRODUCTS/AGU_DataComm/AGU_DataComm.md",
-    "PEOPLE/Khadijah Homolka/Khadijah Homolka.md",
-    "PRODUCTS/EBSD_Mini-Conference/EBSD_Mini-Conference.md"
+    "PLATFORMS/Org_platforms/ICON/ICON-ModEx.md"
   ]
 }

@@ -2,6 +2,83 @@
  [[Logs]] are used to document general progress in the development of [[PRODUCTS]].  They will consist of a series of [[Quick Note]] documents for individual [[PEOPLE]] to develop ideas that can lead to the creation of new [[Workflows]] or other [[TOOLS]]
  ----------------------------------------------------------------------
 ## Quick note
+**Date**: 2023-03_15
+**People:**[[Francisco J. Guerrero]]
+**Products:**[[Scripts]], [[Data]]
+**Platforms:**[[Obsidian]], [[GitHub]], [[RStudio]]
+
+#### Note
+Organizing raw [[Data]] inputs going into the analytical engine.
+[[Francisco J. Guerrero]] also wonders how to include notes about other components of the workflow into [[Obsidian]]. Should I have folders for Analytical Engine, Production Hub, Products store and User Interface? It makes sense, since as I make progress through the project, each repository would have predominance. Thus, many notes would be related to them.
+
+[[Data]] inputs into the analytical engine:
+Land cover raw data for the estimation of information contributions and marginal entropies indexed by COMID
+Stream local respiration rates from [[Kyongho Son]]'s paper (considered raw input for this paper)
+Stream physical characteristics including length and area (considered raw input for this paper)
+
+[[Data]] preparation and pre-processing scripts should be within the assets for the Knowledge Base. 
+* Scripts should be the closest as possible to their data sources. 
+
+List of variables (to be merged with land use data for entropy):
+
+
+COMID, 
+FromNode,
+ToNode,
+Hydroseq,
+TOT_BASIN_AREA,
+CAT_BASIN_AREA,
+StreamOrde,
+logQ_m3_div_s,
+logwbkf_m,
+logd_m,
+logdbkf_m,
+D50_m,
+
+Model Inputs
+[[Scripts]]: script_data_preprocessing (analytical engine, should be moved to knowledge base)
+
+nhd_shp. files contain COMID, ID, Name, HUC4, and Geometry for Willamette, and COMID, Name and Geometry for Yakima. The Name column was added before merging the two datasets. 
+
+The remaining variables were obtained from corresponding csv files for DO, DOC, nitrates, and nexss 
+
+(All files obtained from GitLab and need to be Updated link to ESS-DIVE data package, once is published.)
+
+stream_length_m, = 230313_wlm_ykm_stream_resp_dat.csv
+logw_m, = 230313_wlm_ykm_stream_resp_dat.csv
+pred_annual_DOC, = 230313_wlm_ykm_stream_resp_dat.csv
+pred_annual_DO, = 230313_wlm_ykm_stream_resp_dat.csv
+no3_conc_mg_l, = 230313_wlm_ykm_stream_resp_dat.csv
+logRT_total_hz_s, = 230313_wlm_ykm_stream_resp_dat.csv (as lateral and vertical)
+logq_hz_total_m_s, = 230313_wlm_ykm_stream_resp_dat.csv (as lateral and vertical)
+
+Model outputs
+(All files downloaded from [zenodo](https://doi.org/10.5281/ zenodo.6954107.) and pre-processed locally for Yakima and Willamette)
+[[Scripts]]:
+totco2g_m2_day
+
+
+
+
+Analytical engine futher calculations
+entropy catchment
+entropy watershed
+relative entropy catchment
+relative entropy watershed
+pred_stream_area_m2_fill,
+cum_stream_length_m,
+cum_stream_area_m2,
+cum_totco2g_day,
+cum_totco2g_day_Tsurface_m2,
+cum_totco2g_day_Tdrain_m2
+
+
+#### Tasks
+
+- [ ] #todo Make adjustment to the Organization Template-Project Vault to include other components of the workflow in obsidian folders 🔼 🛫 2023-03-17 ⏳ 2023-03-15 📅 2023-03-17
+
+
+## Quick note
 **Date**: 2023-03_02
 **People:**[[Francisco J. Guerrero]]
 **Products:**[[data_prep_scaling]]

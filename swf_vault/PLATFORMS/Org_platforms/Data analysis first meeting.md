@@ -2,7 +2,7 @@
 [[Conversation Tracker]] is used to document interactions in [[Org_platforms]] including [[#Checking in]], [[#On the Fly Agenda]], [[#Notes]], and [[#Tasks]]
 ## General
 **Date**: 2023-02_10
-**people:**[[Xinming Lin]], [[Francisco Guerrero]], [[Zhangshuan Hou]]
+**people:**[[Xinming Lin]], [[Francisco J. Guerrero]], [[Zhangshuan Hou]]
 **products:**
 **platforms:**[[Teams]], [[Obsidian]]
 
@@ -17,13 +17,13 @@
 - [[Zhangshuan Hou]] has some ideas about how to connect not only averages but also variability in the estimates. 
 - [[Zhangshuan Hou]] mentions that his time is covered by the MM campaign and have support from data science. He considers that this is a relevant project for ESS-DIVE in order to provide metadata preparation, compilation, and sharing. 
 - [[Xinming Lin]] is supported by RC2
-- [[Francisco Guerrero]] mentions that the expectation is that we all will be contributing co-authors to the manuscript generated. 
+- [[Francisco J. Guerrero]] mentions that the expectation is that we all will be contributing co-authors to the manuscript generated. 
 - How to create a master file/ dataset:
 	- Hydrological database 
 	- Model inputs and outputs (gaps from the NEXSS in predictors, HRZ, RT)
 	- Landuse database (Start with the entire suite of land uses)
 - [[Xinming Lin]] is currently working on data preparation for an LDRD project including wildfires that has some overlap with the watershed scaling function. Some of that effort plus the data provided by [[Kyongho Son]] could be leveraged to create the master data file.
-- [[Francisco Guerrero]] will set up a [[Hackathon]] meeting [[Kyongho Son]], [[Francisco Guerrero]], [[Zhangshuan Hou]] and perhaps [[Micah Taylor]], [[James Stegen]].
+- [[Francisco J. Guerrero]] will set up a [[Hackathon]] meeting [[Kyongho Son]], [[Francisco J. Guerrero]], [[Zhangshuan Hou]] and perhaps [[Micah Taylor]], [[James Stegen]].
 - Needed by: End of February. 
 - Needed:
 	- A few slides by [[Kyongho Son]] summarizing the data available as of now. 
