@@ -55,7 +55,7 @@ logq_hz_total_m_s, = 230313_wlm_ykm_stream_resp_dat.csv (as lateral and vertical
 Model outputs
 (All files downloaded from [zenodo](https://doi.org/10.5281/ zenodo.6954107.) and pre-processed locally for Yakima and Willamette)
 [[Scripts]]:
-totco2g_m2_day
+totco2g_m2_day = 230313_wlm_ykm_stream_resp_dat.csv
 
 
 
