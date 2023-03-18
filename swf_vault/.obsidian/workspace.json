@@ -4,61 +4,23 @@
     "type": "split",
     "children": [
       {
-        "id": "0eb0c43e5a17d90f",
+        "id": "aa144b110cb9290b",
         "type": "tabs",
         "children": [
           {
-            "id": "ef2f09f5a1d7be9f",
-            "type": "leaf",
-            "state": {
-              "type": "empty",
-              "state": {}
-            }
-          },
-          {
-            "id": "831a8c319f7aeafd",
-            "type": "leaf",
-            "state": {
-              "type": "empty",
-              "state": {}
-            }
-          },
-          {
-            "id": "2204b7ca424c56ac",
+            "id": "19f1e13b308507be",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Tools/Workflows/Workflows.md",
+                "file": "PRODUCTS/Manuscript/5_supplements/supplements_first_draft.md",
                 "mode": "source",
                 "backlinks": true,
                 "source": false
               }
-            }
-          },
-          {
-            "id": "bb7eb5d9ace4c219",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Tools/Workflows/Building a Knowledge Base with Research Rabbit, Zotero, and Tidytext.md",
-                "mode": "source",
-                "backlinks": true,
-                "source": false
-              }
-            }
-          },
-          {
-            "id": "ef325418fb83329e",
-            "type": "leaf",
-            "state": {
-              "type": "empty",
-              "state": {}
             }
           }
-        ],
-        "currentTab": 3
+        ]
       }
     ],
     "direction": "vertical"
@@ -104,8 +66,7 @@
               "state": {}
             }
           }
-        ],
-        "currentTab": 2
+        ]
       }
     ],
     "direction": "horizontal",
@@ -125,7 +86,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "Tools/Workflows/Building a Knowledge Base with Research Rabbit, Zotero, and Tidytext.md",
+                "file": "PRODUCTS/Manuscript/5_supplements/supplements_first_draft.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -153,7 +114,7 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "Tools/Workflows/Building a Knowledge Base with Research Rabbit, Zotero, and Tidytext.md",
+                "file": "PRODUCTS/Manuscript/5_supplements/supplements_first_draft.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               }
@@ -165,7 +126,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "Tools/Workflows/Building a Knowledge Base with Research Rabbit, Zotero, and Tidytext.md"
+                "file": "PRODUCTS/Manuscript/5_supplements/supplements_first_draft.md"
               }
             }
           },
@@ -207,7 +168,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 200,
+    "width": 368.5,
     "collapsed": true
   },
   "left-ribbon": {
@@ -224,28 +185,45 @@
       "obsidian-excalidraw-plugin:Create new drawing": false
     }
   },
-  "active": "08d2ec53348aed4d",
+  "active": "19f1e13b308507be",
   "lastOpenFiles": [
-    "Tools/Workflows/Workflows.md",
-    "Tools/Workflows/Building a Knowledge Base with Research Rabbit, Zotero, and Tidytext.md",
-    "Tools/Workflows/From RStudio to Quarto.md",
-    "Tools/Workflows/Connecting R with GitHub.md",
+    "PEOPLE/PEOPLE.md",
     "TASKS/TASKS.md",
-    "Tools/Logs/Logs.md",
-    "PLATFORMS/Tech_platforms/GitHub/GitHub.md",
+    "PEOPLE/Untitled.md",
     "PRODUCTS/PRODUCTS.md",
-    "PRODUCTS/Data",
-    "Tools/TOOLS.md",
-    "PLATFORMS/Org_platforms/Data analysis first meeting.md",
-    "Francisco Guerrero.md",
-    "PEOPLE/Tim Scheibe/Tim Scheibe.md",
-    "PLATFORMS/Org_platforms/ICON/ICON Regular Meetings.md",
-    "Tools/readings/Stakeholder_mappings/Vogler_etal_17_stakeholder_analysis_environmental_conservation_planning.md",
-    "Tools/readings/Stakeholder_mappings/Sandroni_etal_22_stakeholder_mapping_transdisciplinary_exercise.md",
-    "Tools/readings/Stakeholder_mappings/Prell_etal_2010_Formal_informal_social_structures_stakeholder_perceptions.md",
-    "Tools/readings/Stakeholder_mappings/Houtkamp_etal_21_AgMIP_stakeholder_mapping.md",
+    "PLATFORMS/PLATFORMS.md",
+    "PRODUCTS/Manuscript/Manuscript.md",
+    "PLATFORMS/Org_platforms/Org_platforms.md",
+    "PLATFORMS/Tech_platforms/Tech_platforms.md",
+    "PLATFORMS/Tech_platforms/Tech_platforms_n.md",
+    "PLATFORMS/Org_platforms/manuscript_meetings/manuscript_meetings.md",
+    "PLATFORMS/Org_platforms/manuscript_meetings",
+    "PLATFORMS/Org_platforms_n/SFA Literature Meeting/SFA Literature Meeting.md",
+    "PLATFORMS/Org_platforms/manuscript_meetings/Data analysis first meeting.md",
+    "PLATFORMS/Org_platforms",
+    "PLATFORMS/Tech_platforms",
+    "PLATFORMS/Tech_platforms/ChatGPT/ChatGPT.md",
+    "PLATFORMS/Tech_platforms/Zotero/Zotero.md",
+    "PLATFORMS/Tech_platforms/Zotero/Untitled.md",
+    "PLATFORMS/Tech_platforms/Zotero.md",
+    "PLATFORMS/Tech_platforms/Zotero",
+    "PRODUCTS/Manuscript/5_supplements/supplements_first_draft.md",
+    "PRODUCTS/Manuscript/5_supplements/5_supplements.md",
+    "Tools/Logs/Logs.md",
+    "PLATFORMS",
+    "PEOPLE/Francisco J. Guerrero/Francisco J. Guerrero.md",
+    "PRODUCTS/Website/Website.md",
+    "PRODUCTS/Scripts/Scripts.md",
+    "PRODUCTS/Manuscript.md",
+    "PRODUCTS/Manuscript/4_discussion/4_discussion.md",
+    "PRODUCTS/Manuscript/3_results/3_results.md",
+    "PRODUCTS/Manuscript/2_methods/2_methods.md",
+    "PRODUCTS/Manuscript/5_supplements",
+    "PRODUCTS/Manuscript/4_discussion",
+    "PEOPLE",
+    "PRODUCTS/Manuscript/3_results",
+    "PRODUCTS/Manuscript/2_methods",
     "Tools/files/images/pnas.1322700111fig05.jpeg",
-    "Tools/readings/Scales in Ecology/Scales in Ecology.md",
     "Tools/files/images/Pasted image 20220608115056.png",
     "Tools/files/images/Pasted image 20220608114530.png",
     "Tools/files/images/Pasted image 20220608113755.png",
@@ -255,23 +233,6 @@
     "Tools/files/images/Pasted image 20220608112209.png",
     "Tools/files/images/Pasted image 20220608112304.png",
     "Tools/files/images/Pasted image 20220608112025.png",
-    "Tools/templates/quick note.md",
-    "Tools/templates/Conversation Tracker.md",
-    "Tools/readings/Stakeholder_mappings",
-    "Tools/readings/Smultea Sciences Proposal for ADCNR RFP Deepwater Horizon Section.pdf",
-    "Tools/readings/readings.md",
-    "Tools/readings/Scales in Ecology",
-    "Tools/files/images",
-    "Tools/excalidraw/some text.md",
-    "Tools/excalidraw/excalidraw.md",
-    "Tools/excalidraw/Drawing 2022-06-08 18.50.16.excalidraw.md",
-    "Tools/templates",
-    "Tools/readings",
-    "Tools/files",
-    "Tools/excalidraw",
-    "Tools",
-    "Tasks/TASKS.md",
-    "Workflows/Workflows.md",
     "Untitled.canvas"
   ]
 }

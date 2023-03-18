@@ -1,6 +1,6 @@
 {
-  "folderNoteHide": true,
-  "folderNoteType": "inside",
+  "folderNoteHide": false,
+  "folderNoteType": "outside",
   "folderNoteName": "_about_",
   "folderNoteKey": "ctrl",
   "folderNoteAutoRename": true,

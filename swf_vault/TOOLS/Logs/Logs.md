@@ -1,6 +1,68 @@
 # Logs 
- [[Logs]] are used to document general progress in the development of [[PRODUCTS]].  They will consist of a series of [[Quick Note]] documents for individual [[PEOPLE]] to develop ideas that can lead to the creation of new [[Workflows]] or other [[TOOLS]]
+ [[Logs]] are used to document general progress in the development of [[PRODUCTS]].  They will consist of a series of [[Quick Note]] documents for individual [[PEOPLE]] to develop ideas that can lead to the creation of new [[Workflows]] or other [[Tools]]
  ----------------------------------------------------------------------
+## Quick note
+**Date**: 2023-03_18
+**People:** [[Francisco J. Guerrero]]
+**Products:** [[2_methods]], [[5_supplements]]
+**Platforms:**[[Obsidian]] [[RStudio]]
+
+#### Note
+[[Francisco J. Guerrero]] installed the plug-in "Folder Index" that automatically indexes the notes within a folder and allows for visual representation of the notes immediately.  This plugin saves a lot of time in terms of maintenance of the folder structure and it's representation
+
+The execution of the plugin is still a bit clunky, but it has immense potential. 
+
+In this session, the [[5_supplements]] section will be updated with a table containing the databases with their corresponding description and download links. 
+
+[[Francisco J. Guerrero]] also added [[Zotero]] to [[Tech_platforms]] an still working on re-organizing the folders within the swf_vault
+
+#### Tasks
+
+## Quick note
+**Date**: 2023-03_17
+**People:** [[Francisco J. Guerrero]] and [[Kyongho Son]]
+**Products:** [[Manuscript]]
+**Platforms:**[[Obsidian]], [[Teams]]
+#### Note
+
+##### Data Sources
+###### NHDPlus
+[Attributes for NHDPlus Version 2.1 Catchments and Modified Routing of Upstream Watersheds for the Conterminous United States: Select Basin Characteristics](https://www.sciencebase.gov/catalog/item/57976a0ce4b021cadec97890)
+Includes: 
+BASIN_CHAR_CAT_CONUS.txt
+BASIN_CHAR_TOT_CONUS.txt
+BASIN_CHAR_ACC_CONUS.txt
+* Contains information on stream slope (percent rise, also referred to as the percent slope), basin slope (percent rise, also referred to as the percent slope), basin area, minimum basin elevation, maximum basin elevation, mean basin elevation, and stream length.
+
+STREAM_DENSITY_CONUS.TXT
+* stream density, contains information on stream density (stream kilometers per square kilometer of basin).
+
+SINUOSITY_CONUS.txt
+* Contains information on flowline reach sinuosity.
+
+FTYPE_PCT_CONUS.txt
+* contains information on each flowline reach type as a percentage to all flowline features per catchment.
+
+Wieczorek, M.E., Jackson, S.E., and Schwarz, G.E., 2018, Select Attributes for NHDPlus Version 2.1 Reach Catchments and Modified Network Routed Upstream Watersheds for the Conterminous United States (ver. 3.0, January 2021): U.S. Geological Survey data release, https://doi.org/10.5066/F7765D7V.
+
+###### NHDPlus EPA
+[NHDPlus Pacific Northwest Data (Vector Processing Unit 17)](https://www.epa.gov/waterdata/nhdplus-pacific-northwest-data-vector-processing-unit-17)
+Files to download
+NHDPlusV21_PN_17_NHDPlusAttributes
+NHDPlusV21_PN_17_NHDPlusCatchment
+NHDPlusV21_PN_17_WBDSnapshot
+
+
+###### NEXSS
+The NEXSS model couples NHDPlus-based geomorphologic model with physics-based surrogate models for hyporheic exchange to compute the exchange flux, residence time distribution, and median residence time via a bedform-driven (or vertical) and sinuosity-driven (or lateral) exchange (Data sent by [[Kyongho Son]]). Expecting new data from [[Chucho Gomez Velez]]
+
+###### NLDC
+[NLCD 2001 Land Cover (CONUS)](https://www.mrlc.gov/data/nlcd-2001-land-cover-conus)
+
+
+
+#### Tasks
+
 ## Quick note
 **Date**: 2023-03_15
 **People:**[[Francisco J. Guerrero]]
@@ -77,6 +139,17 @@ cum_totco2g_day_Tdrain_m2
 
 - [ ] #todo Make adjustment to the Organization Template-Project Vault to include other components of the workflow in obsidian folders 🔼 🛫 2023-03-17 ⏳ 2023-03-15 📅 2023-03-17
 
+
+## Quick note
+**Date**: 2023-03_17
+**People:**
+**Products:**
+**Platforms:**
+
+#### Note
+
+
+#### Tasks
 
 ## Quick note
 **Date**: 2023-03_02
