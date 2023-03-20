@@ -13,7 +13,7 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "PRODUCTS/Manuscript/5_supplements/supplements_first_draft.md",
+                "file": "Tools/Logs/Logs.md",
                 "mode": "source",
                 "backlinks": true,
                 "source": false
@@ -86,7 +86,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "PRODUCTS/Manuscript/5_supplements/supplements_first_draft.md",
+                "file": "Tools/Logs/Logs.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -114,7 +114,7 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "PRODUCTS/Manuscript/5_supplements/supplements_first_draft.md",
+                "file": "Tools/Logs/Logs.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               }
@@ -126,7 +126,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "PRODUCTS/Manuscript/5_supplements/supplements_first_draft.md"
+                "file": "Tools/Logs/Logs.md"
               }
             }
           },
@@ -187,6 +187,8 @@
   },
   "active": "19f1e13b308507be",
   "lastOpenFiles": [
+    "Tools/Tools.md",
+    "PRODUCTS/Manuscript/5_supplements/supplements_first_draft.md",
     "PEOPLE/PEOPLE.md",
     "TASKS/TASKS.md",
     "PEOPLE/Untitled.md",
@@ -207,7 +209,6 @@
     "PLATFORMS/Tech_platforms/Zotero/Untitled.md",
     "PLATFORMS/Tech_platforms/Zotero.md",
     "PLATFORMS/Tech_platforms/Zotero",
-    "PRODUCTS/Manuscript/5_supplements/supplements_first_draft.md",
     "PRODUCTS/Manuscript/5_supplements/5_supplements.md",
     "Tools/Logs/Logs.md",
     "PLATFORMS",
@@ -217,7 +218,6 @@
     "PRODUCTS/Manuscript.md",
     "PRODUCTS/Manuscript/4_discussion/4_discussion.md",
     "PRODUCTS/Manuscript/3_results/3_results.md",
-    "PRODUCTS/Manuscript/2_methods/2_methods.md",
     "PRODUCTS/Manuscript/5_supplements",
     "PRODUCTS/Manuscript/4_discussion",
     "PEOPLE",

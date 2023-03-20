@@ -14,7 +14,7 @@ The execution of the plugin is still a bit clunky, but it has immense potential.
 
 In this session, the [[5_supplements]] section will be updated with a table containing the databases with their corresponding description and download links. 
 
-[[Francisco J. Guerrero]] also added [[Zotero]] to [[Tech_platforms]] an still working on re-organizing the folders within the swf_vault
+[[Francisco J. Guerrero]] also added [[Zotero]] to [[Tech_platforms]] an still working on re-organizing the folders within the swf_vault 
 
 #### Tasks
 
