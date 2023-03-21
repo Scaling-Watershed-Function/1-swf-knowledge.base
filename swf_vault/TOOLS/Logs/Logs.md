@@ -17,6 +17,8 @@ Raw .md could be fully edited and saved (in their corresponding obsidian folder)
 Once edits are completed on the Raw .md, it can be copied to a new .qmd created within the production.hub .Rproj working directory. 
 In this way raw.md docs continue to live in obsidian, while .qmd will be in the production hub. 
 
+Additionally, [[Francisco J. Guerrero]] added a README to the 3-sfw-production.hub including a link to preview html files
+
 
 #### Tasks
 
