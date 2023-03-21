@@ -1,6 +1,19 @@
 # Rnotes 
 [[Rnotes]] are used to document progress in [[RStudio]] along a selected path within  [[Workflows]]
 
+## Quick note
+**Date**: 2023-03_20
+**People:**[[Francisco J. Guerrero]]
+**Products:**[[Scripts]]
+**Platforms:**[[RStudio]]
+
+#### Note
+How to style tables in Quarto documents using html code:
+
+1. [Option to left align table captions](https://github.com/quarto-dev/quarto-cli/discussions/1042)
+2. [Changing font size in a table](https://github.com/marp-team/marp/discussions/217)
+
+
 
 ## Quick note
 **Date**: 2023-03_17
