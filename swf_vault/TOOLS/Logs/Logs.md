@@ -8,6 +8,27 @@
 **Platforms:**[[Obsidian]] [[RStudio]]
 
 #### Note
+[[Francisco J. Guerrero]]  tested a workflow for connecting documents between the swf_vault
+and the production hub. The workflow goes like this:
+
+Raw .md docs are created in obsidian. 
+Raw .md docs are opened while working on the production.hub .Rproj
+Raw .md could be fully edited and saved (in their corresponding obsidian folder), while working on the production.hub .Rproj
+Once edits are completed on the Raw .md, it can be copied to a new .qmd created within the production.hub .Rproj working directory. 
+In this way raw.md docs continue to live in obsidian, while .qmd will be in the production hub. 
+
+
+#### Tasks
+
+
+
+## Quick note
+**Date**: 2023-03_18
+**People:** [[Francisco J. Guerrero]]
+**Products:** [[2_methods]], [[5_supplements]]
+**Platforms:**[[Obsidian]] [[RStudio]]
+
+#### Note
 [[Francisco J. Guerrero]] installed the plug-in "Folder Index" that automatically indexes the notes within a folder and allows for visual representation of the notes immediately.  This plugin saves a lot of time in terms of maintenance of the folder structure and it's representation
 
 The execution of the plugin is still a bit clunky, but it has immense potential. 
