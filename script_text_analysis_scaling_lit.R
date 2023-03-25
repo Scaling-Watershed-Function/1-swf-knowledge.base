@@ -8,7 +8,7 @@ librarian::shelf(plyr, tidytext, tidyverse,
 
 
 # Local Import Path
-assets_pubs <- "../1-swf-knowledge.base/assets/pubs" 
+assets_pubs <- "../1-swf-knowledge.base/assets/data/raw" 
 t_df <- as_tibble(read_csv(paste(assets_pubs,"230321_research_rabbit_scaling_pubs.csv",sep='/'),show_col_types = FALSE))
 # 
 # write.table(t_df,paste(assets_pubs,"230321_research_rabbit_scaling_pubs.csv",sep='/'))
@@ -47,9 +47,9 @@ pub_tokens <- pub_dat %>%
   filter(!str_detect(word, "[:punct:]|[:digit:]")) %>% 
   rowwise() %>% mutate(word = if_else(word!="data",singularize(word),"data")) %>%
   distinct() %>% 
-  group_by(year) %>% 
-  count(word, sort = TRUE) %>% 
-  mutate(length = nchar(word)) 
+  group_by(year) #%>% 
+  # count(word) %>% 
+  # mutate(length = nchar(word)) 
 
 # Word clouds
 p1 <- ggplot(pub_tokens, 
