@@ -3,7 +3,7 @@ librarian::shelf(plyr, tidytext, tidyverse,
                  widyr,igraph, ggraph,
                  wordcloud, reshape2, graphlayouts,
                  pluralize, quanteda, qgraph, cowplot, readr,
-                 ggwordcloud,tm, plotly)
+                 ggwordcloud,tm, plotly, tidygraph)
 
 
 
@@ -34,6 +34,7 @@ ttl_dat <- as.data.frame(t_df_c$Title) %>%
   rename(ttl_words = `t_df_c$Title`) %>% 
   unnest_tokens(output = word, input = ttl_words, drop = FALSE) %>% 
   rowwise() %>% mutate(word = singularize(word)) %>% 
+  rowwise() %>% mutate(word = tolower(word)) %>% 
   filter(!str_detect(word, "[:punct:]|[:digit:]")) %>% 
   filter(!word %in% c(stop_words$word)) %>%  
   nest(word) %>% 
@@ -45,52 +46,24 @@ abs_dat <- as.data.frame(t_df_c$Abstract) %>%
   rename(abs_words = `t_df_c$Abstract`) %>% 
   unnest_tokens(output = word, input = abs_words, drop = FALSE) %>% 
   rowwise() %>% mutate(word = singularize(word)) %>% 
+  rowwise() %>% mutate(word = tolower(word)) %>% 
   filter(!str_detect(word, "[:punct:]|[:digit:]")) %>% 
   filter(!word %in% c(stop_words$word)) %>%  
   nest(word) %>% 
   mutate(abstract = map(data, unlist),
          abstract = map_chr(abstract, paste, collapse = " ")) 
 
+# Putting the dataset back together
 
-  
-  
+t_df_c$abstract <- abs_dat$abstract
+t_df_c$title <- ttl_dat$title
 
-
-
-
-
-
-
-
-
-# 
-# write.table(t_df,paste(assets_pubs,"230321_research_rabbit_scaling_pubs.csv",sep='/'))
-# read.table( pipe( paste0( "sed s'/[[:punct:]]//g' /Users/Simon/input.txt" ) ) , head=TRUE)
-
-# Cleaning the data set
-pub_dat <- t_df_c %>%
-  select(Title, Abstract,Authors,Journal,Year) %>% 
-  rename(title = Title,
-         abstract = Abstract,
-         authors = Authors,
+pub_dat <- select(t_df_c, title, abstract, Authors, Journal, Year) %>% 
+  rename(authors = Authors,
          journal = Journal,
          year = Year) %>% 
   mutate(id = seq(from =1, to= nrow(t_df_c),by=1)) %>% 
-  mutate(abstract=removeNumbers(abstract)) %>%
-  mutate(title = removeNumbers(title)) %>% 
-  mutate(abstract = tolower(abstract)) %>% 
-  mutate(title = tolower(title)) %>% 
-  mutate(abstract = singularize(abstract)) %>% 
-  mutate(title = singularize(title)) %>% 
-  mutate(journal = tolower(journal)) %>% 
-  mutate(abstract=gsub(paste0('\\b',tm::stopwords("english"), '\\b', 
-                              collapse = '|'), '', abstract)) %>% 
-  mutate(title=gsub(paste0('\\b',tm::stopwords("english"), '\\b', 
-                              collapse = '|'), '', title)) %>% 
   mutate(id = factor(id))
-
-# Global removal of stopwords: 
-#https://stackoverflow.com/questions/64361808/r-remove-stopwords-from-text-without-tokenizing-transforming-data-into-list
 
 # Titles
 
@@ -99,8 +72,6 @@ pub_cmp <- "title"
 pub_tokens <- pub_dat %>% 
   ungroup() %>% 
   unnest_tokens(output = word, input = pub_cmp, drop = FALSE)%>%
-  filter(!str_detect(word, "[:punct:]|[:digit:]")) %>% 
-  rowwise() %>% mutate(word = if_else(word!="data",singularize(word),"data")) %>%
   distinct() %>% 
   group_by(year) %>% 
   count(word, sort = TRUE) %>%
@@ -110,6 +81,7 @@ pub_tokens <- pub_dat %>%
 
 res_plot <- 0.2
 depth <- res_plot*nrow(pub_tokens)
+
 
 p <- ggplot(pub_tokens[c(1:depth),], 
             aes(x = year,
@@ -137,12 +109,11 @@ columns <- paste(b,a,sep = '')
 
 pub_ngrams <- pub_dat %>%
   ungroup() %>%
-  filter(str_detect(pub_cmp,"[:alpha:]")) %>%
   unnest_tokens(n_gram, pub_cmp, token = "ngrams", n = gram_l) %>%
-  filter(!str_detect(n_gram, "[:punct:]|[:digit:]")) %>% 
-  filter(!n_gram %in% c(stop_words$word)) %>%
-  separate(n_gram, columns, sep = " ", remove = FALSE) %>%
-  count(across(all_of(columns), ~.x), sort = TRUE) %>%
+  # separate(n_gram, columns, sep = " ", remove = FALSE) %>%
+  group_by(year) %>% 
+  # count(across(all_of(columns), ~.x), sort = TRUE) %>%
+  count(n_gram, sort = TRUE) %>% 
   mutate(rank = row_number(),
          total = sum(n),
          t_freq = n/total)
@@ -156,19 +127,25 @@ head(pub_ngrams)
 
 # For titles I will use a larger number than for abstracts (see below)
 
+breath = 200
+time_window = 2008
+
 ngram_graph <- pub_ngrams %>%
-  filter(rank < res_plot*nrow(pub_ngrams)) %>%
+  filter(rank < breath) %>%
+  filter(year > time_window) %>% 
   graph_from_data_frame()
 ngram_graph
+
 
 p2 <- ggraph(ngram_graph,
              layout = "fr")+
   geom_edge_link(aes(edge_alpha = n, edge_width = n), edge_colour = "sienna3") +
   geom_node_point(size = 2) +
   geom_node_text(aes(label = name), repel = TRUE, 
-                 point.padding = unit(0.2, "lines")) +
+                 point.padding = unit(0.2, "lines"), size = 2.5) +
   theme_void()
 p2
+
 
 
 # Abstracts
