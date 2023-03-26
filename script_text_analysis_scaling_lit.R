@@ -3,85 +3,111 @@ librarian::shelf(plyr, tidytext, tidyverse,
                  widyr,igraph, ggraph,
                  wordcloud, reshape2, graphlayouts,
                  pluralize, quanteda, qgraph, cowplot, readr,
-                 ggwordcloud,tm, plotly, tidygraph)
+                 ggwordcloud,tm, plotly)
 
 
 
 # Local Import Path
 assets_pubs <- "../1-swf-knowledge.base/assets/data/raw" 
 t_df <- as_tibble(read_csv(paste(assets_pubs,"230321_research_rabbit_scaling_pubs.csv",sep='/'),show_col_types = FALSE))
+t_df
 
-# Since research rabbit pulls information from multiple databases, in some cases is possible 
-# the the abstracts for the papers are not retrieved.
+# For our analyses below, we won't need DOIs, PMIDs or arXiv IDs. We will focus 
+# on Title, Abstract, Authors, Journal, Year. To keep column names formatting 
+# simple, I use lowercase and spaces are added with (_) when needed. 
 
-t_df$abs_lgt <- nchar(t_df$Abstract)
-t_df_c <- filter(t_df,abs_lgt>20)
+# Since research rabbit pulls information from multiple databases, in some cases
+# is possible that the abstracts for the papers are not retrieved. In such cases, 
+# the value returned would be NA (which is read as a character string and not as 
+# the typical NA). It could also happen that the abstracts could be partially 
+# retrieved. To filter these cases out, we will add another column to the data 
+# frame to count the character lenght of each abstract, and remove those that are 
+# less than 20 characters long. Finally, we will add a sequential id and make it 
+# a factor for visualization purposes.
+
+t_df_c <- t_df %>% 
+  select(Title,Abstract,Authors,Journal,Year) %>% 
+  rename(title = Title,
+         abstract = Abstract,
+         authors = Authors,
+         journal = Journal,
+         year = Year) %>% 
+  mutate(abstract_lenght = nchar(abstract)) %>% 
+  filter(abstract_lenght > 20)
+
+t_df_c <- t_df_c%>% 
+  mutate(id = seq(from =1, to= nrow(t_df_c),by=1)) %>% 
+  mutate(id = factor(id))
+
+t_df_c
 
 # In this case we went from 104 publication items, to 96 (i.e. 8 items with no
 # abstract retrieved.)
 
 # To make sure all words are processed correctly, we need to do some additional 
-# cleaning on the text data. That includes unnesting each abstract into tokens
-# (i.e. single words), performing the cleaning tasks (i.e. singularizing, 
-# removing punctuations and digits, removing stop words (a, an, by, ...)), and 
-# finally putting the tokens back together (i.e. nesting)
+# cleaning on the text data. That includes unnesting each publication component 
+# (pub_comp) into tokens (i.e. single words), performing the cleaning tasks 
+# (i.e. singularizing,removing punctuations and digits, removing stop words (a,
+# an, by, ...)), and finally putting the tokens back together (i.e. nesting)
 
 # How to unnest and nest text data in using tidytext? check this post: 
 # https://stackoverflow.com/questions/49118539/opposite-of-unnest-tokens-in-r
 
-# Preparing title data
-ttl_dat <- as.data.frame(t_df_c$Title) %>% 
-  rename(ttl_words = `t_df_c$Title`) %>% 
-  unnest_tokens(output = word, input = ttl_words, drop = FALSE) %>% 
-  rowwise() %>% mutate(word = singularize(word)) %>% 
+# Choosing analysis level
+
+# You can choose the publication component (pub_comp) you want to focus your 
+# analysis on. In this case, our options are title or abstract
+
+pub_comp <- "title"
+
+# Preparing the data
+
+pub_comp_c <- select(t_df_c,pub_comp) %>% 
+  rename(pub_comp_words = pub_comp) %>% 
+  unnest_tokens(output = word, input = pub_comp_words, drop = FALSE) %>% 
   rowwise() %>% mutate(word = tolower(word)) %>% 
+  rowwise() %>% mutate(word = if_else(word == "data","data",singularize(word))) %>%  
   filter(!str_detect(word, "[:punct:]|[:digit:]")) %>% 
-  filter(!word %in% c(stop_words$word)) %>%  
+  filter(!word %in% c(stop_words$word)) %>% 
   nest(word) %>% 
-  mutate(title = map(data, unlist),
-         title = map_chr(title, paste, collapse = " ")) 
+  mutate(!!paste0(pub_comp) := map_chr(map(data, unlist), paste, collapse = " "))
+  
+# Combining our original data frames for text analysis
 
-# Preparing abstracts data
-abs_dat <- as.data.frame(t_df_c$Abstract) %>% 
-  rename(abs_words = `t_df_c$Abstract`) %>% 
-  unnest_tokens(output = word, input = abs_words, drop = FALSE) %>% 
-  rowwise() %>% mutate(word = singularize(word)) %>% 
-  rowwise() %>% mutate(word = tolower(word)) %>% 
-  filter(!str_detect(word, "[:punct:]|[:digit:]")) %>% 
-  filter(!word %in% c(stop_words$word)) %>%  
-  nest(word) %>% 
-  mutate(abstract = map(data, unlist),
-         abstract = map_chr(abstract, paste, collapse = " ")) 
+t_df_c_m <- t_df_c %>% 
+  select(year,authors,journal)
 
-# Putting the dataset back together
+pub_comp_m <- select(pub_comp_c,!!paste0(pub_comp))
 
-t_df_c$abstract <- abs_dat$abstract
-t_df_c$title <- ttl_dat$title
+pub_dat <- as_tibble(cbind(pub_comp_m,t_df_c_m))
 
-pub_dat <- select(t_df_c, title, abstract, Authors, Journal, Year) %>% 
-  rename(authors = Authors,
-         journal = Journal,
-         year = Year) %>% 
-  mutate(id = seq(from =1, to= nrow(t_df_c),by=1)) %>% 
-  mutate(id = factor(id))
+pub_dat
+                      
+  
+# Tokenization
 
-# Titles
+# Our first step to analyze the selected publication component, is to break it 
+# into individual words (or tokens) and store the tokens in a new data frame for 
+# (pub_tokens). There are several packages you could use to tokenize a piece of 
+# text, here we will use the tidytext package for most of our analysis. 
 
-pub_cmp <- "title"
+# What the following chunk of code does is: 1) call the pub_dat dataset, 2) break the 
+# chunk of (nested) text into tokens (output = word) by using the function unnest_tokens(),
+# 3) eliminating duplicated words with distinct(), 4) grouping the tokens (word) by years,
+# 5) calculating the frequency of a given token in each year -count(), and adding a new
+# column with the numnber of characters -nchar for each token, so we can filter monosyllabes.
 
 pub_tokens <- pub_dat %>% 
-  ungroup() %>% 
-  unnest_tokens(output = word, input = pub_cmp, drop = FALSE)%>%
+  unnest_tokens(output = word, input = pub_comp, drop = FALSE)%>%
   distinct() %>% 
   group_by(year) %>% 
   count(word, sort = TRUE) %>%
   mutate(length = nchar(word)) %>% 
-  filter(length>2)
+  filter(length>2) 
 
-
+# Time-indexed word clouds
 res_plot <- 0.2
 depth <- res_plot*nrow(pub_tokens)
-
 
 p <- ggplot(pub_tokens[c(1:depth),], 
             aes(x = year,
@@ -98,9 +124,13 @@ p <- ggplot(pub_tokens[c(1:depth),],
   theme_minimal()
 p
 
-# Title n-grams
+# Conceptual maps from n-grams
 
 gram_l = 2
+breath = 200
+time_window = 2008
+
+
 n_gram <- paste(gram_l,"gram",sep='-')
 
 a <- seq(1:gram_l)
@@ -109,7 +139,7 @@ columns <- paste(b,a,sep = '')
 
 pub_ngrams <- pub_dat %>%
   ungroup() %>%
-  unnest_tokens(n_gram, pub_cmp, token = "ngrams", n = gram_l) %>%
+  unnest_tokens(n_gram, pub_comp, token = "ngrams", n = gram_l) %>%
   # separate(n_gram, columns, sep = " ", remove = FALSE) %>%
   group_by(year) %>% 
   # count(across(all_of(columns), ~.x), sort = TRUE) %>%
@@ -127,12 +157,9 @@ head(pub_ngrams)
 
 # For titles I will use a larger number than for abstracts (see below)
 
-breath = 200
-time_window = 2008
-
 ngram_graph <- pub_ngrams %>%
   filter(rank < breath) %>%
-  filter(year > time_window) %>% 
+  filter(year < time_window) %>% 
   graph_from_data_frame()
 ngram_graph
 
@@ -148,389 +175,7 @@ p2
 
 
 
-# Abstracts
 
-pub_cmp <- "abstract"
 
-pub_tokens <- pub_dat %>% 
-  ungroup() %>% 
-  unnest_tokens(output = word, input = pub_cmp, drop = FALSE)%>%
-  filter(!str_detect(word, "[:punct:]|[:digit:]")) %>% 
-  rowwise() %>% mutate(word = if_else(word!="data",singularize(word),"data")) %>%
-  distinct() %>% 
-  group_by(year) %>% 
-  count(word, sort = TRUE) %>% 
-  mutate(length = nchar(word)) %>% 
-  filter(length>2)
 
-res_plot <- 0.025
-depth <- res_plot*nrow(pub_tokens)
 
-p <- ggplot(filter(pub_tokens, n > 2), 
-            aes(x = year,
-                y = n,
-                label = word, 
-                size = n, 
-                color = as.factor (year))) +
-  geom_text_wordcloud(area_corr_power = 1) +
-  scale_radius(range = c(0, 25),
-               limits = c(0, NA)) +
-  # scale_y_log10()+
-  xlab("Year")+
-  ylab("Frequency (n)")+
-  theme_minimal()
-p
-
-
-# Abstracts n-grams
-set.seed(2703)
-gram_l = 4
-n_gram <- paste(gram_l,"gram",sep='-')
-
-a <- seq(1:gram_l)
-b <- rep("word",times=gram_l)
-columns <- paste(b,a,sep = '')
-
-options(ggrepel.max.overlaps = Inf)
-
-pub_ngrams <- pub_dat %>%
-  ungroup() %>%
-  filter(str_detect(pub_cmp,"[:alpha:]")) %>%
-  unnest_tokens(n_gram, pub_cmp, token = "ngrams", n = gram_l) %>%
-  filter(!str_detect(n_gram, "[:punct:]|[:digit:]")) %>% 
-  filter(!n_gram %in% c(stop_words$word)) %>%
-  rowwise() %>% mutate(n_gram = if_else(n_gram!="data",singularize(n_gram),"data")) %>%
-  group_by(year) %>% 
-  count(n_gram, sort = TRUE) %>% 
-  # separate(n_gram, columns, sep = " ", remove = FALSE) %>%
-  # count(across(all_of(columns), ~.x), sort = TRUE) %>%
-  mutate(length = nchar(n_gram),
-    rank = row_number(),
-         total = sum(n),
-         t_freq = n/total)
-head(pub_ngrams)
-
-b <- filter(pub_ngrams,length>10)
-
-ngram_graph <- filter(pub_ngrams,length>10) %>%
-  filter(rank < res_plot*nrow(pub_ngrams)) %>%
-  graph_from_data_frame()
-ngram_graph
-
-p2 <- ggraph(ngram_graph,
-             layout = "fr")+
-  geom_edge_link(aes(edge_alpha = n, edge_width = n), edge_colour = "orchid4") +
-  geom_node_point(size = 1) +
-  geom_node_text(aes(label = name), repel = TRUE, 
-                 point.padding = unit(0.2, "lines")) +
-  theme_void()
-p2
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# Titles
-
-titl_tokens <- pub_dat %>% 
-  ungroup() %>% 
-  unnest_tokens(output = word, input = title, drop = FALSE)%>%
-  filter(!str_detect(word, "[:punct:]|[:digit:]")) %>% 
-  # anti_join(stop_words, by = "word")%>%
-  rowwise() %>% mutate(word = if_else(word!="data",singularize(word),"data")) %>%
-  distinct() %>% 
-  group_by(year) %>% 
-  count(word, sort = TRUE) %>% 
-  mutate(length = nchar(word)) 
-
-# Word clouds
-p <- ggplot(filter(titl_tokens), 
-            aes(label = word, 
-                size = n, 
-                color = as.factor(year))) +
-  geom_text_wordcloud(area_corr_power = 1) +
-  scale_radius(range = c(0, 20),
-               limits = c(0, NA))+
-  # facet_wrap(~year)+
-  theme_minimal()
-p
-
-p1 <- ggplot(titl_tokens, 
-             aes(x = year,
-                 y = n,
-                 label = word, 
-                 size = n, 
-                 color = as.factor(year))) +
-  geom_text_wordcloud(area_corr_power = 1) +
-  scale_y_log10()+
-  scale_radius(range = c(0, 20),
-               limits = c(0, NA))+
-  theme_minimal()
-p1
-
-# Title n-grams
-
-#Define the length of the gram
-
-gram_l = 4
-n_gram <- paste(gram_l,"gram",sep='-')
-
-a <- seq(1:gram_l)
-b <- rep("word",times=gram_l)
-columns <- paste(b,a,sep = '')
-
-pub_cmp <- "title"
-
-
-pub_ngrams <- pub_dat %>%
-  ungroup() %>%
-  filter(str_detect(pub_cmp,"[:alpha:]")) %>%
-  unnest_tokens(n_gram, pub_cmp, token = "ngrams", n = gram_l) %>%
-  filter(!str_detect(n_gram, "[:punct:]|[:digit:]")) %>% 
-  filter(!n_gram %in% c(stop_words$word)) %>%
-  separate(n_gram, columns, sep = " ", remove = FALSE) %>%
-  count(across(all_of(columns), ~.x), sort = TRUE) %>%
-  mutate(rank = row_number(),
-         total = sum(n),
-         t_freq = n/total)
-head(pub_ngrams)
-
-n_gram_res <- 0.2
-
-ngram_graph <- pub_ngrams %>%
-  filter(rank < n_gram_res*nrow(pub_ngrams)) %>%
-  graph_from_data_frame()
-ngram_graph
-
-p2 <- ggraph(ngram_graph,
-             layout = "fr")+
-  geom_edge_link(aes(edge_alpha = n, edge_width = n), edge_colour = "steelblue") +
-  geom_node_point(size = 2) +
-  geom_node_text(aes(label = name), repel = TRUE, 
-                 point.padding = unit(0.2, "lines")) +
-  theme_void()
-p2
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-set.seed(2017)
-
-l <- layout_with_fr(ngram_graph)
-e <- get.edgelist(ngram_graph,names=FALSE)
-m <- qgraph.layout.fruchtermanreingold(e,vcount=vcount(ngram_graph))
-deg <- degree(ngram_graph,mode="all")
-fsize <- degree(ngram_graph, mode= "all")
-
-#png(filename=paste("assets/NetworkAnalysis_words_",Sys.Date(),".png", sep = ""), res = 100)
-
-plot(ngram_graph,
-     layout=m, 
-     edge.arrow.size =.05,
-     vertex.color = "pink", 
-     vertex.size =150,
-     vertex.frame.color="deeppink",
-     vertex.label.color="black", 
-     vertex.label.cex=0.75, #fsize/2,
-     vertex.label.dist=0.6,
-     edge.curve = 0.85,
-     edge.color="skyblue",
-     edge.label.family="Ariahttp://127.0.0.1:35229/graphics/plot_zoom_png?width=1536&height=898l", 
-     rescale=F, 
-     axes = FALSE, 
-     ylim = c(-150,150), 
-     xlim = c(-150,150),
-     asp =0)
-
-a <- graph_from_data_frame(abs_ngrams)
-
-
-
-plotly::plot_ly(ngram_graph)
-
-
-# Using ggwordclouds:
-# https://cran.r-project.org/web/packages/ggwordcloud/vignettes/ggwordcloud.html
-
-p <- ggplot(filter(titl_tokens), 
-            aes(label = word, 
-                size = n, 
-                color = as.factor(year))) +
-  geom_text_wordcloud(area_corr_power = 1) +
-  scale_radius(range = c(0, 20),
-               limits = c(0, NA))
-p
-
-abst_tokens <- pub_dat %>% 
-  ungroup() %>% 
-  unnest_tokens(output = word, input = abstract, drop = FALSE)%>%
-  anti_join(stop_words, by = "word")%>%
-  filter(str_detect(word,"[:alpha:]"))%>%
-  rowwise() %>% mutate(word = if_else(word!="data",singularize(word),"data")) %>%
-  distinct() %>% 
-  group_by(year) %>% 
-  count(word, sort = FALSE) %>% 
-  mutate(length = nchar(word)) 
-
-summary(abst_tokens)
-
-  p <- ggplot(filter(abst_tokens,n>1), 
-              aes(label = word, 
-                  size = n, 
-                  color = as.factor(year))) +
-    geom_text_wordcloud(area_corr_power = 1) +
-    scale_radius(range = c(0, 20),
-                 limits = c(0, NA)) 
-  p
-
-# n-grams
-  
-#Define the length of the gram
-  
-gram_l = 3
-n_gram <- paste(gram_l,"gram",sep='-')
-
-a <- seq(1:gram_l)
-b <- rep("word",times=gram_l)
-columns <- paste(b,a,sep = '')
-
-
-abs_ngrams <- pub_dat %>%
-  ungroup() %>%
-  filter(str_detect(abstract,"[:alpha:]")) %>%
-  unnest_tokens(n_gram, abstract, token = "ngrams", n = gram_l) %>%
-  separate(n_gram, columns, sep = " ") %>%
-  count(across(all_of(columns), ~.x), sort = TRUE) %>%
-  mutate(rank = row_number(),
-         total = sum(n),
-         t_freq = n/total)
-head(abs_ngrams)
-
-options(ggrepel.max.overlaps = Inf)
-
-abs_ngrams %>% 
-  filter(n>1) %>% 
-  graph_from_data_frame() %>% 
-  ggraph(layout = "fr") +
-  geom_edge_link(aes(edge_alpha = n, edge_width = n), edge_colour = "tomato") +
-  geom_node_point(size = 2) +
-  geom_node_text(aes(label = name), repel = TRUE, 
-                 point.padding = unit(0.2, "lines")) +
-  theme_void()
-  
-  
-a <- graph_from_data_frame(abs_ngrams)
-
-b <- ggraph(a,layout = "fr")+
-  geom_edge_link(aes(edge_alpha = n, edge_width = n), edge_colour = "tomato") +
-  geom_node_point(size = 2) +
-  geom_node_text(aes(label = name), repel = TRUE, 
-                 point.padding = unit(0.2, "lines")) +
-  theme_void()
-b
-
-
-
-n_gram_res <- 0.02
-
-ngram_graph <- abs_ngrams %>%
-  filter(rank < n_gram_res*nrow(abs_ngrams)) %>%
-  graph_from_data_frame()
-ngram_graph
-
-set.seed(2017)
-
-l <- layout_with_fr(ngram_graph)
-e <- get.edgelist(ngram_graph,names=FALSE)
-m <- qgraph.layout.fruchtermanreingold(e,vcount=vcount(ngram_graph))
-deg <- degree(ngram_graph,mode="all")
-fsize <- degree(ngram_graph, mode= "all")
-
-#png(filename=paste("assets/NetworkAnalysis_words_",Sys.Date(),".png", sep = ""), res = 100)
-
-plot(ngram_graph,
-     layout=m, 
-     edge.arrow.size =.05,
-     vertex.color = "pink", 
-     vertex.size =deg*150,
-     vertex.frame.color="deeppink",
-     vertex.label.color="black", 
-     vertex.label.cex=0.75,
-     vertex.label.dist=0.25,
-     edge.curve = 0.75,
-     edge.color="skyblue",
-     edge.label.family="Arial", 
-     rescale=F, 
-     axes = FALSE, 
-     ylim = c(-150,170), 
-     xlim = c(-150,200),
-     asp =0)
-
-#####################################
-plot(ngram_graph,
-     layout=m, 
-     edge.arrow.size =.05,
-     vertex.color = "pink", 
-     vertex.size =500,
-     vertex.frame.color="deeppink",
-     vertex.label.color="black", 
-     vertex.label.cex=fsize/3,
-     vertex.label.dist=0.6,
-     edge.curve = 0.75,
-     edge.color="skyblue",
-     edge.label.family="Ariahttp://127.0.0.1:35229/graphics/plot_zoom_png?width=1536&height=898l", 
-     rescale=F, 
-     axes = FALSE, 
-     ylim = c(-190,190), 
-     xlim = c(-180,200),
-     asp =0)
