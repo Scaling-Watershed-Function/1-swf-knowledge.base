@@ -10,23 +10,78 @@ librarian::shelf(plyr, tidytext, tidyverse,
 # Local Import Path
 assets_pubs <- "../1-swf-knowledge.base/assets/data/raw" 
 t_df <- as_tibble(read_csv(paste(assets_pubs,"230321_research_rabbit_scaling_pubs.csv",sep='/'),show_col_types = FALSE))
+
+# Since research rabbit pulls information from multiple databases, in some cases is possible 
+# the the abstracts for the papers are not retrieved.
+
+t_df$abs_lgt <- nchar(t_df$Abstract)
+t_df_c <- filter(t_df,abs_lgt>20)
+
+# In this case we went from 104 publication items, to 96 (i.e. 8 items with no
+# abstract retrieved.)
+
+# To make sure all words are processed correctly, we need to do some additional 
+# cleaning on the text data. That includes unnesting each abstract into tokens
+# (i.e. single words), performing the cleaning tasks (i.e. singularizing, 
+# removing punctuations and digits, removing stop words (a, an, by, ...)), and 
+# finally putting the tokens back together (i.e. nesting)
+
+# How to unnest and nest text data in using tidytext? check this post: 
+# https://stackoverflow.com/questions/49118539/opposite-of-unnest-tokens-in-r
+
+# Preparing title data
+ttl_dat <- as.data.frame(t_df_c$Title) %>% 
+  rename(ttl_words = `t_df_c$Title`) %>% 
+  unnest_tokens(output = word, input = ttl_words, drop = FALSE) %>% 
+  rowwise() %>% mutate(word = singularize(word)) %>% 
+  filter(!str_detect(word, "[:punct:]|[:digit:]")) %>% 
+  filter(!word %in% c(stop_words$word)) %>%  
+  nest(word) %>% 
+  mutate(title = map(data, unlist),
+         title = map_chr(title, paste, collapse = " ")) 
+
+# Preparing abstracts data
+abs_dat <- as.data.frame(t_df_c$Abstract) %>% 
+  rename(abs_words = `t_df_c$Abstract`) %>% 
+  unnest_tokens(output = word, input = abs_words, drop = FALSE) %>% 
+  rowwise() %>% mutate(word = singularize(word)) %>% 
+  filter(!str_detect(word, "[:punct:]|[:digit:]")) %>% 
+  filter(!word %in% c(stop_words$word)) %>%  
+  nest(word) %>% 
+  mutate(abstract = map(data, unlist),
+         abstract = map_chr(abstract, paste, collapse = " ")) 
+
+
+  
+  
+
+
+
+
+
+
+
+
+
 # 
 # write.table(t_df,paste(assets_pubs,"230321_research_rabbit_scaling_pubs.csv",sep='/'))
 # read.table( pipe( paste0( "sed s'/[[:punct:]]//g' /Users/Simon/input.txt" ) ) , head=TRUE)
 
 # Cleaning the data set
-pub_dat <- t_df %>%
+pub_dat <- t_df_c %>%
   select(Title, Abstract,Authors,Journal,Year) %>% 
   rename(title = Title,
          abstract = Abstract,
          authors = Authors,
          journal = Journal,
          year = Year) %>% 
-  mutate(id = seq(from =1, to= nrow(t_df),by=1)) %>% 
+  mutate(id = seq(from =1, to= nrow(t_df_c),by=1)) %>% 
   mutate(abstract=removeNumbers(abstract)) %>%
   mutate(title = removeNumbers(title)) %>% 
-  mutate(title = tolower(title)) %>% 
   mutate(abstract = tolower(abstract)) %>% 
+  mutate(title = tolower(title)) %>% 
+  mutate(abstract = singularize(abstract)) %>% 
+  mutate(title = singularize(title)) %>% 
   mutate(journal = tolower(journal)) %>% 
   mutate(abstract=gsub(paste0('\\b',tm::stopwords("english"), '\\b', 
                               collapse = '|'), '', abstract)) %>% 
@@ -47,23 +102,29 @@ pub_tokens <- pub_dat %>%
   filter(!str_detect(word, "[:punct:]|[:digit:]")) %>% 
   rowwise() %>% mutate(word = if_else(word!="data",singularize(word),"data")) %>%
   distinct() %>% 
-  group_by(year) #%>% 
-  # count(word) %>% 
-  # mutate(length = nchar(word)) 
+  group_by(year) %>% 
+  count(word, sort = TRUE) %>%
+  mutate(length = nchar(word)) %>% 
+  filter(length>2)
 
-# Word clouds
-p1 <- ggplot(pub_tokens, 
-             aes(x = year,
-                 y = n,
-                 label = word, 
-                 size = n, 
-                 color = as.factor(year))) +
+
+res_plot <- 0.2
+depth <- res_plot*nrow(pub_tokens)
+
+p <- ggplot(pub_tokens[c(1:depth),], 
+            aes(x = year,
+                y = n,
+                label = word, 
+                size = n, 
+                color = as.factor (year))) +
   geom_text_wordcloud(area_corr_power = 1) +
-  # scale_y_log10()+
-  scale_radius(range = c(0, 20),
-               limits = c(0, NA))+
+  scale_radius(range = c(0, 25),
+               limits = c(0, NA)) +
+  scale_y_log10()+
+  xlab("Year")+
+  ylab("Frequency (n)")+
   theme_minimal()
-p1
+p
 
 # Title n-grams
 
@@ -95,10 +156,8 @@ head(pub_ngrams)
 
 # For titles I will use a larger number than for abstracts (see below)
 
-n_gram_res = 0.25
-
 ngram_graph <- pub_ngrams %>%
-  filter(rank < n_gram_res*nrow(pub_ngrams)) %>%
+  filter(rank < res_plot*nrow(pub_ngrams)) %>%
   graph_from_data_frame()
 ngram_graph
 
@@ -124,33 +183,38 @@ pub_tokens <- pub_dat %>%
   distinct() %>% 
   group_by(year) %>% 
   count(word, sort = TRUE) %>% 
-  mutate(length = nchar(word)) 
+  mutate(length = nchar(word)) %>% 
+  filter(length>2)
 
-# Word clouds
-p1 <- ggplot(pub_tokens, 
-             aes(x = year,
-                 y = n,
-                 label = word, 
-                 size = n, 
-                 color = as.factor(year))) +
+res_plot <- 0.025
+depth <- res_plot*nrow(pub_tokens)
+
+p <- ggplot(filter(pub_tokens, n > 2), 
+            aes(x = year,
+                y = n,
+                label = word, 
+                size = n, 
+                color = as.factor (year))) +
   geom_text_wordcloud(area_corr_power = 1) +
-  scale_y_log10()+
-  scale_radius(range = c(0, 20),
-               limits = c(0, NA))+
+  scale_radius(range = c(0, 25),
+               limits = c(0, NA)) +
+  # scale_y_log10()+
+  xlab("Year")+
+  ylab("Frequency (n)")+
   theme_minimal()
-p1
+p
+
 
 # Abstracts n-grams
-
-gram_l = 3
+set.seed(2703)
+gram_l = 4
 n_gram <- paste(gram_l,"gram",sep='-')
 
 a <- seq(1:gram_l)
 b <- rep("word",times=gram_l)
 columns <- paste(b,a,sep = '')
 
-n_gram_res <- 0.02
-
+options(ggrepel.max.overlaps = Inf)
 
 pub_ngrams <- pub_dat %>%
   ungroup() %>%
@@ -158,22 +222,28 @@ pub_ngrams <- pub_dat %>%
   unnest_tokens(n_gram, pub_cmp, token = "ngrams", n = gram_l) %>%
   filter(!str_detect(n_gram, "[:punct:]|[:digit:]")) %>% 
   filter(!n_gram %in% c(stop_words$word)) %>%
-  separate(n_gram, columns, sep = " ", remove = FALSE) %>%
-  count(across(all_of(columns), ~.x), sort = TRUE) %>%
-  mutate(rank = row_number(),
+  rowwise() %>% mutate(n_gram = if_else(n_gram!="data",singularize(n_gram),"data")) %>%
+  group_by(year) %>% 
+  count(n_gram, sort = TRUE) %>% 
+  # separate(n_gram, columns, sep = " ", remove = FALSE) %>%
+  # count(across(all_of(columns), ~.x), sort = TRUE) %>%
+  mutate(length = nchar(n_gram),
+    rank = row_number(),
          total = sum(n),
          t_freq = n/total)
 head(pub_ngrams)
 
-ngram_graph <- pub_ngrams %>%
-  filter(rank < n_gram_res*nrow(pub_ngrams)) %>%
+b <- filter(pub_ngrams,length>10)
+
+ngram_graph <- filter(pub_ngrams,length>10) %>%
+  filter(rank < res_plot*nrow(pub_ngrams)) %>%
   graph_from_data_frame()
 ngram_graph
 
 p2 <- ggraph(ngram_graph,
              layout = "fr")+
   geom_edge_link(aes(edge_alpha = n, edge_width = n), edge_colour = "orchid4") +
-  geom_node_point(size = 2) +
+  geom_node_point(size = 1) +
   geom_node_text(aes(label = name), repel = TRUE, 
                  point.padding = unit(0.2, "lines")) +
   theme_void()
