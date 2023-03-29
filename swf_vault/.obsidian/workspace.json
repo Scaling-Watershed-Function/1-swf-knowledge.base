@@ -13,7 +13,7 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "PLATFORMS/Org_platforms/manuscript_meetings/Data analysis first meeting.md",
+                "file": "Tools/Workflows/Building a Knowledge Base with Research Rabbit, Zotero, and Tidytext.md",
                 "mode": "source",
                 "backlinks": true,
                 "source": false
@@ -86,7 +86,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "PLATFORMS/Org_platforms/manuscript_meetings/Data analysis first meeting.md",
+                "file": "Tools/Workflows/Building a Knowledge Base with Research Rabbit, Zotero, and Tidytext.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -114,7 +114,7 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "PLATFORMS/Org_platforms/manuscript_meetings/Data analysis first meeting.md",
+                "file": "Tools/Workflows/Building a Knowledge Base with Research Rabbit, Zotero, and Tidytext.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               }
@@ -126,7 +126,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "PLATFORMS/Org_platforms/manuscript_meetings/Data analysis first meeting.md"
+                "file": "Tools/Workflows/Building a Knowledge Base with Research Rabbit, Zotero, and Tidytext.md"
               }
             }
           },
@@ -187,6 +187,9 @@
   },
   "active": "19f1e13b308507be",
   "lastOpenFiles": [
+    "Tools/Logs/Logs.md",
+    "Tools/Lit_review/Lit_review.md",
+    "PLATFORMS/Org_platforms/manuscript_meetings/Data analysis first meeting.md",
     "PLATFORMS/Org_platforms/manuscript_meetings/manuscript_meetings.md",
     "PLATFORMS/Org_platforms/Org_platforms.md",
     "PLATFORMS/Tech_platforms/Tech_platforms.md",
@@ -199,7 +202,6 @@
     "PRODUCTS/Manuscript/5_supplements/supplements_first_draft_files/libs/quarto-html/quarto-html.md",
     "PRODUCTS/Manuscript/5_supplements/5_supplements.md",
     "PRODUCTS/Manuscript/5_supplements/supplements_first_draft_files/supplements_first_draft_files.md",
-    "Tools/Logs/Logs.md",
     "Tools/Tools.md",
     "PRODUCTS/Manuscript/5_supplements/supplements_first_draft.md",
     "PEOPLE/PEOPLE.md",
@@ -210,12 +212,10 @@
     "PLATFORMS/Tech_platforms/Tech_platforms_n.md",
     "PLATFORMS/Org_platforms/manuscript_meetings",
     "PLATFORMS/Org_platforms_n/SFA Literature Meeting/SFA Literature Meeting.md",
-    "PLATFORMS/Org_platforms/manuscript_meetings/Data analysis first meeting.md",
     "PLATFORMS/Org_platforms",
     "PLATFORMS/Tech_platforms",
     "PLATFORMS/Tech_platforms/ChatGPT/ChatGPT.md",
     "PLATFORMS/Tech_platforms/Zotero/Zotero.md",
-    "PLATFORMS/Tech_platforms/Zotero/Untitled.md",
     "PLATFORMS/Tech_platforms/Zotero",
     "PLATFORMS",
     "PRODUCTS/Manuscript/5_supplements",
