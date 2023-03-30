@@ -13,7 +13,7 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Tools/Workflows/Building a Knowledge Base with Research Rabbit, Zotero, and Tidytext.md",
+                "file": "Tools/Rnotes/Rnotes.md",
                 "mode": "source",
                 "backlinks": true,
                 "source": false
@@ -86,7 +86,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "Tools/Workflows/Building a Knowledge Base with Research Rabbit, Zotero, and Tidytext.md",
+                "file": "Tools/Rnotes/Rnotes.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -114,7 +114,7 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "Tools/Workflows/Building a Knowledge Base with Research Rabbit, Zotero, and Tidytext.md",
+                "file": "Tools/Rnotes/Rnotes.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               }
@@ -126,7 +126,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "Tools/Workflows/Building a Knowledge Base with Research Rabbit, Zotero, and Tidytext.md"
+                "file": "Tools/Rnotes/Rnotes.md"
               }
             }
           },
@@ -187,6 +187,7 @@
   },
   "active": "19f1e13b308507be",
   "lastOpenFiles": [
+    "Tools/Workflows/Building a Knowledge Base with Research Rabbit, Zotero, and Tidytext.md",
     "Tools/Logs/Logs.md",
     "Tools/Lit_review/Lit_review.md",
     "PLATFORMS/Org_platforms/manuscript_meetings/Data analysis first meeting.md",
@@ -215,7 +216,6 @@
     "PLATFORMS/Org_platforms",
     "PLATFORMS/Tech_platforms",
     "PLATFORMS/Tech_platforms/ChatGPT/ChatGPT.md",
-    "PLATFORMS/Tech_platforms/Zotero/Zotero.md",
     "PLATFORMS/Tech_platforms/Zotero",
     "PLATFORMS",
     "PRODUCTS/Manuscript/5_supplements",

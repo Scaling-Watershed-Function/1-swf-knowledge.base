@@ -2,6 +2,43 @@
 [[Rnotes]] are used to document progress in [[RStudio]] along a selected path within  [[Workflows]]
 
 ## Quick note
+**Date**: 2023-03_29
+**People:** [[Francisco J. Guerrero]]
+**Products:**
+**Platforms:**
+
+#### Note
+# To R Notes
+
+Help from Nick Lyon
+
+pub_comp_c <- t_df_c %>% 
+  dplyr::select(dplyr::contains(pub_comp)) %>%  
+  rename(pub_comp_words = pub_comp) %>% 
+  unnest_tokens(output = word, input = pub_comp_words, drop = FALSE) %>% 
+  rowwise() %>% mutate(word = tolower(word)) %>% 
+  rowwise() %>% mutate(word = if_else(word == "data","data",singularize(word))) %>%  
+  filter(!str_detect(word, "[:punct:]|[:digit:]")) %>% 
+  filter(!word %in% c(stop_words$word)) %>% 
+  nest(word) %>% 
+  mutate(!!paste0(pub_comp) := map_chr(map(data, unlist), paste, collapse = " "))
+
+# Combining our original data frames for text analysis
+
+t_df_c_m <- t_df_c %>% 
+  select(year,authors,journal)
+
+pub_comp_m <- select(pub_comp_c,!!paste0(pub_comp))
+
+pub_dat <- as_tibble(cbind(pub_comp_m,t_df_c_m))
+
+pub_dat
+
+#### Tasks
+
+
+
+## Quick note
 **Date**: 2023-03_20
 **People:**[[Francisco J. Guerrero]]
 **Products:**[[Scripts]]
