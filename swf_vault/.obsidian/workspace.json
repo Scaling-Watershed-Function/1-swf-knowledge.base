@@ -13,7 +13,11 @@
             "state": {
               "type": "markdown",
               "state": {
+<<<<<<< Updated upstream
                 "file": "Tools/Rnotes/Rnotes.md",
+=======
+                "file": "PRODUCTS/Manuscript/1_intro/intro_first_draft.md",
+>>>>>>> Stashed changes
                 "mode": "source",
                 "backlinks": true,
                 "source": false
@@ -86,7 +90,11 @@
             "state": {
               "type": "backlink",
               "state": {
+<<<<<<< Updated upstream
                 "file": "Tools/Rnotes/Rnotes.md",
+=======
+                "file": "PRODUCTS/Manuscript/1_intro/intro_first_draft.md",
+>>>>>>> Stashed changes
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -114,7 +122,11 @@
             "state": {
               "type": "outgoing-link",
               "state": {
+<<<<<<< Updated upstream
                 "file": "Tools/Rnotes/Rnotes.md",
+=======
+                "file": "PRODUCTS/Manuscript/1_intro/intro_first_draft.md",
+>>>>>>> Stashed changes
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               }
@@ -126,7 +138,11 @@
             "state": {
               "type": "outline",
               "state": {
+<<<<<<< Updated upstream
                 "file": "Tools/Rnotes/Rnotes.md"
+=======
+                "file": "PRODUCTS/Manuscript/1_intro/intro_first_draft.md"
+>>>>>>> Stashed changes
               }
             }
           },
@@ -187,6 +203,10 @@
   },
   "active": "19f1e13b308507be",
   "lastOpenFiles": [
+<<<<<<< Updated upstream
+=======
+    "PRODUCTS/Manuscript/1_intro/1_intro.md",
+>>>>>>> Stashed changes
     "Tools/Workflows/Building a Knowledge Base with Research Rabbit, Zotero, and Tidytext.md",
     "Tools/Logs/Logs.md",
     "Tools/Lit_review/Lit_review.md",
@@ -197,7 +217,6 @@
     "PLATFORMS/PLATFORMS.md",
     "PRODUCTS/Manuscript/3_results/3_results.md",
     "PRODUCTS/Manuscript/1_intro/intro_first_draft.md",
-    "PRODUCTS/Manuscript/1_intro/1_intro.md",
     "PRODUCTS/Manuscript/5_supplements/supplements_first_draft_files/libs/clipboard/clipboard.md",
     "PRODUCTS/Manuscript/5_supplements/supplements_first_draft_files/libs/bootstrap/bootstrap.md",
     "PRODUCTS/Manuscript/5_supplements/supplements_first_draft_files/libs/quarto-html/quarto-html.md",
