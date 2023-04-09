@@ -2,6 +2,21 @@
  [[Logs]] are used to document general progress in the development of [[PRODUCTS]].  They will consist of a series of [[Quick Note]] documents for individual [[PEOPLE]] to develop ideas that can lead to the creation of new [[Workflows]] or other [[Tools]]
  ----------------------------------------------------------------------
 ## Quick note
+**Date**: 2023-04_07
+**People:**[[Francisco J. Guerrero]]
+**Products: **[[Manuscript]], [[Website]], [[Scripts]]
+**Platforms: **[[GitHub]]
+
+#### Note
+A new tool for large file storage system: 
+https://towardsdatascience.com/version-control-your-large-datasets-using-google-drive-dd42211ab740
+https://dvc.org/#use-cases
+Installing DVC from GitHub
+https://github.com/iterative/dvc
+#### Tasks
+
+
+## Quick note
 **Date**: 2023-03_18
 **People:** [[Francisco J. Guerrero]]
 **Products:** [[2_methods]], [[5_supplements]]
