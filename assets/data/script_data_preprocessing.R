@@ -54,9 +54,9 @@ set.seed(2703)
 #TBD
 
 # Local import
-raw_data <- "../1-swf-knowledge.base/assets/data/raw"
-input_data <- "../1-swf-knowledge.base/assets/data/raw/pre-processing/model_inputs" 
-processed_data <- "../1-swf-knowledge.base/assets/data/processed"
+raw_data <- "raw"
+input_data <- "raw/pre-processing/model_inputs" 
+processed_data <- "processed"
 
 ############ loading NHDPlus Data (Shapefiles) ##################################################
 
@@ -86,10 +86,10 @@ nhd_wrb_map <- nhd_wrb_stream %>%
             nhdp_2_pnw_raw %>% 
               filter(HUC_4 == 1709) %>% 
               dplyr::select(ComID,
-                     LENGTHKM,
-                     StreamOrde) %>% 
+                            LENGTHKM,
+                            StreamOrde) %>% 
               mutate(COMID = ComID),
-           by = "COMID") %>% 
+            by = "COMID") %>% 
   filter(is.na(ComID)==FALSE)
 
 # 26 COMIDs extra in Shapefile
@@ -106,6 +106,20 @@ nhd_yrb_map <- nhd_yrb_stream %>%
   filter(is.na(ComID)==FALSE)
 
 # Using leaflet to look into maps:
+
+# With the function 'addTiles' you get a base map by default that contain streets names
+# and major features. If you want  a different base map, here is hwo to do it:
+
+# A tutorial video: https://www.youtube.com/watch?v=sX9jwUAXShs
+
+# OR follow this instructions:  
+# Go to the website: https://leaflet-extras.github.io/leaflet-providers/preview/
+# Look through the gallery and pick the base map you'd like to add
+# Copy the name that appears below "Provider names for leaflet-providers.js" on the top
+# dialogue box
+# Call the function 'addProviderTiles' and paste the name chosen between ""
+# In the chunk below I chose "Esri.WorldImagery"
+
 # Willamette River Basin
 leaflet(nhd_wrb_map) %>% 
   addPolylines(weight = 3) %>% 
@@ -114,7 +128,7 @@ leaflet(nhd_wrb_map) %>%
                opacity = 1,
                weight = 3) %>% 
   addProviderTiles("Esri.WorldImagery")
-  # addTiles()
+# addTiles()
 
 # Yakima River Basin
 leaflet(nhd_yrb_map) %>% 
@@ -124,7 +138,7 @@ leaflet(nhd_yrb_map) %>%
                opacity = 1,
                weight = 3) %>% 
   addProviderTiles("Esri.WorldImagery")
-  # addTiles()
+# addTiles()
 
 # 60 COMIDs extra in shapefile
 
@@ -168,10 +182,10 @@ df_list <- list(nhd_ywb_stream,
 nhd_ywb_resp <- df_list %>% reduce(full_join, by = "COMID")
 
 nhd_ywb_resp <- rename(nhd_ywb_resp,
-                          id = ID,
-                          name = Name,
-                          stream_do_mg_l = `Stream DO`,
-                          stream_doc_mg_l = `Stream DOC`)
+                       id = ID,
+                       name = Name,
+                       stream_do_mg_l = `Stream DO`,
+                       stream_doc_mg_l = `Stream DOC`)
 
 
 # Saving data set as processed data
@@ -190,4 +204,3 @@ write_csv(nhd_ywb_resp,file=paste(assets_processed,"230313_wlm_ykm_stream_resp_d
 # 
 # 
 # dev.off()
-
