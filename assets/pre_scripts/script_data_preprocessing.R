@@ -54,24 +54,82 @@ set.seed(2703)
 #TBD
 
 # Local import
-assets_data <- "../1-swf-knowledge.base/assets/data/raw/pre-processing/model_inputs" 
-assets_processed <- "../1-swf-knowledge.base/assets/data/processed"
+raw_data <- "../1-swf-knowledge.base/assets/data/raw"
+input_data <- "../1-swf-knowledge.base/assets/data/raw/pre-processing/model_inputs" 
+processed_data <- "../1-swf-knowledge.base/assets/data/processed"
 
-############ loading NHDPlus Data ##################################################
+############ loading NHDPlus Data (Shapefiles) ##################################################
 
 # For compatibility with the latest NHDPlus database, the coordinate system for the 
 # original shapefiles has to be modified from NAD83 to WGS84. We do so by using the 
 # st_transform() function from the package sf
 
+# Shapefiles
 # Yakima River Basin
-nhd_yrb_stream<-st_transform(st_read(paste(assets_data,"shapes/nhd_CR_stream_sub9.shp",sep = "/")),4326)
+nhd_yrb_stream<-st_transform(st_read(paste(input_data,"shapes/nhd_CR_stream_sub9.shp",sep = "/")),4326)
 # Willamette River Basin
-nhd_wrb_stream<-st_transform(st_read(paste(assets_data,"shapes/nhd_CR_stream_sub8.shp",sep = "/")),4326)
+nhd_wrb_stream<-st_transform(st_read(paste(input_data,"shapes/nhd_CR_stream_sub8.shp",sep = "/")),4326)
+
+# The willamette file contains two extra variables: Name and HUC4. Adding these columns to 
+# the yakima file
+
+nhd_yrb_stream <-  nhd_yrb_stream %>% 
+  mutate(Name = "Yakima",
+         HUC4 = 1703) 
+
+# csv files with physical hydrological data
+nhdp_2_pnw_raw <- read_csv(paste(raw_data,"230410_hydro_info_pnw.csv", sep = "/"),
+                           show_col_types = FALSE)
+
+nhd_wrb_map <- nhd_wrb_stream %>% 
+  left_join(.,
+            nhdp_2_pnw_raw %>% 
+              filter(HUC_4 == 1709) %>% 
+              dplyr::select(ComID,
+                     LENGTHKM,
+                     StreamOrde) %>% 
+              mutate(COMID = ComID),
+           by = "COMID") %>% 
+  filter(is.na(ComID)==FALSE)
+
+# 26 COMIDs extra in Shapefile
+
+nhd_yrb_map <- nhd_yrb_stream %>% 
+  left_join(.,
+            nhdp_2_pnw_raw %>% 
+              filter(HUC_4 == 1703) %>% 
+              dplyr::select(ComID,
+                            LENGTHKM,
+                            StreamOrde) %>% 
+              mutate(COMID = ComID),
+            by = "COMID") %>% 
+  filter(is.na(ComID)==FALSE)
+
+# Using leaflet to look into maps:
+# Willamette River Basin
+leaflet(nhd_wrb_map) %>% 
+  addPolylines(weight = 3) %>% 
+  addPolylines(data = filter(nhd_wrb_map,is.na(StreamOrde)),
+               color = "magenta",
+               opacity = 1,
+               weight = 3) %>% 
+  addProviderTiles("Esri.WorldImagery")
+  # addTiles()
+
+# Yakima River Basin
+leaflet(nhd_yrb_map) %>% 
+  addPolylines(weight = 3) %>% 
+  addPolylines(data = filter(nhd_yrb_map,is.na(StreamOrde)),
+               color = "magenta",
+               opacity = 1,
+               weight = 3) %>% 
+  addProviderTiles("Esri.WorldImagery")
+  # addTiles()
+
+# 60 COMIDs extra in shapefile
 
 # We are going to merge these data sets, but we need to add and remove a few
 # columns first
-
-nhd_yrb_stream$Name <- "Yakima"
 
 nhd_ywb_stream <- rbind(dplyr::select(nhd_yrb_stream,COMID,ID,geometry,Name),
                         dplyr::select(nhd_wrb_stream,COMID,ID,geometry,Name))
@@ -83,6 +141,7 @@ st_crs(nhd_ywb_stream)
 leaflet(nhd_ywb_stream) %>% 
   addPolylines() %>% 
   addTiles()
+
 
 
 # We will now load all the substrate concentration data for the Columbia River Basin to then extract
