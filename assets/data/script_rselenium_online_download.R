@@ -72,21 +72,32 @@ selenium_object <- selenium(retcommand = T, check = F)
 # This object contains the paths to all the drivers installed, included those 
 # for Google Chrome. The path to those files should look something like:
 
-# /Users/your_user.name/Library/Application../binman_chromedriver.
+# C:\Users\your_user.name\AppData\Local\binman\binman_chromedriver\win32 (Windows)
+#
 
 # You need to navigate to the Application folder and locate the chromedriver files.
+# You will find as many folders as google chrome drivers. In that case, open each folder
+# and delete the LICENSE files.
 
+# Now, you want 
 
 binman::list_versions("chromedriver")
 
+# You will see the versions available for your computer. To select the version 
+# to input in the following code, open chrome and type "chrome//version". Check 
+# the first three numbers of the version (e.g. 112), and pick within the available
+# version any that matches those three numbers. 
 
+
+# The following code, should open a browser window that will be controlled from
+# here:
 rs_driver_object <- rsDriver(browser = "chrome",
-                             chromever = "112.0.5615.49",
+                             chromever = "112.0.5615.28",
                              verbose = FALSE,
                              port = free_port())
 
 
-# Closing the server
+# once you are done using the server in your session, don't forget to close it:
 rs_driver_object$server$stop()
 
 
