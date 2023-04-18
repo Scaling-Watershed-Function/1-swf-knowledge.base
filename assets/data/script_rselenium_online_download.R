@@ -13,22 +13,13 @@
 # To do so, follow the instructions in this tutorial:
 # 1. Installing Java: https://www.youtube.com/watch?v=IJ-PJbvJBGs
 # 2. Intro to RSeleniumhttps://www.youtube.com/watch?v=U1BrIPmhx10
-# 3. Downloading documents from the web: https://www.youtube.com/watch?v=BK_JBk_l5uQ
+# 3. Downloading documents from the web: https://www.youtube.com/watch?v=BK_JBk_l5uQ&t=94s
 
 # MAC OS:
 # Checking for Java:
 # Open a terminal and type java --version. If you get a message starting with 
-# "The operation could not be completed...". You don't have Java installed. To install 
-# Java properly, follow the instructions in this online tutorial (you can't skip the 
-# part of the video that is related to MAVEN):
-# https://www.youtube.com/watch?v=Mi8YpP9TQSs 
-
-# TROUBLESHOOTING
-# Please be careful when creating the .zshrc file (if an error ocurr, that would change
-# the configuration of your terminal). If that the case, reset your terminal setting to 
-# its original default. Here is how: 
-# https://superuser.com/questions/1686083/any-ideas-on-how-to-reset-my-zsh-terminal-to-default
-# and start over. 
+# "The operation could not be completed...". You don't have Java installed. Get
+# Java for mac from this [link](https://www.java.com/en/download/apple.jsp) 
 
 # Check that all your r packages are up to date
 
@@ -96,6 +87,58 @@ rs_driver_object <- rsDriver(browser = "chrome",
                              verbose = FALSE,
                              port = free_port())
 
+# The lines above will open a browser on a separate window, in this case it would
+# be chrome, but you can specify other browsers like safari, or firefox. You will 
+# see a message right below the search bar like this: "Chrome is being controlled
+# by automatic test software". This is because, the original purpose of RSelenium
+# is to help developers to privately test their applications online. Yet, the 
+# use of this approach for webscrapping and data download, came as a bonus. 
+
+# You can go to any https address using this browser, like YouTube or ESS-DIVE, look
+# for the data you need and download it directly into your working directory.
+
+# This is what the rsDriver function is doing:
+# Source: https://cran.r-project.org/web/packages/RSelenium/vignettes/basics.html#:~:text=The%20rsDriver%20function%20is%20a,it%20runs%20a%20Chrome%20browser.
+#"The rsDriver function is a wrapper for the selenium function from the wdman 
+# package. It allows the user to manage the binaries used to run a Selenium Server. 
+# It returns an environment containing a client and a server. By default, it runs a 
+# Chrome browser. Other browsers such as Firefox, PhantomJS, and Internet Explorer 
+# can be selected using the browser argument."
+
+# Here is a Client-Server definition from dictionary.com:
+
+# "A computer network in which one centralized, powerful computer (called the server) 
+# is a hub to which many less powerful personal computers or workstations (called clients) 
+# are connected. The clients run programs and access data that are stored on the server." 
+
+# Downloading data example:
+
+# To start downloading data, we first need to open a client object:
+
+remDr <- rs_driver_object$client
+remDr$open()
+
+# Let's navigate to the webpage for Son et al., 2022 data package:
+
+remDr$navigate("https://data.ess-dive.lbl.gov/view/doi:10.15485/1962818")
+
+data_files <- remDr$findElements(using = 'xpath', "//td[@class='download-btn btn-container']/a")
+
+# Create a temporary directory to store the heavy data from ESS-DIVE
+temp_dir <- tempdir()
+
+son_dat <- download.file(url = "https://data.ess-dive.lbl.gov/catalog/d1/mn/v2/object/ess-dive-ef92031cc1bc9c5-20230310T201704004",
+                         path = temp_dir,
+                         destfile = "model_inputs.zip")
+
+crb_dat <- unzip("model_inputs.zip",exdir = temp_dir)
+
+dat <- read_csv(crb_dat[9],
+                show_col_types = FALSE)
+
+glimpse(dat)
+
+write.csv(dat,"nexss_inputs.csv")
 
 # once you are done using the server in your session, don't forget to close it:
 rs_driver_object$server$stop()

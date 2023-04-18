@@ -2,6 +2,25 @@
  [[Logs]] are used to document general progress in the development of [[PRODUCTS]].  They will consist of a series of [[Quick Note]] documents for individual [[PEOPLE]] to develop ideas that can lead to the creation of new [[Workflows]] or other [[Tools]]
  ----------------------------------------------------------------------
 ## Quick note
+**Date**: 2023-04_18
+**People:** [[Francisco J. Guerrero]]
+**Products:** [[Scripts]]
+**Platforms:** [[Java]]
+
+
+#### Note
+
+Installation of Java for Mac:
+In previous iterations I was installing Java 20, this time, when looking for Java for Mac I downloaded from this page and installed Java 1.8.0: 
+https://www.java.com/en/download/apple.jsp 
+The main difference is that the latest Java is specifically designed for mac engines. 
+
+
+#### Tasks
+
+
+
+## Quick note
 **Date**: 2023-04_07
 **People:**[[Francisco J. Guerrero]]
 **Products: **[[Manuscript]], [[Website]], [[Scripts]]

@@ -128,19 +128,31 @@ var IndexContentRenderer = class extends import_obsidian.MarkdownRenderChild {
   }
   buildMarkdownText(filtered_files) {
     const list = [];
+    if (this.plugin.settings.sortIndexFilesAlphabetically) {
+      filtered_files = filtered_files.sort((a, b) => a.name.localeCompare(b.name));
+    }
     filtered_files.forEach((value) => {
       if (value instanceof import_obsidian.TFile) {
         if (value.basename == value.parent.name) {
           return;
         }
-        const headings = this.app.metadataCache.getFileCache(value).headings;
+        let headings = this.app.metadataCache.getFileCache(value).headings;
+        headings = headings.sort((a, b) => a.position.start.offset - b.position.start.offset);
         const fileLink = this.app.metadataCache.fileToLinktext(value, this.filePath);
         list.push(`1. ${this.plugin.settings.includeFileContent ? "!" : ""}[[${fileLink}|${value.basename}]]`);
         if (headings != null && !this.plugin.settings.disableHeadlines) {
-          for (let i = this.plugin.settings.skipFirstHeadline ? 1 : 0; i < headings.length; i++) {
+          if (this.plugin.settings.skipFirstHeadline) {
+            headings = headings.slice(1);
+          }
+          if (this.plugin.settings.sortHeadersAlphabetically) {
+            headings = headings.sort((a, b) => a.heading.localeCompare(b.heading));
+          }
+          for (let i = 0; i < headings.length; i++) {
             const heading = new FileHeader(headings[i]);
-            const numIndents = new Array(Math.max(1, heading.level - headings[0].level));
-            const indent = numIndents.fill("	").join("");
+            let indent = "";
+            for (let j = 0; j < heading.level; j++) {
+              indent += "	";
+            }
             list.push(`${indent}1. [[${fileLink}#${heading.rawHeading}|${heading.rawHeading}]]`);
           }
         }
@@ -369,7 +381,9 @@ var DEFAULT_SETTINGS = {
   includeFileContent: false,
   hideIndexFiles: false,
   indexFileInitText: "---\ntags: MOCs\n---\n\n# MOC: {{folder}}\n\n---\n\n```folder-index-content\n```",
-  autoPreviewMode: false
+  autoPreviewMode: false,
+  sortIndexFilesAlphabetically: false,
+  sortHeadersAlphabetically: false
 };
 var PluginSettingsTab = class extends import_obsidian3.PluginSettingTab {
   constructor(app, plugin) {
@@ -424,6 +438,14 @@ var PluginSettingsTab = class extends import_obsidian3.PluginSettingTab {
     })));
     new import_obsidian3.Setting(containerEl).setName("Automatic Preview mode").setDesc("This will automatically swap to preview mode when opening an index file").addToggle((component) => component.setValue(this.plugin.settings.autoPreviewMode).onChange((value) => __async(this, null, function* () {
       this.plugin.settings.autoPreviewMode = value;
+      yield this.plugin.saveSettings();
+    })));
+    new import_obsidian3.Setting(containerEl).setName("Sort Indexfiles Alphabetically").setDesc("This will sort the Indexfiles alphabetically").addToggle((component) => component.setValue(this.plugin.settings.sortIndexFilesAlphabetically).onChange((value) => __async(this, null, function* () {
+      this.plugin.settings.sortIndexFilesAlphabetically = value;
+      yield this.plugin.saveSettings();
+    })));
+    new import_obsidian3.Setting(containerEl).setName("Sort Headers Alphabetically").setDesc("This will sort the Headers within a file alphabetically").addToggle((component) => component.setValue(this.plugin.settings.sortHeadersAlphabetically).onChange((value) => __async(this, null, function* () {
+      this.plugin.settings.sortHeadersAlphabetically = value;
       yield this.plugin.saveSettings();
     })));
   }

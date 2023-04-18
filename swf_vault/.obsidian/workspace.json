@@ -13,7 +13,7 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Tools/Workflows/Workflows.md",
+                "file": "Tools/Logs/Logs.md",
                 "mode": "source",
                 "backlinks": true,
                 "source": false
@@ -86,7 +86,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "Tools/Workflows/Workflows.md",
+                "file": "Tools/Logs/Logs.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -114,7 +114,7 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "Tools/Workflows/Workflows.md",
+                "file": "Tools/Logs/Logs.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               }
@@ -126,7 +126,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "Tools/Workflows/Workflows.md"
+                "file": "Tools/Logs/Logs.md"
               }
             }
           },
@@ -162,7 +162,7 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "TASKS/TASKS.md",
+                "file": "Tasks/Tasks.md",
                 "mode": "source",
                 "backlinks": true,
                 "source": false
@@ -188,7 +188,6 @@
   },
   "left-ribbon": {
     "hiddenItems": {
-      "obsidian-excalidraw-plugin:Create new drawing": false,
       "switcher:Open quick switcher": false,
       "graph:Open graph view": false,
       "canvas:Create new canvas": false,
@@ -197,15 +196,19 @@
       "command-palette:Open command palette": false,
       "markdown-importer:Open format converter": false,
       "audio-recorder:Start/stop recording": false,
-      "workspaces:Manage workspace layouts": false
+      "workspaces:Manage workspace layouts": false,
+      "obsidian-excalidraw-plugin:Create new drawing": false
     }
   },
   "active": "7da4640af1ae462f",
   "lastOpenFiles": [
+    "PLATFORMS/Tech_platforms/Java.md",
+    "PLATFORMS/Tech_platforms/Java/Java.md",
+    "PLATFORMS/Tech_platforms/Java",
+    "Tools/Logs/Logs.md",
     "Tools/Workflows/From RStudio to Quarto.md",
     "Tools/Workflows/Connecting R with GitHub.md",
     "PRODUCTS/Website/Wolheim_etal_summary/Wolheim_etal_summary.md",
-    "Tools/Logs/Logs.md",
     "PEOPLE/Jessica Neff/Jessica Neff.md",
     "PLATFORMS/Org_platforms/ICON/ICON Regular Meetings.md",
     "PLATFORMS/Org_platforms/ICON/ICON Rebranding.md",
