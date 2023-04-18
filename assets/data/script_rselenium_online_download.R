@@ -122,27 +122,37 @@ remDr$open()
 
 remDr$navigate("https://data.ess-dive.lbl.gov/view/doi:10.15485/1962818")
 
+# Wait until the page is fully loaded in the browser
+
 data_files <- remDr$findElements(using = 'xpath', "//td[@class='download-btn btn-container']/a")
 
 # Create a temporary directory to store the heavy data from ESS-DIVE
 temp_dir <- tempdir()
+temp_file <- tempfile(fileext = ".zip")
 
-son_dat <- download.file(url = "https://data.ess-dive.lbl.gov/catalog/d1/mn/v2/object/ess-dive-ef92031cc1bc9c5-20230310T201704004",
-                         path = temp_dir,
-                         destfile = "model_inputs.zip")
+download.file(url = "https://data.ess-dive.lbl.gov/catalog/d1/mn/v2/object/ess-dive-ef92031cc1bc9c5-20230310T201704004",
+                         destfile = "temp_file.zip")
 
-crb_dat <- unzip("model_inputs.zip",exdir = temp_dir)
+crb_dat <- unzip("temp_file.zip",exdir = temp_dir)
 
-dat <- read_csv(crb_dat[9],
-                show_col_types = FALSE)
+dat <- read_csv(crb_dat[9], show_col_types = FALSE)
 
 glimpse(dat)
 
 write.csv(dat,"nexss_inputs.csv")
 
+# Delete temporary file
+file_name <- "temp_file.zip"
+
+if (file.exists(file_name)) {
+  unlink(file_name)
+  print("File is deleted..")
+} else{
+  print("File not exists..")
+}
+
 # once you are done using the server in your session, don't forget to close it:
 rs_driver_object$server$stop()
-
 
 
 
