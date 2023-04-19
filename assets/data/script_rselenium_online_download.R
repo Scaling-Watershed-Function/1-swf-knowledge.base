@@ -124,20 +124,26 @@ rs_driver_object <- rsDriver(browser = "chrome",
 # Our input variable should be the data package url
 
 target_url <- "https://data.ess-dive.lbl.gov/view/doi:10.15485/1962818"
+#target_url <- "https://data.ess-dive.lbl.gov/view/doi:10.5440/1861071" (tested and verified)
+#target_url <- "https://data.ess-dive.lbl.gov/view/doi:10.15485/1505624" (tested and verified)
 
 remDr <- rs_driver_object$client
 remDr$open()
 remDr$navigate(target_url)
+Sys.sleep(5) # Wait for the page to load
 
-# Wait for the page to load
-Sys.sleep(5)
 
-# Find the expand button and click on it
-expand_button <- remDr$findElement(using = "css selector", value = "#table-container > div > table > tfoot")
-expand_button$clickElement()
+# Find the expand button and click on it (if exists)
 
-# Wait for the table to load
-Sys.sleep(5)
+expand_button <- tryCatch(
+  remDr$findElement(using = "css selector", value = "#table-container > div > table > tfoot"),
+  error = function(e) NULL
+)
+
+if (!is.null(expand_button)) {
+  expand_button$clickElement()
+  Sys.sleep(5)
+}
 
 # Extract the table as a data frame
 table_html <- remDr$findElement(using = "css selector", 
@@ -159,6 +165,7 @@ files_table <- files_table%>%
 
 # Extract the download links for each row
 table_rows <- remDr$findElements(using = "css selector", value = "#table-container > div > table > tbody > tr")
+
 download_links <- lapply(1:length(table_rows), function(i) {
   # Construct the selector for the download link for the i-th row
   download_link_selector <- paste0("#table-container > div > table > tbody > tr:nth-child(", i, ") > td.download-btn.btn-container > a")
