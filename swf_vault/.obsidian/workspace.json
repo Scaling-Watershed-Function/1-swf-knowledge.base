@@ -13,7 +13,7 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Tools/Logs/Logs.md",
+                "file": "PRODUCTS/Manuscript/1_intro/intro_first_draft.md",
                 "mode": "source",
                 "backlinks": true,
                 "source": false
@@ -86,7 +86,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "Tools/Logs/Logs.md",
+                "file": "PRODUCTS/Manuscript/1_intro/intro_first_draft.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -114,7 +114,7 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "Tools/Logs/Logs.md",
+                "file": "PRODUCTS/Manuscript/1_intro/intro_first_draft.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               }
@@ -126,7 +126,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "Tools/Logs/Logs.md"
+                "file": "PRODUCTS/Manuscript/1_intro/intro_first_draft.md"
               }
             }
           },
@@ -160,13 +160,8 @@
             "type": "leaf",
             "pinned": true,
             "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Tasks/Tasks.md",
-                "mode": "source",
-                "backlinks": true,
-                "source": false
-              },
+              "type": "empty",
+              "state": {},
               "pinned": true
             }
           },
@@ -202,10 +197,15 @@
   },
   "active": "7da4640af1ae462f",
   "lastOpenFiles": [
+    "PRODUCTS/Manuscript/1_intro/1_intro.md",
+    "PRODUCTS/Manuscript/1_intro/intro_first_draft.md",
+    "PRODUCTS/Manuscript/2_methods/methods_first_draft.md",
+    "PRODUCTS/Manuscript/2_methods/2_methods.md",
+    "PRODUCTS/Manuscript/3_results/results_first_draft.md",
+    "Tools/Logs/Logs.md",
     "PLATFORMS/Tech_platforms/Java.md",
     "PLATFORMS/Tech_platforms/Java/Java.md",
     "PLATFORMS/Tech_platforms/Java",
-    "Tools/Logs/Logs.md",
     "Tools/Workflows/From RStudio to Quarto.md",
     "Tools/Workflows/Connecting R with GitHub.md",
     "PRODUCTS/Website/Wolheim_etal_summary/Wolheim_etal_summary.md",
