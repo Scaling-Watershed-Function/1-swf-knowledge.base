@@ -44,7 +44,9 @@
 librarian::shelf(tidyverse,
                  RSelenium,
                  netstat,
-                 wdman)
+                 wdman,
+                 rvest,
+                 data.table)
 
 # Run this for the first time so all the drivers and dependencies
 selenium()
@@ -83,7 +85,7 @@ binman::list_versions("chromedriver")
 # The following code, should open a browser window that will be controlled from
 # here:
 rs_driver_object <- rsDriver(browser = "chrome",
-                             chromever = "112.0.5615.28",
+                             chromever = "112.0.5615.49",
                              verbose = FALSE,
                              port = free_port())
 
@@ -93,6 +95,7 @@ rs_driver_object <- rsDriver(browser = "chrome",
 # by automatic test software". This is because, the original purpose of RSelenium
 # is to help developers to privately test their applications online. Yet, the 
 # use of this approach for webscrapping and data download, came as a bonus. 
+
 
 # You can go to any https address using this browser, like YouTube or ESS-DIVE, look
 # for the data you need and download it directly into your working directory.
@@ -105,6 +108,9 @@ rs_driver_object <- rsDriver(browser = "chrome",
 # Chrome browser. Other browsers such as Firefox, PhantomJS, and Internet Explorer 
 # can be selected using the browser argument."
 
+# You can close this browser right away, since we will open another one as a client.
+
+
 # Here is a Client-Server definition from dictionary.com:
 
 # "A computer network in which one centralized, powerful computer (called the server) 
@@ -115,16 +121,79 @@ rs_driver_object <- rsDriver(browser = "chrome",
 
 # To start downloading data, we first need to open a client object:
 
+# Our input variable should be the data package url
+
+target_url <- "https://data.ess-dive.lbl.gov/view/doi:10.15485/1962818"
+
 remDr <- rs_driver_object$client
 remDr$open()
+remDr$navigate(target_url)
 
-# Let's navigate to the webpage for Son et al., 2022 data package:
+# Wait for the page to load
+Sys.sleep(5)
 
-remDr$navigate("https://data.ess-dive.lbl.gov/view/doi:10.15485/1962818")
+# Find the expand button and click on it
+expand_button <- remDr$findElement(using = "css selector", value = "#table-container > div > table > tfoot")
+expand_button$clickElement()
+
+# Wait for the table to load
+Sys.sleep(5)
+
+# Extract the table as a data frame
+table_html <- remDr$findElement(using = "css selector", 
+                                value = "#table-container")$getElementAttribute("outerHTML")[[1]]
+table_df <- read_html(table_html) %>% html_table()
+
+files_table <- as.data.frame(table_df[1]) 
+
+colnames(files_table) <- c("position",
+                           "name",
+                           "info",
+                           "file_type",
+                           "size",
+                           "n_downloads",
+                           "action_download")
+files_table <- files_table%>% 
+  slice(-1) %>% 
+  filter(is.na(name)==FALSE)
+
+# Extract the download links for each row
+table_rows <- remDr$findElements(using = "css selector", value = "#table-container > div > table > tbody > tr")
+download_links <- lapply(1:length(table_rows), function(i) {
+  # Construct the selector for the download link for the i-th row
+  download_link_selector <- paste0("#table-container > div > table > tbody > tr:nth-child(", i, ") > td.download-btn.btn-container > a")
+  # Extract the 'href' attribute of the download link
+  download_link_element <- remDr$findElement(using = "css selector", value = download_link_selector)
+  download_link_element$getElementAttribute("href")
+})
+
+# Stop the Selenium server and close the browser
+rs_driver_object$server$stop()
+
+#Printing table with download links
+download_list <- as.data.frame(unlist(download_links))
+colnames(download_list) <- "links"
+download_table <- files_table %>% 
+  select(name,file_type,size) %>% 
+  cbind(download_list)
+
+print(download_table)
+
+
+######## First Version############
+
+target_url <- "https://data.ess-dive.lbl.gov/view/doi:10.15485/1962818"
+
+remDr <- rs_driver_object$client
+remDr$open()
+remDr$navigate(target_url)
 
 # Wait until the page is fully loaded in the browser
 
 data_files <- remDr$findElements(using = 'xpath', "//td[@class='download-btn btn-container']/a")
+
+# You can use other paramethers different to xpath, like id, or anything that links to the 
+# download link of the object you want to extract from the webpage 
 
 # Create a temporary directory to store the heavy data from ESS-DIVE
 temp_dir <- tempdir()
@@ -153,6 +222,76 @@ if (file.exists(file_name)) {
 
 # once you are done using the server in your session, don't forget to close it:
 rs_driver_object$server$stop()
+
+##### IN PROGRESS ###############
+
+target_url <- "https://data.ess-dive.lbl.gov/view/doi:10.15485/1962818"
+
+remDr <- rs_driver_object$client
+remDr$open()
+remDr$navigate(target_url)
+
+# Wait for the page to load
+Sys.sleep(5)
+
+# Find the expand button and click on it
+expand_button <- remDr$findElement(using = "css selector", value = "#table-container > div > table > tfoot")
+expand_button$clickElement()
+
+# Wait for the table to load
+Sys.sleep(5)
+
+# Extract the table as a data frame
+table_html <- remDr$findElement(using = "css selector", 
+                                value = "#table-container")$getElementAttribute("outerHTML")[[1]]
+table_df <- read_html(table_html) %>% html_table()
+
+files_table <- as.data.frame(table_df[1]) 
+  
+colnames(files_table) <- c("position",
+                            "name",
+                           "info",
+                           "file_type",
+                           "size",
+                           "n_downloads",
+                           "action_download")
+files_table <- files_table%>% 
+  slice(-1) %>% 
+  filter(is.na(name)==FALSE)
+
+
+table_rows <- remDr$findElements(using = "css selector", value = "#table-container > div > table > tbody > tr")
+
+# Extract the download links for each row
+download_links <- lapply(1:length(table_rows), function(i) {
+  # Construct the selector for the download link for the i-th row
+  download_link_selector <- paste0("#table-container > div > table > tbody > tr:nth-child(", i, ") > td.download-btn.btn-container > a")
+  # Extract the 'href' attribute of the download link
+  download_link_element <- remDr$findElement(using = "css selector", value = download_link_selector)
+  download_link_element$getElementAttribute("href")
+})
+
+# Stop the Selenium server and close the browser
+remDr$close()
+rD$server$stop()
+
+# Print the download links
+download_list <- as.data.frame(unlist(download_links))
+colnames(download_list) <- "links"
+
+#Printing table with download links
+download_table <- files_table %>% 
+  select(name,file_type,size) %>% 
+  cbind(download_list)
+
+print(download_table)
+
+
+
+
+
+
+
 
 
 
