@@ -180,29 +180,22 @@ download_table <- files_table %>%
 print(download_table)
 
 
-######## First Version############
+# From the download table the user should be able to pick which file to download
 
-target_url <- "https://data.ess-dive.lbl.gov/view/doi:10.15485/1962818"
+my_data_selection = 9
 
-remDr <- rs_driver_object$client
-remDr$open()
-remDr$navigate(target_url)
+my_download_url <- download_table$links[my_data_selection]
 
-# Wait until the page is fully loaded in the browser
-
-data_files <- remDr$findElements(using = 'xpath', "//td[@class='download-btn btn-container']/a")
-
-# You can use other paramethers different to xpath, like id, or anything that links to the 
-# download link of the object you want to extract from the webpage 
+########################### IN PROGRESS ########################################
 
 # Create a temporary directory to store the heavy data from ESS-DIVE
 temp_dir <- tempdir()
 temp_file <- tempfile(fileext = ".zip")
 
-download.file(url = "https://data.ess-dive.lbl.gov/catalog/d1/mn/v2/object/ess-dive-ef92031cc1bc9c5-20230310T201704004",
-                         destfile = "temp_file.zip")
+temp_dat <- download.file(url = my_download_url,
+              destfile = temp_file)
 
-crb_dat <- unzip("temp_file.zip",exdir = temp_dir)
+crb_dat <- unzip("temp_dat",exdir = temp_dir)
 
 dat <- read_csv(crb_dat[9], show_col_types = FALSE)
 
@@ -219,82 +212,3 @@ if (file.exists(file_name)) {
 } else{
   print("File not exists..")
 }
-
-# once you are done using the server in your session, don't forget to close it:
-rs_driver_object$server$stop()
-
-##### IN PROGRESS ###############
-
-target_url <- "https://data.ess-dive.lbl.gov/view/doi:10.15485/1962818"
-
-remDr <- rs_driver_object$client
-remDr$open()
-remDr$navigate(target_url)
-
-# Wait for the page to load
-Sys.sleep(5)
-
-# Find the expand button and click on it
-expand_button <- remDr$findElement(using = "css selector", value = "#table-container > div > table > tfoot")
-expand_button$clickElement()
-
-# Wait for the table to load
-Sys.sleep(5)
-
-# Extract the table as a data frame
-table_html <- remDr$findElement(using = "css selector", 
-                                value = "#table-container")$getElementAttribute("outerHTML")[[1]]
-table_df <- read_html(table_html) %>% html_table()
-
-files_table <- as.data.frame(table_df[1]) 
-  
-colnames(files_table) <- c("position",
-                            "name",
-                           "info",
-                           "file_type",
-                           "size",
-                           "n_downloads",
-                           "action_download")
-files_table <- files_table%>% 
-  slice(-1) %>% 
-  filter(is.na(name)==FALSE)
-
-
-table_rows <- remDr$findElements(using = "css selector", value = "#table-container > div > table > tbody > tr")
-
-# Extract the download links for each row
-download_links <- lapply(1:length(table_rows), function(i) {
-  # Construct the selector for the download link for the i-th row
-  download_link_selector <- paste0("#table-container > div > table > tbody > tr:nth-child(", i, ") > td.download-btn.btn-container > a")
-  # Extract the 'href' attribute of the download link
-  download_link_element <- remDr$findElement(using = "css selector", value = download_link_selector)
-  download_link_element$getElementAttribute("href")
-})
-
-# Stop the Selenium server and close the browser
-remDr$close()
-rD$server$stop()
-
-# Print the download links
-download_list <- as.data.frame(unlist(download_links))
-colnames(download_list) <- "links"
-
-#Printing table with download links
-download_table <- files_table %>% 
-  select(name,file_type,size) %>% 
-  cbind(download_list)
-
-print(download_table)
-
-
-
-
-
-
-
-
-
-
-
-
-
