@@ -6,7 +6,7 @@
 # Windows:
 # 1.Checking for Java:
 # Click on the the start icon (window on bottom left)
-# On the search bar write "cmd" to open the control comand console
+# On the search bar write "cmd" to open the control command console
 # Once there, type java -version
 # If you get the message: 'java is not recognized as an internal
 # or external command...' You have to install Java first.
@@ -88,6 +88,8 @@ rs_driver_object <- rsDriver(browser = "chrome",
                              chromever = "112.0.5615.49",
                              verbose = FALSE,
                              port = free_port())
+remDr <- rs_driver_object$client
+remDr$close()
 
 # The lines above will open a browser on a separate window, in this case it would
 # be chrome, but you can specify other browsers like safari, or firefox. You will 
@@ -127,7 +129,7 @@ target_url <- "https://data.ess-dive.lbl.gov/view/doi:10.15485/1962818"
 #target_url <- "https://data.ess-dive.lbl.gov/view/doi:10.5440/1861071" (tested and verified)
 #target_url <- "https://data.ess-dive.lbl.gov/view/doi:10.15485/1505624" (tested and verified)
 
-remDr <- rs_driver_object$client
+
 remDr$open()
 remDr$navigate(target_url)
 Sys.sleep(5) # Wait for the page to load
