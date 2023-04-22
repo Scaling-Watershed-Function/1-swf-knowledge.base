@@ -94,6 +94,11 @@ my_data_selection = 9
 
 my_download_url <- download_table$links[my_data_selection]
 
+# Make the table a static object within the code, in case the driver code
+# breaks. 
+
+# Replace css by xpath
+
 ########################### IN PROGRESS ########################################
 
 # Create a temporary directory to store the heavy data from ESS-DIVE

@@ -13,7 +13,7 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "PRODUCTS/Manuscript/1_intro/intro_first_draft.md",
+                "file": "Tools/Logs/Logs.md",
                 "mode": "source",
                 "backlinks": true,
                 "source": false
@@ -86,7 +86,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "PRODUCTS/Manuscript/1_intro/intro_first_draft.md",
+                "file": "Tools/Logs/Logs.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -114,7 +114,7 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "PRODUCTS/Manuscript/1_intro/intro_first_draft.md",
+                "file": "Tools/Logs/Logs.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               }
@@ -126,7 +126,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "PRODUCTS/Manuscript/1_intro/intro_first_draft.md"
+                "file": "Tools/Logs/Logs.md"
               }
             }
           },
@@ -155,16 +155,6 @@
         "id": "99878d31acf7e27c",
         "type": "tabs",
         "children": [
-          {
-            "id": "1d047d1cba27f085",
-            "type": "leaf",
-            "pinned": true,
-            "state": {
-              "type": "empty",
-              "state": {},
-              "pinned": true
-            }
-          },
           {
             "id": "fd413e7b8b97d839",
             "type": "leaf",
@@ -197,12 +187,19 @@
   },
   "active": "7da4640af1ae462f",
   "lastOpenFiles": [
-    "PRODUCTS/Manuscript/1_intro/1_intro.md",
+    "Tasks/Tasks.md",
+    "PRODUCTS/PRODUCTS.md",
+    "Tools/Tools.md",
+    "PLATFORMS/Tech_platforms/Tech_platforms.md",
+    "PLATFORMS/Org_platforms/Org_platforms.md",
+    "Tools/Logs/Logs.md",
+    "PRODUCTS/Manuscript/5_supplements/supplements_first_draft_files/supplements_first_draft_files.md",
+    "PRODUCTS/Manuscript/5_supplements/5_supplements.md",
     "PRODUCTS/Manuscript/1_intro/intro_first_draft.md",
+    "PRODUCTS/Manuscript/1_intro/1_intro.md",
     "PRODUCTS/Manuscript/2_methods/methods_first_draft.md",
     "PRODUCTS/Manuscript/2_methods/2_methods.md",
     "PRODUCTS/Manuscript/3_results/results_first_draft.md",
-    "Tools/Logs/Logs.md",
     "PLATFORMS/Tech_platforms/Java.md",
     "PLATFORMS/Tech_platforms/Java/Java.md",
     "PLATFORMS/Tech_platforms/Java",
@@ -216,8 +213,6 @@
     "PEOPLE/Tim Scheibe/Tim Scheibe.md",
     "PLATFORMS/Org_platforms/ICON/Nandita Basu Talk.md",
     "PLATFORMS/Org_platforms/ICON/Advisory Board Meeting/Advisory Board Meeting.md",
-    "PLATFORMS/Org_platforms/ICON/ICON-ModEx.md",
-    "PRODUCTS/AGU_DataComm/AGU_Abstracts-SY019.md",
-    "PRODUCTS/AGU_DataComm/AGU_Abstracts-EP008.md"
+    "PLATFORMS/Org_platforms/ICON/ICON-ModEx.md"
   ]
 }

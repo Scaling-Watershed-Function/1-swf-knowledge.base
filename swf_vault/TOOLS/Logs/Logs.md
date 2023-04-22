@@ -2,6 +2,47 @@
  [[Logs]] are used to document general progress in the development of [[PRODUCTS]].  They will consist of a series of [[Quick Note]] documents for individual [[PEOPLE]] to develop ideas that can lead to the creation of new [[Workflows]] or other [[Tools]]
  ----------------------------------------------------------------------
 ## Quick note
+**Date**: 2023-04_22
+**People:** [[Francisco J. Guerrero]]
+**Products:**[[Scripts]]
+**Platforms:** [[RStudio]], [[Obsidian]]
+
+#### Note
+##### Organizing Data Files
+So far I have 5 input files of raw data:
+* 230314_conus_2001_landcover.csv:
+	* This file was originally generated with a local script (script_comid_ref_landuse) stored in 6-swf-preprocessing_local (without filtering for Yakima and Willamette)
+	* I call files from the local subfolder ./nhdpv2_files
+	* This file was removed
+* 230321_pnw_2001_landcover.csv:
+	* The updated version of 230321_conus_2001_landcover.csv
+	* This file was generated with: script_comid_ref_landuse locally stored in 6-swf-preprocessing_local
+	* It calls files from the local subfolder ./nhdpv2_files
+	* This file is retained
+* 230406_son_etal_22_results_zen.csv
+	*  This file is generated with a remote backed up script: script_zenodo_data.R stored in 2-swf-analytical.engine.
+	* This script also merges "230324_inf_cont_lnd.csv" with Son et al., data to generate the file "230406_hbgc_pnw_land.csv" in data/processed
+* 230410_hydro_info_pnw.csv
+	*  This file was originally generated with a local script (script_comid_ref_landuse) stored in 6-swf-preprocessing_local (without filtering for Yakima and Willamette)
+	* I call files from the local subfolder ./nhdpv2_files
+* 230420_yrb_spatial_corrected.csv
+	* This file was originally suplied by Kyongho Son, and it was corrected to show the final comids verified by K. Son and M. Kauffman, which will be published as a geospatial data package
+* combined_results_updated_040623.csv
+	* lab results from field incubations of aquatic ecosystem respiration. 
+	* Provided by Matt Kauffman
+##### Principles
+* All data are downloaded via RSelenium, so the download process itself is reproducible.
+* Tables with specific urls to data files should also be stored in the knowledge base/data, so if the RSelenium script fails, people could still directly download the files and continue with data wrangling.
+* Data wrangling scripts are stored in the knowledge base, and any new data set generated from data wrangling is still considered raw data.
+* Any scripts analysis performed on the data beyond data wrangling and cleaning should be stored in the analytical engine repository, and the new data produced should be stored in the "processed" folder of the Knowledge Base.
+* Any plot created by scripts in the analytical engine should only use minimal formatting. 
+* Scripts for draft figures or documents are stored in the production hub as quarto documents. This scripts could be started as a copy of the analytical engine scripts, but with the .qmd extension.  Draft figures are generated from processed data only. 
+
+#### Tasks
+
+
+
+## Quick note
 **Date**: 2023-04_18
 **People:** [[Francisco J. Guerrero]]
 **Products:** [[Scripts]]
