@@ -112,20 +112,55 @@ download.file(url = my_download_url,
               mod_inp,
               timeout = max(300, getOption("timeout")))
 
-temp <- tempfile()
-download.file(url = my_download_url, 
-              temp,
-              timeout = max(300, getOption("timeout")))
-a <- read.table(unz(temp))
+# Get list of files in zipped file
+input_list <- unzip(mod_inp, list = TRUE)$Name
 
+#Extracting specific shapefiles for YRB and WRB to use COMIDs to filter remaining
+#files pertaining to the entire Columbia River Basin (CRB)
 
-# Model outputs
-my_data_selection = 5
-my_download_url <- download_table$links[my_data_selection]
-mod_out <- tempfile(pattern = 'model_outputs',
-                    tmpdir = tempdir(),
-                    fileext = '.zip')
-download.file(my_download_url, mod_out, quiet = TRUE)
+#Creating a folder within our raw data folder to store shape files for the Yakima 
+#River Basin (YRB) and Willamette River Basin (WRB)
+
+dir.create(paste(raw_data,"shape_files",sep = "/"))
+
+extract_shapes <- c( "model_inputs/nhd_CR_stream_sub8.dbf",
+                     "model_inputs/nhd_CR_stream_sub8.prj",
+                     "model_inputs/nhd_CR_stream_sub8.shp",
+                     "model_inputs/nhd_CR_stream_sub8.shx",
+                     "model_inputs/nhd_CR_stream_sub9.dbf",
+                     "model_inputs/nhd_CR_stream_sub9.prj",      
+                     "model_inputs/nhd_CR_stream_sub9.shp" ,
+                     "model_inputs/nhd_CR_stream_sub9.shx")
+
+unzip(mod_inp, files = extract_shapes, 
+      exdir = file.path(raw_data,"shape_files"))
+
+# Extract specific files from zipped file to temporary directory
+extract_files <- c("model_inputs/nexss_inputs.csv", 
+                   "model_inputs/nhd_CR_stream_annual_DOC.csv",
+                   "model_inputs/nhd_CR_stream_annual_DO.csv",
+                   "model_inputs/nhd_CR_stream_no3.csv",
+                   "model_inputs/nhd_CR_stream_nlcd_2001.csv" ,
+                   "model_inputs/nhd_CR_stream_orders.csv")
+
+temp_dir <- tempdir()
+
+unzip(mod_inp, files = extract_files, exdir = temp_dir)
+
+crb_files_list <- list.files(temp_dir)
+
+# Read nexxs_dat into R
+nexss_input <- file.path(temp_dir, "model_inputs/nexss_inputs.csv")
+nexss_dat <- read_csv(nexss_input,show_col_types = FALSE)
+summary(nexss_dat)
+
+# Read nlcd data (2001) into R
+lnd_input <- file.path(temp_dir,"model_inputs/nhd_CR_stream_nlcd_2001.csv")
+lnd_dat <- read_csv(lnd_input,show_col_types = FALSE)
+summary(lnd_dat)
+
+# I could use these land data to compare with the grouping based on information
+# content analysis
 
 
 
