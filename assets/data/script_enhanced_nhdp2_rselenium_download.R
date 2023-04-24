@@ -1,5 +1,5 @@
 ###############################################################################
-# Downloading NHDPlus Version 2.1 Data
+# Downloading NHDPlus Version 2.1 Data (Enhanced Network Connectivity)
 ###############################################################################
 
 # Pre-requisites:
@@ -31,7 +31,7 @@ remDr$close() #This will close the first browser that is not needed for webscrap
 
 # To start downloading data, we first need to specify the url we want to navigate to
 
-target_url <- "https://www.sciencebase.gov/catalog/item/5d16509ee4b0941bde5d8ffe"
+target_url <- "https://www.sciencebase.gov/catalog/item/63cb311ed34e06fef14f40a3"
 
 # Open a client browser for webscrapping
 remDr$open()
@@ -63,7 +63,7 @@ table_rows <- remDr$findElements(using = "css selector", value = table_selector)
 # Select the desired row (replace 1 with the desired row number)
 row <- table_rows[[2]]
 
-download_selector <- "#attached-files-section > div > div > div.sb-expander-content > div.table-responsive > table > tbody > tr:nth-child(2) > td:nth-child(1) > span.sb-file-get.sb-download-link"
+download_selector <- "#attached-files-section > div > div > div.sb-expander-content > div.table-responsive > table > tbody > tr:nth-child(2) > td:nth-child(1) > span"
 
 # Find the download button element
 download_button_element <- remDr$findElement(using = "css selector", 
@@ -73,7 +73,7 @@ download_button_element <- remDr$findElement(using = "css selector",
 remDr$executeScript("arguments[0].click()", list(download_button_element))
 
 # Wait for the file to download
-Sys.sleep(5)
+Sys.sleep(80)
 
 # Set the path to the downloads folder
 downloads_folder <- file.path(Sys.getenv("HOME"), "Downloads")
@@ -95,34 +95,18 @@ temp_file_path <- file.path(temp_dir, file_name)
 file.rename(most_recent_file, temp_file_path)
 
 # Extract the contents of the zip file to the temporary directory and read them
-my_data <- read_csv(unzip(temp_file_path, exdir = temp_dir),
-                    show_col_types = FALSE)
+my_data <- read_csv(temp_file_path, 
+              show_col_types = FALSE)
 
-my_data$huc_4 <- substr(my_data$REACHCODE, start = 1, stop = 4)
+my_data$huc_4 <- substr(my_data$reachcode, start = 1, stop = 4)
 
-nhd2_pnw <- filter(my_data, huc_4 ==1703 | huc_4==1709)
+enh_nhd2_pnw <- filter(my_data, huc_4 ==1703 | huc_4==1709)
 
-# write.csv(nhd2_pnw,paste(raw_data,"230423_main_nhdp_2_yrb_wrb.csv", sep = '/'),
-#           row.names = FALSE)
+write.csv(enh_nhd2_pnw,paste(raw_data,"230423_enhanced_nhdp_2_yrb_wrb.csv", sep = '/'),
+           row.names = FALSE)
 
 # Delete the most recent file from the downloads folder
 file.remove(most_recent_file)
 
 # Stop the Selenium server and close the browser
 rs_driver_object$server$stop()
-  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
