@@ -179,7 +179,6 @@ file.remove(most_recent_file)
 write.csv(nlcd_wsd_yrb_wrb,paste(raw_data,"230424_nlcd_wsd_yrb_wrb.csv", sep = '/'),
           row.names = FALSE)
 
-
 # Stop the Selenium server and close the browser
 rs_driver_object$server$stop()
 
