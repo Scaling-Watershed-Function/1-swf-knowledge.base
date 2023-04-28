@@ -73,10 +73,11 @@ colnames(files_table) <- c("dataset",
                            "file_type")
 
 files_table <- files_table %>% 
-  mutate(child = rownames(.),
+  mutate(file_name = sub("\\s.*", "", .$dataset),
+         file_extension = sub("^.*\\.", "", file_name),
+         child = rownames(.),
          size_unit = sub("[^[:alpha:]]+", "", size),
-         size_MB = if_else(size_unit=="KB",parse_number(size)/1000,parse_number(size)),
-         sleep_time = (size_MB/0.75)+5)
+         size_MB = if_else(size_unit=="KB",parse_number(size)/1000,parse_number(size)))
 
 my_selection <- c(1,2,4,5,6,11)
 
@@ -94,11 +95,18 @@ new_table_rows <- lapply(my_selection, function(i) {
   table_rows[[i]]
 })
 
-my_row <- 1
+my_row <- 6
 
 row <- new_table_rows[[my_row]]
 
 # Find the download button element
+
+# Set the path to the downloads folder
+downloads_folder <- file.path(Sys.getenv("HOME"), "Downloads")
+
+download_pattern <- my_files_table[my_row,"file_name"]
+
+
 download_selector <- paste0("#attached-files-section > div > div > div.sb-expander-content > div.table-responsive > table > tbody > tr:nth-child(", 
                             my_files_table$child[my_row], ") > td:nth-child(1) > span")
 download_button_element <- remDr$findElement(using = "css selector", value = download_selector)
@@ -106,394 +114,116 @@ download_button_element <- remDr$findElement(using = "css selector", value = dow
 # Execute the JavaScript event attached to the element
 remDr$executeScript("arguments[0].click()", list(download_button_element))
 
-# Wait for the files to download
-sleep_time <- my_files_table[i,]$sleep_time
-
-Sys.sleep(sleep_time)
-
-# Set the path to the downloads folder
-downloads_folder <- file.path(Sys.getenv("HOME"), "Downloads")
-
-# Find all the downloaded files
-downloaded_files <- list.files(downloads_folder, full.names = TRUE)
-
-# Set the path to the temporary directory
-temp_dir <- tempdir()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# Create an empty list to store the data frames for each file
-# file_dfs <- list()
-
-file_dfs <- list()
-
-# Iterate through the rows of the table
-for (i in seq_along(new_table_rows)) {
-  
-  # Select the row
-  row <- new_table_rows[[i]]
-  
-  # Find the download button element
-  download_selector <- paste0("#attached-files-section > div > div > div.sb-expander-content > div.table-responsive > table > tbody > tr:nth-child(", 
-                              my_files_table$child[i], ") > td:nth-child(1) > span")
-  download_button_element <- remDr$findElement(using = "css selector", value = download_selector)
-  
-  # Execute the JavaScript event attached to the element
-  remDr$executeScript("arguments[0].click()", list(download_button_element))
-  
-  # Wait for the files to download
-  sleep_time <- my_files_table[i,]$sleep_time
-  
-  Sys.sleep(sleep_time)
-  
-  # Set the path to the downloads folder
-  downloads_folder <- file.path(Sys.getenv("HOME"), "Downloads")
-  
-  # Find all the downloaded files
-  downloaded_files <- list.files(downloads_folder, full.names = TRUE)
-  
-  # Set the path to the temporary directory
-  temp_dir <- tempdir()
-  
-  # Create a list to store the temporary file paths
-  temp_file_paths <- list()
-  
-  # Get the name of the file
-  file_name <- basename(file_path)
-  
-  # Extract file extension
-  file_ext <- tolower(tools::file_ext(file_name))
-  
-  # Create a unique temporary file name
-  temp_file_name <- paste0(format(Sys.time(), "%Y%m%d%H%M%S"),"_",file_name)
-  
-  # Create the full path to the file in the temporary directory
-  temp_file_path <- file.path(temp_dir, temp_file_name)
-  
-  # Move the file to the temporary directory
-  file.rename(file_path, temp_file_path)
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  # Loop over the downloaded files and move them to the temporary directory
-  for (file_path in downloaded_files) {
-    
-    # Get the name of the file
-    file_name <- basename(file_path)
-    
-    # Extract file extension
-    file_ext <- tolower(tools::file_ext(file_name))
-    
-    # Create a unique temporary file name
-    temp_file_name <- paste0(format(Sys.time(), "%Y%m%d%H%M%S"),"_",file_name)
-    
-    # Create the full path to the file in the temporary directory
-    temp_file_path <- file.path(temp_dir, temp_file_name)
-    
-    # Move the file to the temporary directory
-    file.rename(file_path, temp_file_path)
-    
-    # Add the temporary file path to the list
-    temp_file_paths <- c(temp_file_paths, temp_file_path)
-    
-  }
+# Wait for the download to complete
+while (length(list.files(path = downloads_folder, pattern = download_pattern)) == 0) {
+  Sys.sleep(1)
 }
 
+# Reading files from downloads directory
 
+downloaded_files <- list.files(path = downloads_folder, full.names =  TRUE)
 
-
-
-
-
-
-
-
-
-# Metadata files
-
-# Select the table row
-my_row <- 2
-
-row <- new_table_rows[[my_row]]
-
-# Find the download button element
-download_selector <- paste0("#attached-files-section > div > div > div.sb-expander-content > div.table-responsive > table > tbody > tr:nth-child(", 
-                            my_files_table$child[my_row], ") > td:nth-child(1) > span")
-download_button_element <- remDr$findElement(using = "css selector", value = download_selector)
-
-# Execute the JavaScript event attached to the element
-remDr$executeScript("arguments[0].click()", list(download_button_element))
-
-sleep_time <- my_files_table[my_row,]$sleep_time
-
-# Wait for the files to download
-Sys.sleep(sleep_time)
-
-# Set the path to the downloads folder
-downloads_folder <- file.path(Sys.getenv("HOME"), "Downloads")
-
-# Find the most recent file in the downloads folder
-downloaded_files <- list.files(downloads_folder, full.names = TRUE)
-most_recent_file <- downloaded_files[which.max(file.info(downloaded_files)$mtime)]
-
-# Set the path to the temporary directory
 temp_dir <- tempdir()
 
-# Get the name of the file
-file_name <- basename(most_recent_file)
+bsn_chr_acc_dat <- unzip(downloaded_files[1],
+                         exdir = temp_dir) %>% 
+  read_delim(.,show_col_types = FALSE)
 
-# Create the full path to the file in the temporary directory
-temp_file_path <- file.path(temp_dir, file_name)
-
-# Move the file to the temporary directory
-file.rename(most_recent_file, temp_file_path)
-
-
-
-
-
-
-
-
-
-
-# Create an empty list to store the data frames for each file
-# file_dfs <- list()
-
-file_dfs <- as.list(rep(NULL, length(new_table_rows)))
-
-# Iterate through the rows of the table
-for (i in seq_along(new_table_rows)) {
+bsn_chr_cat_dat <- unzip(downloaded_files[2],
+                         exdir = temp_dir) %>% 
+  read_delim(.,show_col_types = FALSE)
   
-  # Select the row
-  row <- new_table_rows[[i]]
-  
-  # Find the download button element
-  download_selector <- paste0("#attached-files-section > div > div > div.sb-expander-content > div.table-responsive > table > tbody > tr:nth-child(", 
-                              my_files_table$child[i], ") > td:nth-child(1) > span")
-  download_button_element <- remDr$findElement(using = "css selector", value = download_selector)
-  
-  # Execute the JavaScript event attached to the element
-  remDr$executeScript("arguments[0].click()", list(download_button_element))
-  
-  # Wait for the files to download
-  sleep_time <- my_files_table[i,]$sleep_time
+bsn_chr_tot_dat <- unzip(downloaded_files[3],
+                         exdir = temp_dir) %>% 
+  read_delim(.,show_col_types = FALSE)
 
-  Sys.sleep(sleep_time)
-  
-  # Set the path to the downloads folder
-  downloads_folder <- file.path(Sys.getenv("HOME"), "Downloads")
-  
-  # Find all the downloaded files
-  downloaded_files <- list.files(downloads_folder, full.names = TRUE)
-  
-  # Set the path to the temporary directory
-  temp_dir <- tempdir()
-  
-  # Create a list to store the temporary file paths
-  temp_file_paths <- list()
-  
-  # Loop over the downloaded files and move them to the temporary directory
-  for (file_path in downloaded_files) {
-    
-    # Get the name of the file
-    file_name <- basename(file_path)
-    
-    # Create a unique temporary file name
-    temp_file_name <- paste0(format(Sys.time(), "%Y%m%d%H%M%S"),"_",file_name)
-    
-    # Create the full path to the file in the temporary directory
-    temp_file_path <- file.path(temp_dir, temp_file_name)
-    
-    # Move the file to the temporary directory
-    file.rename(file_path, temp_file_path)
-    
-    # Add the temporary file path to the list
-    temp_file_paths <- c(temp_file_paths, temp_file_path)
-    
-  }
-  
-  # Loop over the temporary file paths and extract the data
-  for (temp_file_path in temp_file_paths) {
+bsn_chr_sin_dat <- unzip(downloaded_files[5],
+                         exdir = temp_dir) %>% 
+  read_delim(.,show_col_types = FALSE)
 
-    # Extract the contents of the zip file to the temporary directory and read them
-    file_dfs[[i]] <- c(file_dfs[[i]],
-                       if (tolower(file_ext) == "zip") {
-                         unzip(temp_file_path, exdir = temp_dir)
-                       },temp_file_path, exdir = temp_dir)
+bsn_chr_dns_dat <- unzip(downloaded_files[6],
+                         exdir = temp_dir) %>% 
+  read_delim(.,show_col_types = FALSE)
 
-  }
-}
+# Combining all data into a single one:
 
-##################################################################################
-# Iterate through the rows of the table
-for (i in seq_along(new_table_rows)) {
-  
-  # Select the row
-  row <- new_table_rows[[i]]
-  
-  # Find the download button element
-  download_selector <- paste0("#attached-files-section > div > div > div.sb-expander-content > div.table-responsive > table > tbody > tr:nth-child(", 
-                              my_files_table$child[i], ") > td:nth-child(1) > span")
-  download_button_element <- remDr$findElement(using = "css selector", value = download_selector)
-  
-  # Execute the JavaScript event attached to the element
-  remDr$executeScript("arguments[0].click()", list(download_button_element))
-  
-  # Wait for the file to download
-  Sys.sleep(80)
-  
-  # Check for pop-up message and click OK if it is present
-  tryCatch({
-    pop_up_selector <- "div.modal-footer > button.btn.btn-primary"
-    pop_up_element <- remDr$findElement(using = "css selector", value = pop_up_selector)
-    if (remDr$isVisible(pop_up_element)) {
-      remDr$executeScript("arguments[0].click()", list(pop_up_element))
-    }
-  }, error = function(e) {
-    # Do nothing if pop-up message is not present
-  })
-  
-  # Set the path to the downloads folder
-  downloads_folder <- file.path(Sys.getenv("HOME"), "Downloads")
-  
-  # Find all the downloaded files
-  downloaded_files <- list.files(downloads_folder, full.names = TRUE)
-  
-  # Set the path to the temporary directory
-  temp_dir <- tempdir()
-  
-  # Create a list to store the temporary file paths
-  temp_file_paths <- list()
-  
-  # Loop over the downloaded files and move them to the temporary directory
-  for (file_path in downloaded_files) {
-    
-    # Get the name of the file
-    file_name <- basename(file_path)
-    
-    # Create a unique temporary file name
-    temp_file_name <- paste0(file_name, "_", format(Sys.time(), "%Y%m%d%H%M%S"))
-    
-    # Create the full path to the file in the temporary directory
-    temp_file_path <- file.path(temp_dir, temp_file_name)
-    
-    # Move the file to the temporary directory
-    file.rename(file_path, temp_file_path)
-    
-    # Add the temporary file path to the list
-    temp_file_paths <- c(temp_file_paths, temp_file_path)
-    
-  }
-  
-  # Loop over the temporary file paths and read the data
-  for (temp_file_path in temp_file_paths) {
-    
-    # Extract the contents of the zip file to the temporary directory and read them
-    file_dfs[[i]] <- c(file_dfs[[i]], unzip(temp_file_path, exdir = temp_dir))
-    
-  }
-  
-  # Check for pop-up message and click OK if it is present
-  tryCatch({
-    pop_up_selector <- "div.modal-footer > button.btn.btn-primary"
-    pop_up_element <- remDr$findElement(using = "css selector", value = pop_up_selector)
-    if (remDr$isVisible(pop_up_element)) {
-      remDr$executeScript("arguments[0].click()", list(pop_up_element))
-    }
-  }, error = function(e) {
-    # Do nothing if pop-up message is not present
-  })
-  
-}
+bsn_chr_data <- bsn_chr_sin_dat %>% 
+  merge(.,
+        bsn_chr_dns_dat,
+        by.x = "COMID",
+        by.y = "COMID",
+        all.x = TRUE) %>% 
+  merge(.,
+        bsn_chr_acc_dat,
+        by.x = "COMID",
+        by.y = "COMID",
+        all.x = TRUE) %>% 
+  merge(.,
+        bsn_chr_cat_dat,
+        by.x = "COMID",
+        by.y = "COMID",
+        all.x = TRUE) %>% 
+  merge(.,
+        bsn_chr_tot_dat,
+        by.x = "COMID",
+        by.y = "COMID",
+        all.x = TRUE)
 
+# Filtering for YRB and WRB
+enh_dat <- read_csv(paste(raw_data,"230423_enhanced_nhdp_2_yrb_wrb.csv", sep = '/'),
+         show_col_types = FALSE)
 
+bsn_chr_pnw_data <- enh_dat %>% 
+  select(comid) %>% 
+  merge(.,
+        bsn_chr_data,
+        by.x = "comid",
+        by.y = "COMID",
+        all.x = TRUE)
 
-
-##################################################################################
-# Select the desired row (replace 1 with the desired row number)
-row <- table_rows[[2]]
-
-download_selector <- "#attached-files-section > div > div > div.sb-expander-content > div.table-responsive > table > tbody > tr:nth-child(2) > td:nth-child(1) > span"
-
-# Find the download button element
-download_button_element <- remDr$findElement(using = "css selector", 
-                                             value = download_selector)
-
-# Execute the JavaScript event attached to the element
-remDr$executeScript("arguments[0].click()", list(download_button_element))
-
-# Wait for the file to download
-Sys.sleep(80)
-
-# Set the path to the downloads folder
-downloads_folder <- file.path(Sys.getenv("HOME"), "Downloads")
-
-# Find the most recent file in the downloads folder
-downloaded_files <- list.files(downloads_folder, full.names = TRUE)
-most_recent_file <- downloaded_files[which.max(file.info(downloaded_files)$mtime)]
-
-# Set the path to the temporary directory
-temp_dir <- tempdir()
-
-# Get the name of the file
-file_name <- basename(most_recent_file)
-
-# Create the full path to the file in the temporary directory
-temp_file_path <- file.path(temp_dir, file_name)
-
-# Move the file to the temporary directory
-file.rename(most_recent_file, temp_file_path)
-
-# Extract the contents of the zip file to the temporary directory and read them
-my_data <- read_csv(temp_file_path, 
-                    show_col_types = FALSE)
-
-my_data$huc_4 <- substr(my_data$reachcode, start = 1, stop = 4)
-
-enh_nhd2_pnw <- filter(my_data, huc_4 ==1703 | huc_4==1709)
-
-write.csv(enh_nhd2_pnw,paste(raw_data,"230423_enhanced_nhdp_2_yrb_wrb.csv", sep = '/'),
+# Saving the dataset as a raw datafile
+write.csv(bsn_chr_pnw_data,paste(raw_data,"230427_pnw_basin_characteristics.csv", sep = '/'),
           row.names = FALSE)
-
-# Delete the most recent file from the downloads folder
-file.remove(most_recent_file)
 
 # Stop the Selenium server and close the browser
 rs_driver_object$server$stop()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+
+
+
