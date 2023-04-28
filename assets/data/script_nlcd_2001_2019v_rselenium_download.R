@@ -78,7 +78,9 @@ remDr$executeScript("arguments[0].click()", list(download_button_element))
 Sys.sleep(80)
 
 # Set the path to the downloads folder
-downloads_folder <- file.path(Sys.getenv("HOME"), "Downloads")
+downloads_folder <- if (Sys.getenv("OS")=="Windows_NT"){
+  file.path("C:/Users", Sys.getenv("USERNAME"), "Downloads") 
+} else{file.path(Sys.getenv("HOME"), "Downloads")}
 
 # Find the most recent file in the downloads folder
 downloaded_files <- list.files(downloads_folder, full.names = TRUE)

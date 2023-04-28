@@ -3,7 +3,7 @@
 ###############################################################################
 
 # Pre-requisites:
-# Make sure you have ran the file "script_system_prep_rselenium.R"
+# Make sure you have ran the file "script_system_prep_RSelenium.R"
 
 # Local Import-Export
 
@@ -103,7 +103,10 @@ row <- new_table_rows[[my_row]]
 # Find the download button element
 
 # Set the path to the downloads folder
-downloads_folder <- file.path(Sys.getenv("HOME"), "Downloads")
+downloads_folder <- if (Sys.getenv("OS")=="Windows_NT"){
+  file.path("C:/Users", Sys.getenv("USERNAME"), "Downloads") 
+} else{file.path(Sys.getenv("HOME"), "Downloads")}
+
 
 download_pattern <- my_files_table[my_row,"file_name"]
 
@@ -170,14 +173,24 @@ bsn_chr_data <- bsn_chr_sin_dat %>%
         by.y = "COMID",
         all.x = TRUE)
 
+# Filtering for YRB and WRB
+enh_dat <- read_csv(paste(raw_data,"230427_pnw_basin_characteristics.csv", sep = '/'),
+                    show_col_types = FALSE)
+
+bsn_chr_pnw_data <- enh_dat %>% 
+  select(comid) %>% 
+  merge(.,
+        bsn_chr_data,
+        by.x = "comid",
+        by.y = "COMID",
+        all.x = TRUE)
+
+
 ###############################################################################
 # Downloading Bankfull Hydraulic Geometry Data
 ###############################################################################
 
 target_url <- "https://www.sciencebase.gov/catalog/item/5cf02bdae4b0b51330e22b85"
-
-# Open a client browser for webscrapping
-remDr <- rs_driver_object$client
 
 # Navigate to your target url
 remDr$navigate(target_url)
@@ -228,8 +241,10 @@ my_row <- 1
 
 row <- new_table_rows[[my_row]]
 
-
-downloads_folder <- file.path(Sys.getenv("HOME"), "Downloads")
+downloads_folder <- if (Sys.getenv("OS")=="Windows_NT"){
+  file.path("C:/Users", Sys.getenv("USERNAME"), "Downloads") 
+} else{file.path(Sys.getenv("HOME"), "Downloads")}
+  
 
 download_pattern <- my_files_table[my_row,"file_name"]
 
@@ -242,19 +257,9 @@ download_button_element <- remDr$findElement(using = "css selector", value = dow
 remDr$executeScript("arguments[0].click()", list(download_button_element))
 
 # Wait for the download to complete
-# while (length(list.files(path = downloads_folder, pattern = download_pattern)) == 0) {
-#   Sys.sleep(1)
-# }
-
-Sys.sleep(30)
-
-# Set the path to the downloads folder
-#downloads_folder <- file.path(Sys.getenv("HOME"), "Downloads")
-#downloads_folder <- file.path(path.expand("~/Downloads"))
-
-
-
-downloads_folder <- file.path(path.expand("C:/Users/guer310/Downloads"))
+while (length(list.files(path = downloads_folder, pattern = download_pattern)) == 0) {
+  Sys.sleep(1)
+}
 
 # Find the most recent file in the downloads folder
 downloaded_files <- list.files(downloads_folder, full.names = TRUE)
@@ -276,38 +281,15 @@ file.rename(most_recent_file, temp_file_path)
 bnkfl_dat <- read_delim(unzip(temp_file_path, exdir = temp_dir),
                     show_col_types = FALSE)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-# Filtering for YRB and WRB
-enh_dat <- read_csv(paste(raw_data,"230423_enhanced_nhdp_2_yrb_wrb.csv", sep = '/'),
-         show_col_types = FALSE)
-
-bsn_chr_pnw_data <- enh_dat %>% 
-  select(comid) %>% 
+bsn_chr_ext <- bsn_dat %>% 
   merge(.,
-        bsn_chr_data,
+        bnkfl_dat,
         by.x = "comid",
         by.y = "COMID",
         all.x = TRUE)
 
 
-
-
-
-
-# Saving the dataset as a raw datafile
-write.csv(bsn_chr_pnw_data,paste(raw_data,"230427_pnw_basin_characteristics.csv", sep = '/'),
+write.csv(bsn_chr_ext,paste(raw_data,"230428_pnw_basin_characteristics.csv", sep = '/'),
           row.names = FALSE)
 
 # Stop the Selenium server and close the browser
