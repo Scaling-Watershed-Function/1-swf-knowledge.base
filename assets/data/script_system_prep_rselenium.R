@@ -88,11 +88,14 @@ selenium_object <- selenium(retcommand = T, check = F)
 
 binman::list_versions("chromedriver")
 
-# You will see the versions available for your computer. To select the version 
-# to input in the following code, open chrome and type "chrome//version". Check 
-# the first three numbers of the version (e.g. 112), and pick within the available
-# version any that matches those three numbers. 
+# You will see the versions available for your computer. 
 
+# To select the version to input in the following code do this: 
+# open chrome and type "chrome://version"
+# At the time of writing this script I got: 112.0.5615.138
+# Compare the first three numbers with those in the versions available in your system (i.e. 112)
+# Pick your system version with the highest number after the first three numbers. For instance if you have 
+# 112.X.XXX.24 and 112.X.XXX.49, pick the latest. 
 
 # The following code, should open a browser window that will be controlled from
 # here:
