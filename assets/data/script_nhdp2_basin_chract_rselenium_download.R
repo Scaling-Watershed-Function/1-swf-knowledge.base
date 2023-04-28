@@ -20,7 +20,8 @@ librarian::shelf(tidyverse,
                  utils, 
                  readr,
                  xml2, 
-                 methods)
+                 methods,
+                 R.utils)
 # Set a target url
 target_url <- "https://www.sciencebase.gov/catalog/item/57976a0ce4b021cadec97890"
 
@@ -169,6 +170,125 @@ bsn_chr_data <- bsn_chr_sin_dat %>%
         by.y = "COMID",
         all.x = TRUE)
 
+###############################################################################
+# Downloading Bankfull Hydraulic Geometry Data
+###############################################################################
+
+target_url <- "https://www.sciencebase.gov/catalog/item/5cf02bdae4b0b51330e22b85"
+
+# Open a client browser for webscrapping
+remDr <- rs_driver_object$client
+
+# Navigate to your target url
+remDr$navigate(target_url)
+
+# Wait for the page to load
+Sys.sleep(5) 
+
+# Explore the page and find css selector
+
+css_selector <- "#attached-files-section > div > div > div.sb-expander-content > div.table-responsive > table"
+
+# Extract the table as a data frame
+table_html <- remDr$findElement(using = "css selector", 
+                                value = css_selector)$getElementAttribute("outerHTML")[[1]]
+table_df <- read_html(table_html) %>% html_table()
+
+files_table <- as.data.frame(table_df[1]) 
+
+colnames(files_table) <- c("dataset",
+                           "view",
+                           "size",
+                           "file_type")
+
+files_table <- files_table %>% 
+  mutate(file_name = sub("\\s.*", "", .$dataset),
+         file_extension = sub("^.*\\.", "", file_name),
+         child = rownames(.),
+         size_unit = sub("[^[:alpha:]]+", "", size),
+         size_MB = if_else(size_unit=="KB",parse_number(size)/1000,parse_number(size)))
+
+my_selection <- 2
+
+my_files_table <- files_table[my_selection,]
+
+# Downloading data
+# table selector
+table_selector <- "#attached-files-section > div > div > div.sb-expander-content > div.table-responsive > table > tbody > tr"
+
+# Find the rows in the table
+table_rows <- remDr$findElements(using = "css selector", value = table_selector)
+
+# Generate new version of table_rows
+new_table_rows <- lapply(my_selection, function(i) {
+  table_rows[[i]]
+})
+
+my_row <- 1
+
+row <- new_table_rows[[my_row]]
+
+
+downloads_folder <- file.path(Sys.getenv("HOME"), "Downloads")
+
+download_pattern <- my_files_table[my_row,"file_name"]
+
+
+download_selector <- paste0("#attached-files-section > div > div > div.sb-expander-content > div.table-responsive > table > tbody > tr:nth-child(", 
+                            my_files_table$child[my_row], ") > td:nth-child(1) > span")
+download_button_element <- remDr$findElement(using = "css selector", value = download_selector)
+
+# Execute the JavaScript event attached to the element
+remDr$executeScript("arguments[0].click()", list(download_button_element))
+
+# Wait for the download to complete
+# while (length(list.files(path = downloads_folder, pattern = download_pattern)) == 0) {
+#   Sys.sleep(1)
+# }
+
+Sys.sleep(30)
+
+# Set the path to the downloads folder
+#downloads_folder <- file.path(Sys.getenv("HOME"), "Downloads")
+#downloads_folder <- file.path(path.expand("~/Downloads"))
+
+
+
+downloads_folder <- file.path(path.expand("C:/Users/guer310/Downloads"))
+
+# Find the most recent file in the downloads folder
+downloaded_files <- list.files(downloads_folder, full.names = TRUE)
+most_recent_file <- downloaded_files[which.max(file.info(downloaded_files)$mtime)]
+
+# Set the path to the temporary directory
+temp_dir <- tempdir()
+
+# Get the name of the file
+file_name <- basename(most_recent_file)
+
+# Create the full path to the file in the temporary directory
+temp_file_path <- file.path(temp_dir, file_name)
+
+# Move the file to the temporary directory
+file.rename(most_recent_file, temp_file_path)
+
+# Extract the contents of the zip file to the temporary directory and read them
+bnkfl_dat <- read_delim(unzip(temp_file_path, exdir = temp_dir),
+                    show_col_types = FALSE)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Filtering for YRB and WRB
 enh_dat <- read_csv(paste(raw_data,"230423_enhanced_nhdp_2_yrb_wrb.csv", sep = '/'),
          show_col_types = FALSE)
@@ -180,6 +300,11 @@ bsn_chr_pnw_data <- enh_dat %>%
         by.x = "comid",
         by.y = "COMID",
         all.x = TRUE)
+
+
+
+
+
 
 # Saving the dataset as a raw datafile
 write.csv(bsn_chr_pnw_data,paste(raw_data,"230427_pnw_basin_characteristics.csv", sep = '/'),

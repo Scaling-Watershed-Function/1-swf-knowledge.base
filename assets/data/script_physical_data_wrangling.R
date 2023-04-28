@@ -23,7 +23,14 @@ rcid_dat <- read_csv(paste(raw_data,"230423_enhanced_nhdp_2_yrb_wrb.csv", sep = 
 
 # Original dataset citation
 #Blodgett, D.L., 2023, Updated CONUS river network attributes based on the E2NHDPlusV2 and NWMv2.1 
-#networks (ver. 2.0, February 2023): U.S. Geological Survey data release, https://doi.org/10.5066/P976XCVT.
+#networks (ver. 2.0, February 2023): U.S. Geological Survey data release,
+#https://doi.org/10.5066/P976XCVT.
+
+#Moore, R.B., McKay, L.D., Rea, A.H., Bondelid, T.R., Price, C.V., Dewald, T.G., and Johnston, 
+#C.M., 2019, User's guide for the national hydrography dataset plus (NHDPlus) high 
+#resolution: U.S. Geological Survey Open-File Report 2019–1096, 66 p., 
+#https://doi.org/10.3133/ofr20191096.
+
 
 # Download script: script_enhanced_nhdp2_rselenium.R
 
@@ -180,8 +187,61 @@ data_dictionary <- df(variable = c("comid",
                                    "stream_slope",
                                    "flowline_slope"), # Wieczorek et al., 2018
                       description = c("Unique feature identifier from NHDPlus source data. USGS defined",
-                      ),
-                      reference = c(""))
+                      "Flowline length. USGS Defined",
+                      "Unique flowline identifier. The first eight digits are the Watershed Boundary Dataset(WBD) HUC8.The next six digits are randomly assigned, sequential numbers that are unique within a HUC8.",
+                      "Total drainage area recalculated with nhdplus Tools",
+                      "the sum of the lengths of all digitized flowlines upstream from the downstream end of the immediate flowline, in kilometers",
+                      "Hydrosequence number (assigned in ascending order",
+                      "Modified Strahler stream order",
+                      "Slope of the flowline from smoothed elevation (unitless)",
+                      "Flow-line length used to calculate slope, in km",
+                      "An NHDFlowline feature that is part of a series of consecutive flowlines that does not ultimately flow to a coast and has an FType of StreamRiver, Artificial Path, or Connector; otherwise",
+                      "Raster Processing Unit ID (For landscape features)",
+                      "Vector Processing Unit ID (For flowline features)",
+                      "Numeric Manning's N estimate for flowline",
+                      "4-Digit Hydrologic Unit Code",
+                      "Original NHDPlus V2 from node identifier",
+                      "Original NHDPlus V2 to node identifier",
+                      "Divergence code (0 for no diversion, 1 for primary pathway, and 2 for secondary pathway).",
+                      "Mean annual precipitation in mm -multiplied by 100 in original data",
+                      "Mean annual temperature in Degree Celsius -multiplied by 100 in original data",
+                      "Mean annual runoff in mm",
+                      "Cumulative mean annual flow using unit flow runoff method",
+                      "Stream velocity at mean annual flow",
+                      "Incremental catchment mean annual flow (unit runoff methods, m3s)"),
+                      reference = c("Blodgett, 2023; Moore et al., 2019",
+                                    "Blodgett, 2023; Moore et al., 2019",
+                                    "Blodgett, 2023; Moore et al., 2019",
+                                    "Blodgett, 2023; Moore et al., 2019",
+                                    "Blodgett, 2023; Moore et al., 2019",
+                                    "Blodgett, 2023; Moore et al., 2019",
+                                    "Blodgett, 2023; Moore et al., 2019",
+                                    "Blodgett, 2023; Moore et al., 2019",
+                                    "Blodgett, 2023; Moore et al., 2019",
+                                    "Blodgett, 2023; Moore et al., 2019",
+                                    "Blodgett, 2023; Moore et al., 2019",
+                                    "Blodgett, 2023; Moore et al., 2019",
+                                    "Blodgett, 2023; Moore et al., 2019",
+                                    "Blodgett, 2023; Moore et al., 2019",
+                                    "Schwarz, G. E., 2019",
+                                    "Schwarz, G. E., 2019",
+                                    "Schwarz, G. E., 2019",
+                                    "Schwarz, G. E., 2019",
+                                    "Schwarz, G. E., 2019",
+                                    "Schwarz, G. E., 2019",
+                                    "Schwarz, G. E., 2019",
+                                    "Schwarz, G. E., 2019",
+                                    "Schwarz, G. E., 2019",
+                                    "Wieczorek, et al., 2018",
+                                    "Wieczorek, et al., 2018",
+                                    "Wieczorek, et al., 2018",
+                                    "Wieczorek, et al., 2018",
+                                    "Wieczorek, et al., 2018",
+                                    "Wieczorek, et al., 2018",
+                                    "Wieczorek, et al., 2018",
+                                    "Wieczorek, et al., 2018",
+                                    "Wieczorek, et al., 2018",
+                                    "Wieczorek, et al., 2018"))
 
 
 
