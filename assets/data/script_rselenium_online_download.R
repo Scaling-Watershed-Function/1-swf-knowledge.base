@@ -1,5 +1,5 @@
 ###############################################################################
-# Downloading data from websites with RSelenium
+# Downloading data from ESS-DIVE with RSelenium
 ###############################################################################
 
 # Pre-requisites:
@@ -13,29 +13,63 @@ librarian::shelf(tidyverse,
                  rvest,
                  data.table)
 
+# Select your target url
+
+# In your internet explorer (chrome, safari, etc.) go to the ESS-DIVE url that
+# contains the data you are interested in. 
+
+# For this short example, we are going to download 1 zip file from the data package: 
+
+# Forbes, B. et al., 2023. WHONDRS River Corridor Dissolved Oxygen, Temperature, 
+# Sediment Aerobic Respiration, Grain Size, and Water Chemistry from Machine-Learning-Informed 
+# Sites across the Contiguous United States. Copy and paste between "" marks your target url in the
+# code line below. In our case this would look like:
+
+target_url <- "https://data.ess-dive.lbl.gov/view/doi:10.15485/1923689"
+
+
+# Decide whether you want to download the full data package or specific files. To specify
+# the file(s) you want to download, write the row number below for their download button below.
+# For, instance, the link for full download is on the first row, so you would write 
+
+# `my_data_selection <- 1`. 
+
+# In our example we are interested in downloading the files in the folder "CM_SSS_Data_Package.zip".
+# The download link for this zip folder is 4, so we write:
+
+my_data_selection <- 4
+
+# It is possible to download multiple files at the same time by using a loop function. But, for right now 
+# for simplicity, we will let the users decide the best way to do so, and focus in one download at a time. 
+
+# We will place our files in the downloads folder and extract them into a temporary
+# directory to illustrate the options available for storing files. 
+
+# ATTENTION: Depending on your OS, you might have different paths to get to your 
+# downloads folder. The code below should work for most OS, but has been only tested
+# on Windows_NT and macOS
+
+# Set the path to the downloads folder
+downloads_folder <- if (Sys.getenv("OS")=="Windows_NT"){
+  file.path("C:/Users", Sys.getenv("USERNAME"), "Downloads") 
+} else{file.path(Sys.getenv("HOME"), "Downloads")}
+
 # Opening a Selenium client-server object
 rs_driver_object <- rsDriver(browser = "chrome",
                              chromever = "112.0.5615.49",
                              verbose = FALSE,
                              port = free_port())
 remDr <- rs_driver_object$client
-remDr$close() #This will close the first browser that is not needed for webscrapping.
 
-# Downloading data example:
-
-# To start downloading data, we first need to specify the url we want to navigate to
-
-target_url <- "https://data.ess-dive.lbl.gov/view/doi:10.15485/1962818"
-#target_url <- "https://data.ess-dive.lbl.gov/view/doi:10.5440/1861071" (tested and verified)
-#target_url <- "https://data.ess-dive.lbl.gov/view/doi:10.15485/1505624" (tested and verified)
-
-# Open a client browser for webscrapping
-remDr$open()
+# Navitage to your target url and wait for the page to load
 remDr$navigate(target_url)
-Sys.sleep(5) # Wait for the page to load
+Sys.sleep(5) 
 
+# Many data packages contain lists of files with more than 5 items. In those cases
+# those files are not visible to the scrapper function unless we Find the expand button 
+# and click on it. The following lines check whether there is and expand button and 
+# click on it. 
 
-# Find the expand button and click on it (if exists)
 expand_button <- tryCatch(
   remDr$findElement(using = "css selector", value = "#table-container > div > table > tfoot"),
   error = function(e) NULL
@@ -64,8 +98,9 @@ files_table <- files_table%>%
   slice(-1) %>% 
   filter(is.na(name)==FALSE)
 
-# Extract the download links for each row
-table_rows <- remDr$findElements(using = "css selector", value = "#table-container > div > table > tbody > tr")
+# Extract the download links
+
+if (my_data_selection > 1 {table_rows <- remDr$findElements(using = "css selector", value = "#table-container > div > table > tbody > tr")
 
 download_links <- lapply(1:length(table_rows), function(i) {
   # Construct the selector for the download link for the i-th row
@@ -73,55 +108,24 @@ download_links <- lapply(1:length(table_rows), function(i) {
   # Extract the 'href' attribute of the download link
   download_link_element <- remDr$findElement(using = "css selector", value = download_link_selector)
   download_link_element$getElementAttribute("href")
+})}
+else{
+  download_link_selector <-"#table-container > div > table > thead > tr:nth-child(2) > th.download-container > a"
+  download_link_element <- remDr$findElement(using = "css selector", value = download_link_selector)
+  download_link_element$getElementAttribute("href")
 })
+
+
+
+
+
+
+
 
 # Stop the Selenium server and close the browser
 rs_driver_object$server$stop()
 
-#Printing table with download links
-download_list <- as.data.frame(unlist(download_links))
-colnames(download_list) <- "links"
-download_table <- files_table %>% 
-  select(name,file_type,size) %>% 
-  cbind(download_list)
-
-print(download_table)
 
 
-# From the download table the user should be able to pick which file to download
 
-my_data_selection = 9
 
-my_download_url <- download_table$links[my_data_selection]
-
-# Make the table a static object within the code, in case the driver code
-# breaks. 
-
-# Replace css by xpath
-
-########################### IN PROGRESS ########################################
-
-# Create a temporary directory to store the heavy data from ESS-DIVE
-temp_dir <- tempdir()
-temp_file <- tempfile(fileext = ".zip")
-
-temp_dat <- download.file(url = my_download_url,
-              destfile = temp_file)
-
-crb_dat <- unzip("temp_dat",exdir = temp_dir)
-
-dat <- read_csv(crb_dat[9], show_col_types = FALSE)
-
-glimpse(dat)
-
-write.csv(dat,"nexss_inputs.csv")
-
-# Delete temporary file
-file_name <- "temp_file.zip"
-
-if (file.exists(file_name)) {
-  unlink(file_name)
-  print("File is deleted..")
-} else{
-  print("File not exists..")
-}
