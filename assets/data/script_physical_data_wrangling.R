@@ -35,14 +35,21 @@ rcid_dat <- read_csv(paste(raw_data,"230423_enhanced_nhdp_2_yrb_wrb.csv", sep = 
 # Download script: script_enhanced_nhdp2_rselenium.R
 
 # Physical characteristics of the river basins
-bchr_dat <-  read_csv(paste(raw_data,"230427_pnw_basin_characteristics.csv", sep = '/'),
+bchr_dat <-  read_csv(paste(raw_data,"230428_pnw_basin_characteristics.csv", sep = '/'),
                       show_col_types = FALSE)
 
 # Original dataset citation
 #Wieczorek, M.E., Jackson, S.E., and Schwarz, G.E., 2018, Select Attributes for 
 #NHDPlus Version 2.1 Reach Catchments and Modified Network Routed Upstream Watersheds 
-# for the Conterminous United States (ver. 3.0, January 2021): U.S. Geological Survey data release, 
-#https://doi.org/10.5066/F7765D7V.
+#for the Conterminous United States-Select Basin Characteristics (ver. 3.0, January 2021): U.S. 
+#Geological Survey data release, 
+#https://www.sciencebase.gov/catalog/item/57976a0ce4b021cadec97890.
+
+#Wieczorek, M.E., Jackson, S.E., and Schwarz, G.E., 2018, Select Attributes for 
+#NHDPlus Version 2.1 Reach Catchments and Modified Network Routed Upstream Watersheds 
+#for the Conterminous United States-Bankfull Hydraulic Geometry Related to Physiographic 
+#Divisions (ver. 3.0, January 2021): U.S. Geological Survey data release, 
+#https://www.sciencebase.gov/catalog/item/5cf02bdae4b0b51330e22b85.
 
 # Download script: script_nhdp2_basin_charct_rselenium_download.R
 
@@ -128,7 +135,10 @@ phys_dat <- rcid_dat %>%
                  TOT_STREAM_LENGTH,
                  CAT_STREAM_LENGTH,
                  TOT_STREAM_SLOPE,
-                 CAT_STREAM_SLOPE) %>% 
+                 CAT_STREAM_SLOPE,
+                 BANKFULL_WIDTH,
+                 BANKFULL_DEPTH,
+                 BANKFULL_XSEC_AREA) %>% 
           rename(stream_dens = TOT_STRM_DENS,
                  basin_slope = TOT_BASIN_SLOPE,
                  min_elevation_m = TOT_ELEV_MIN,
@@ -137,7 +147,10 @@ phys_dat <- rcid_dat %>%
                  stream_lenght_km = TOT_STREAM_LENGTH,
                  flowline_lenght_km = CAT_STREAM_LENGTH,
                  stream_slope = TOT_STREAM_SLOPE,
-                 flowline_slope = CAT_STREAM_SLOPE) %>% 
+                 flowline_slope = CAT_STREAM_SLOPE,
+                 bnkfll_width_m = BANKFULL_WIDTH,
+                 bnkfll_depth_m = BANKFULL_DEPTH,
+                 bnkfll_xsec_area_m2 = BANKFULL_XSEC_AREA) %>% 
           select(comid,
                  sinuosity,
                  stream_dens,
@@ -148,12 +161,16 @@ phys_dat <- rcid_dat %>%
                  stream_lenght_km,
                  flowline_lenght_km,
                  stream_slope,
-                 flowline_slope),
+                 flowline_slope,
+                 bnkfll_width_m,
+                 bnkfll_depth_m,
+                 bnkfll_xsec_area_m2),
         by.x = "comid",
         by.y = "comid",
         all.x = TRUE)
 
-data_dictionary <- df(variable = c("comid",
+
+data_dictionary <- data.frame(variable = c("comid",
                                    "lengthkm",
                                    "reachcode",
                                    "totdasqkm",
@@ -185,7 +202,10 @@ data_dictionary <- df(variable = c("comid",
                                    "stream_lenght_km",
                                    "flowline_lenght_km",
                                    "stream_slope",
-                                   "flowline_slope"), # Wieczorek et al., 2018
+                                   "flowline_slope",
+                                   "bnkfll_width_m",
+                                   "bnkfll_depth_m",
+                                   "bnkfll_xsec_area_m2"), # Wieczorek et al., 2018
                       description = c("Unique feature identifier from NHDPlus source data. USGS defined",
                       "Flowline length. USGS Defined",
                       "Unique flowline identifier. The first eight digits are the Watershed Boundary Dataset(WBD) HUC8.The next six digits are randomly assigned, sequential numbers that are unique within a HUC8.",
@@ -208,7 +228,20 @@ data_dictionary <- df(variable = c("comid",
                       "Mean annual runoff in mm",
                       "Cumulative mean annual flow using unit flow runoff method",
                       "Stream velocity at mean annual flow",
-                      "Incremental catchment mean annual flow (unit runoff methods, m3s)"),
+                      "Incremental catchment mean annual flow (unit runoff methods, m3s)",
+                      "Flowline reach's sinuosity calculated as the reach length (in meters) divided by its Euclidean distance (straight line in meters). Straight-line length is measured from the beginning node of a reach to the end node of the reach.",
+                      "Flowline catchment stream density calculated as all upstream stream lengths (meters) divided by all upstream catchment areas (square kilometers). Upstream is defined by total upstream routing.",
+                      "Average slope in percent of all upstream NHDPlusV2 flowline catchments, based on total upstream routing",
+                      "Minimum elevation in meters of all upstream NHDPlusV2 flowline catchments, based on total upstream routing.",
+                      "Maximum elevation in meters of all upstream NHDPlusV2 flowline catchments, based on total upstream routing.",
+                      "Mean elevation in meters of all upstream NHDPlusV2 flowline catchments, based on total upstream routing.",
+                      "Total length of all upstream NHDPlusV2 flowlines in kilometers, based on total upstream routing.",
+                      "NHDPlus version 2 flowline's length in kilometers taken directly from NHDPlusv2's NHDflowline shapefile's item, LENGTHKM.",
+                      "Average slope in percent NHDPlusV2 flowlines, based on total upstream routing.",
+                      "NHDPlus version 2 flowline's average slope in percent.",
+                      "Estimated bankfull width of NHDPlus version 2.1's flowline reach calculated using Bieger 's regression equation (Bieger et al, 2015)",
+                      "Estimated bankfull depth of NHDPlus version 2.1's flowline reach calculated using Bieger 's regression equation (Bieger et al, 2015)",
+                      "Estimated bankfull cross sectional area of NHDPlus version 2.1's flowline reach calculated using Bieger 's regression equation (Bieger et al, 2015)"),
                       reference = c("Blodgett, 2023; Moore et al., 2019",
                                     "Blodgett, 2023; Moore et al., 2019",
                                     "Blodgett, 2023; Moore et al., 2019",
@@ -232,49 +265,26 @@ data_dictionary <- df(variable = c("comid",
                                     "Schwarz, G. E., 2019",
                                     "Schwarz, G. E., 2019",
                                     "Schwarz, G. E., 2019",
-                                    "Wieczorek, et al., 2018",
-                                    "Wieczorek, et al., 2018",
-                                    "Wieczorek, et al., 2018",
-                                    "Wieczorek, et al., 2018",
-                                    "Wieczorek, et al., 2018",
-                                    "Wieczorek, et al., 2018",
-                                    "Wieczorek, et al., 2018",
-                                    "Wieczorek, et al., 2018",
-                                    "Wieczorek, et al., 2018",
-                                    "Wieczorek, et al., 2018"))
+                                    "Wieczorek, et al., 2018-Select Basin Characteristics",
+                                    "Wieczorek, et al., 2018-Select Basin Characteristics",
+                                    "Wieczorek, et al., 2018-Select Basin Characteristics",
+                                    "Wieczorek, et al., 2018-Select Basin Characteristics",
+                                    "Wieczorek, et al., 2018-Select Basin Characteristics",
+                                    "Wieczorek, et al., 2018-Select Basin Characteristics",
+                                    "Wieczorek, et al., 2018-Select Basin Characteristics",
+                                    "Wieczorek, et al., 2018-Select Basin Characteristics",
+                                    "Wieczorek, et al., 2018-Select Basin Characteristics",
+                                    "Wieczorek, et al., 2018-Select Basin Characteristics",
+                                    "Wieczorek, et al., 2018-Bankfull Hydraulic Geometry",
+                                    "Wieczorek, et al., 2018-Bankfull Hydraulic Geometry",
+                                    "Wieczorek, et al., 2018-Bankfull Hydraulic Geometry"))
 
 
+write.csv(phys_dat,paste(raw_data,"230429_basin_char_hydr_geom_yrb_wrb.csv", sep = '/'),
+          row.names = FALSE)
 
-phys_dat_print <- phys_dat %>% 
-  select(comid,
-         vpuid,
-         rpuid,
-         huc_4,
-         reachcode,
-         hydroseq,
-         from_node,
-         to_node,
-         divergence,
-         ftype,
-         streamorde,
-         stream_dens,
-         sinuosity,
-         roughness,
-         stream_lenght_km,
-         flowline_lenght_km,
-         stream_slope,
-         flowline_slope,
-         basin_slope,
-         min_elevation_m,
-         max_elevation_m,
-         avg_elevation_m,
-         mean_ann_pcpt_mm,
-         mean_ann_temp_dc,
-         mean_ann_runf_mm,
-         mean_ann_flow_m3s,
-         mean_ann_vel_ms,
-         inc_flw_m3s)
-
+write.csv(data_dictionary,paste(raw_data,"230429_dd_basin_char_hydr_geom_yrb_wrb.csv", sep = '/'),
+          row.names = FALSE)
 
 
 
