@@ -100,6 +100,8 @@ files_table <- files_table%>%
 
 # Extract the download links
 
+if (my_data_selection == 1{})
+
 if (my_data_selection > 1 {table_rows <- remDr$findElements(using = "css selector", value = "#table-container > div > table > tbody > tr")
 
 download_links <- lapply(1:length(table_rows), function(i) {
