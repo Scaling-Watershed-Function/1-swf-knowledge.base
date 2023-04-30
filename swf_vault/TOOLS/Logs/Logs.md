@@ -2,6 +2,18 @@
  [[Logs]] are used to document general progress in the development of [[PRODUCTS]].  They will consist of a series of [[Quick Note]] documents for individual [[PEOPLE]] to develop ideas that can lead to the creation of new [[Workflows]] or other [[Tools]]
  ----------------------------------------------------------------------
 ## Quick note
+**Date**: 2023-04_29
+**People:** [[Francisco J. Guerrero]]
+**Products:**[[Scripts]], [[scaling_figures]]
+**Platforms:** [[RStudio]], [[Obsidian]]
+
+#### Note
+
+
+#### Tasks
+
+
+## Quick note
 **Date**: 2023-04_22
 **People:** [[Francisco J. Guerrero]]
 **Products:**[[Scripts]]
