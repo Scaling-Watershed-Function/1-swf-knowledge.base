@@ -25,7 +25,7 @@ mod_inp <- tempfile(pattern = 'model_inputs',
                     fileext = '.zip')
 download.file(url = my_download_url, 
               mod_inp,
-              timeout = max(300, getOption("timeout")))
+              timeout = max(800, getOption("timeout")))
 
 # Get list of files in zipped file
 input_list <- unzip(mod_inp, list = TRUE)$Name

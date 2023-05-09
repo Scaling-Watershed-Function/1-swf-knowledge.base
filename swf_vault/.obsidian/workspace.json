@@ -19,8 +19,19 @@
                 "source": false
               }
             }
+          },
+          {
+            "id": "faa964e1a13b5c8f",
+            "type": "leaf",
+            "state": {
+              "type": "release-notes",
+              "state": {
+                "currentVersion": "1.2.7"
+              }
+            }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -63,6 +74,14 @@
             "type": "leaf",
             "state": {
               "type": "starred",
+              "state": {}
+            }
+          },
+          {
+            "id": "c5d93f290836bcb9",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
               "state": {}
             }
           }
@@ -185,7 +204,7 @@
       "obsidian-excalidraw-plugin:Create new drawing": false
     }
   },
-  "active": "7da4640af1ae462f",
+  "active": "faa964e1a13b5c8f",
   "lastOpenFiles": [
     "Tasks/Tasks.md",
     "PRODUCTS/PRODUCTS.md",

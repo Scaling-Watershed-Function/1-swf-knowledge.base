@@ -2,13 +2,17 @@
  [[Logs]] are used to document general progress in the development of [[PRODUCTS]].  They will consist of a series of [[Quick Note]] documents for individual [[PEOPLE]] to develop ideas that can lead to the creation of new [[Workflows]] or other [[Tools]]
  ----------------------------------------------------------------------
 ## Quick note
-**Date**: 2023-04_29
+**Date**: 2023-05_07
 **People:** [[Francisco J. Guerrero]]
-**Products:**[[Scripts]], [[scaling_figures]]
+**Products:** [[Scripts]], [[scaling_figures]]
 **Platforms:** [[RStudio]], [[Obsidian]]
 
 #### Note
-
+##### Creating ESS-PI poster figures: Cumulative Watershed Function
+1. Calculating cumulative sediment respiration across the basins
+	1. This is the total mass of CO2 produced at each reach added along the stream network in the upstream direction. 
+	2. I need to take `10^logtotco2g_m2_day` and multiply it by `stream_area_m2` to obtain `totco2g_day`
+	3. Then I use [[Kyongho Son]]'s script to calculate the cumulative mass of co2 across the stream network as `acc_totco2g_day`. You also need to calculate `acc_k_wshd_area_km2` in case that the cumulative calculations using the divergence method by the USGS produce different results.
 
 #### Tasks
 
