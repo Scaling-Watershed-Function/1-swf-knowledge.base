@@ -107,30 +107,6 @@ w_stat_plot
 # Also, that a regression model on the min values would better reflect those changes. 
 # This could be improved for larger datasets with a quantile regression model.
 
-
-
-
-w_qr_mod_check <- phys_dat_ro %>% 
-  filter(tot_stream_length_km < 1.6 &
-           wshd_area_km2!=0) %>% 
-  select(basin,
-         tot_stream_length_km,
-         wshd_area_km2) %>% 
-  mutate(w_p_area = predict.rq(w_qr_mod,.)) %>% 
-  ggplot(aes(tot_stream_length_km,
-             wshd_area_km2,
-             color = basin))+
-  geom_point(alpha = 0.5)+
-  geom_point(aes(tot_stream_length_km,
-                 w_p_area),
-             alpha = 0.5, 
-             color = "gray")+
-  scale_x_log10()+
-  scale_y_log10()+
-  facet_wrap(~basin, ncol = 2)
-w_qr_mod_check
-
-
 #For this simpler case, we would replace missing values with predictions of a regression of min_area
 # on tot_stream_length
 
@@ -286,12 +262,13 @@ c_stat_plot_i <- delete_layers(c_stat_plot,"GeomPoint")+
   geom_hline(yintercept = exp(0.03601), linetype = "dashed", color ="darkorange")
 c_stat_plot_i
 
-# Both models do a really good job. For consistency, we will use c_min_mod
+# Both models do a really good job. We use the average prediction: 
 
 phys_dat_mod2 <- phys_dat_mod1 %>% 
   mutate(ctch_area_km2 = if_else(ctch_area_km2==0 &
                                  reach_length_km<1.6,
-                                 exp(predict.lm(c_min_mod,.)),
+                                 (exp(predict.lm(c_min_mod,.))+
+                                 exp(predict.lm(c_med_mod,.)))/2,
                                  ctch_area_km2))
 
 summary(phys_dat_mod2)

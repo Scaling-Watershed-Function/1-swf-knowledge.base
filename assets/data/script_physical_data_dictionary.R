@@ -17,59 +17,11 @@ processed_data <- "processed"
 
 # Data preparation script: "script_physical_data_wrangling"
 
-phys_dat <- read_csv(paste(raw_data,"230430_basin_hydrogeom_yrb_wrb.csv", sep = '/'),
+phys_dat_ro <- read_csv(paste(raw_data,"230430_ord_basin_hydrogeom_yrb_wrb.csv", sep = '/'),
                      show_col_types = FALSE)
 
-
-
-# Reordering variables within the data set for easier sub-setting
-phys_dat_ro <- phys_dat %>% 
-  select(comid,
-         reachcode,
-         hydroseq,
-         from_node,
-         to_node,
-         huc_2_region_id,
-         huc_region_raster_id,
-         huc_4_subregion_id,
-         basin,
-         wshd_stream_dens,
-         wshd_basin_slope,
-         wshd_min_elevation_m,
-         wshd_max_elevation_m,
-         wshd_avg_elevation_m,
-         ctch_stream_dens,
-         ctch_basin_slope,
-         ctch_min_elevation_m,
-         ctch_max_elevation_m,
-         ctch_avg_elevation_m,
-         accm_basin_area_km2,
-         accm_basin_slope,
-         accm_min_elevation_m,
-         accm_max_elevation_m,
-         accm_avg_elevation_m,
-         accm_stream_slope,
-         accm_stream_dens,
-         mean_ann_pcpt_mm,
-         mean_ann_temp_dc,
-         mean_ann_runf_mm,
-         ctch_area_km2,
-         wshd_area_km2,
-         stream_order,
-         reach_type,
-         reach_length_km,
-         tot_stream_length_km,
-         reach_slope_length_km,
-         reach_slope,
-         roughness,
-         sinuosity,
-         bnkfll_width_m,
-         bnkfll_depth_m,
-         bnkfll_xsec_area_m2,
-         mean_ann_flow_m3s,
-         mean_ann_vel_ms)
-
 variable <-  c("comid",
+               "tocomid",
                "reachcode",
                "hydroseq",
                "from_node",
@@ -114,7 +66,8 @@ variable <-  c("comid",
                "mean_ann_flow_m3s",
                "mean_ann_vel_ms")
 
-orig_name <- c("comid",#bldg_23
+orig_name <- c("comid",
+               "tocomid", #bldg_23
                "reachcode",
                "hydroseq",
                "FromNode",#schz19
@@ -160,6 +113,7 @@ orig_name <- c("comid",#bldg_23
                "MAVelUfps")
               
 description = c("Unique feature identifier from NHDPlus source data. USGS defined",
+                "integer derived from tonode/fromnode topology of NHDPlusV2, E2NHDPlusV2, and tocomid attributes of the NWMv2.1 routelink file",
                 "Unique flowline identifier. The first eight digits are the Watershed Boundary Dataset(WBD) HUC8.The next six digits are randomly assigned, sequential numbers that are unique within a HUC8.",
                 "Hydrosequence number (assigned in ascending order)",
                 "Original NHDPlus V2 from node identifier",
@@ -205,6 +159,7 @@ description = c("Unique feature identifier from NHDPlus source data. USGS define
                 "Stream velocity at mean annual flow")
                 
 references = c("Blodgett, 2023; Moore et al., 2019",
+              "Blodgett, 2023; Moore et al., 2019",
               "Blodgett, 2023; Moore et al., 2019",
               "Blodgett, 2023; Moore et al., 2019",
               "Schwarz, G. E., 2019",
@@ -257,8 +212,6 @@ data_dictionary <- tibble(variable,
 write.csv(data_dictionary,paste(raw_data,"230429_dd_basin_char_hydr_geom_yrb_wrb.csv", sep = '/'),
           row.names = FALSE)
 
-write.csv(phys_dat_ro,paste(raw_data,"230430_ord_basin_hydrogeom_yrb_wrb.csv", sep = '/'),
-          row.names = FALSE)        
 
 
 

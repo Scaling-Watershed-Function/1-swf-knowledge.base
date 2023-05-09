@@ -18,7 +18,7 @@ processed_data <- "processed"
 # Physical Characteristics and Hydrology
 
 # We use the enhanced NHDPlus V.2. as the reference dataset for COMIDs (Blodgett_23_Network_Attributes)
-bldg23_dat <- read_csv(paste(raw_data,"230423_enhanced_nhdp_2_yrb_wrb.csv", sep = '/'),
+blgt23_dat <- read_csv(paste(raw_data,"230423_enhanced_nhdp_2_yrb_wrb.csv", sep = '/'),
                       show_col_types = FALSE)
 
 # Original dataset citation
@@ -32,7 +32,7 @@ bldg23_dat <- read_csv(paste(raw_data,"230423_enhanced_nhdp_2_yrb_wrb.csv", sep 
 #https://pubs.usgs.gov/of/2019/1096/ofr20191096.pdf.
 
 
-# Download script: script_enhanced_nhdp2_rselenium.R
+# Download script: script_nhdp2_blgt_23_enhanced_rselenium_download.R
 
 # Physical characteristics of the river basins (Wieczeroek_21_Select_Attributes)
 wczk21_dat <-  read_csv(paste(raw_data,"230428_pnw_basin_characteristics.csv", sep = '/'),
@@ -51,7 +51,7 @@ wczk21_dat <-  read_csv(paste(raw_data,"230428_pnw_basin_characteristics.csv", s
 #Divisions (ver. 3.0, January 2021): U.S. Geological Survey data release, 
 #https://www.sciencebase.gov/catalog/item/5cf02bdae4b0b51330e22b85.
 
-# Download script: script_nhdp2_basin_charct_rselenium_download.R
+# Download script: script_nhdp2_wczk_21_basin_charct_rselenium_download.R
 
 
 # Hydrological data (Schwarz_19_Ancillary_Attributes)
@@ -63,7 +63,7 @@ schz19_dat <- read_csv(paste(raw_data,"230423_main_nhdp_2_yrb_wrb.csv", sep = '/
 #and Modified Routing for NHDPlus Version 2.1 Flowlines: U.S. Geological Survey data release, 
 #https://doi.org/10.5066/P986KZEM.
 
-#Download script: script_nhdp2_son_etal_22rselenium_download.R
+#Download script: script_nhdp2_schz_19_rselenium_download.R
 
 
 # Flowline slopes
@@ -82,10 +82,17 @@ schz19_dat <- read_csv(paste(raw_data,"230423_main_nhdp_2_yrb_wrb.csv", sep = '/
 # which the slopes would be determined in the downstream direction. For more info
 # on the revised method go to: https://pubs.usgs.gov/sir/2019/5127/sir20195127.pdf
 
-# Merging data to selected variables from 'bgl'
+# comit and to_comid
+# blgt_23 dataset also includes a Cleaned up network, added tocomid from 
+# tonode/fromnode topology, and removed unwanted modifications from E2NHDPlusV2 and NWMv2.1.
 
-phys_dat <- bldg23_dat %>% 
+
+
+# Merging data to selected variables from 'bglt23_dat'
+
+phys_dat <- blgt23_dat %>% 
   select(comid,
+         tocomid,
          lengthkm,#flowline length
          reachcode,
          areasqkm,#catchment area
@@ -200,9 +207,57 @@ phys_dat <- bldg23_dat %>%
         by = "comid",
         all.x = TRUE)
           
-write.csv(phys_dat,paste(raw_data,"230430_raw_basin_hydrogeom_yrb_wrb.csv", sep = '/'),
+
+# Reordering variables within the data set for easier sub-setting
+phys_dat_ro <- phys_dat %>% 
+  select(comid,
+         tocomid,
+         reachcode,
+         hydroseq,
+         from_node,
+         to_node,
+         huc_2_region_id,
+         huc_region_raster_id,
+         huc_4_subregion_id,
+         basin,
+         wshd_stream_dens,
+         wshd_basin_slope,
+         wshd_min_elevation_m,
+         wshd_max_elevation_m,
+         wshd_avg_elevation_m,
+         ctch_stream_dens,
+         ctch_basin_slope,
+         ctch_min_elevation_m,
+         ctch_max_elevation_m,
+         ctch_avg_elevation_m,
+         accm_basin_area_km2,
+         accm_basin_slope,
+         accm_min_elevation_m,
+         accm_max_elevation_m,
+         accm_avg_elevation_m,
+         accm_stream_slope,
+         accm_stream_dens,
+         mean_ann_pcpt_mm,
+         mean_ann_temp_dc,
+         mean_ann_runf_mm,
+         ctch_area_km2,
+         wshd_area_km2,
+         stream_order,
+         reach_type,
+         reach_length_km,
+         tot_stream_length_km,
+         reach_slope_length_km,
+         reach_slope,
+         roughness,
+         sinuosity,
+         bnkfll_width_m,
+         bnkfll_depth_m,
+         bnkfll_xsec_area_m2,
+         mean_ann_flow_m3s,
+         mean_ann_vel_ms)
+
+write.csv(phys_dat_ro,paste(raw_data,"230430_ord_basin_hydrogeom_yrb_wrb.csv", sep = '/'),
           row.names = FALSE)        
-          
 
 
 
