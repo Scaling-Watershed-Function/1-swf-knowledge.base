@@ -209,7 +209,7 @@ data_dictionary <- tibble(variable,
                               description,
                               references)
               
-write.csv(data_dictionary,paste(raw_data,"230429_dd_basin_char_hydr_geom_yrb_wrb.csv", sep = '/'),
+write.csv(data_dictionary,paste(processed_data,"230429_dd_basin_char_hydr_geom_yrb_wrb.csv", sep = '/'),
           row.names = FALSE)
 
 
