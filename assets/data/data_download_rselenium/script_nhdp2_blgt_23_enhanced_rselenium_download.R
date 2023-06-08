@@ -7,8 +7,8 @@
 
 # Local Import-Export
 
-raw_data <- "raw"
-processed_data <- "processed"
+raw_data <- "../raw"
+processed_data <- "../processed"
 
 # Loading/installing required libraries
 librarian::shelf(tidyverse,

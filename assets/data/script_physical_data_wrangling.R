@@ -24,12 +24,12 @@ blgt23_dat <- read_csv(paste(raw_data,"230423_enhanced_nhdp_2_yrb_wrb.csv", sep 
 # Original dataset citation
 #Blodgett, D.L., 2023, Updated CONUS river network attributes based on the E2NHDPlusV2 and NWMv2.1 
 #networks (ver. 2.0, February 2023): U.S. Geological Survey data release,
-#https://doi.org/10.5066/P976XCVT.
+#https://doi.org/10.5066/P976XCVT
 
 #Moore, R.B., McKay, L.D., Rea, A.H., Bondelid, T.R., Price, C.V., Dewald, T.G., and Johnston, 
 #C.M., 2019, User's guide for the national hydrography dataset plus (NHDPlus) high 
 #resolution: U.S. Geological Survey Open-File Report 2019–1096, 66 p., 
-#https://pubs.usgs.gov/of/2019/1096/ofr20191096.pdf.
+#https://pubs.usgs.gov/of/2019/1096/ofr20191096.pdf
 
 
 # Download script: script_nhdp2_blgt_23_enhanced_rselenium_download.R
@@ -43,13 +43,13 @@ wczk21_dat <-  read_csv(paste(raw_data,"230428_pnw_basin_characteristics.csv", s
 #NHDPlus Version 2.1 Reach Catchments and Modified Network Routed Upstream Watersheds 
 #for the Conterminous United States-Select Basin Characteristics (ver. 3.0, January 2021): U.S. 
 #Geological Survey data release, 
-#https://www.sciencebase.gov/catalog/item/57976a0ce4b021cadec97890.
+#https://www.sciencebase.gov/catalog/item/57976a0ce4b021cadec97890
 
 #Wieczorek, M.E., Jackson, S.E., and Schwarz, G.E., 2018, Select Attributes for 
 #NHDPlus Version 2.1 Reach Catchments and Modified Network Routed Upstream Watersheds 
 #for the Conterminous United States-Bankfull Hydraulic Geometry Related to Physiographic 
 #Divisions (ver. 3.0, January 2021): U.S. Geological Survey data release, 
-#https://www.sciencebase.gov/catalog/item/5cf02bdae4b0b51330e22b85.
+#https://www.sciencebase.gov/catalog/item/5cf02bdae4b0b51330e22b85
 
 # Download script: script_nhdp2_wczk_21_basin_charct_rselenium_download.R
 
@@ -121,6 +121,7 @@ phys_dat <- blgt23_dat %>%
   mutate(basin = if_else(huc_4_subregion_id == 1703,
                          "yakima",
                          "willamette")) %>% 
+  mutate(reach_slope = reach_slope/1000) %>%
   merge(.,
         wczk21_dat %>% 
           select(comid,

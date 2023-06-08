@@ -2,6 +2,21 @@
  [[Logs]] are used to document general progress in the development of [[PRODUCTS]].  They will consist of a series of [[Quick Note]] documents for individual [[PEOPLE]] to develop ideas that can lead to the creation of new [[Workflows]] or other [[Tools]]
  ----------------------------------------------------------------------
 ## Quick note
+**Date**: 2023-05_31
+**People:** [[Francisco J. Guerrero]]
+**Products:** [[Scripts]], [[data_prep_scaling]]
+**Platforms:** [[RStudio]], [[Obsidian]]
+
+#### Note
+##### Reviewing methods for calculating stream surface area
+[[Wil Wollheim]] estimate surface area for streams under mean annual flow conditions. Meanwhile, [[Francisco J. Guerrero]] was calculating cumulative stream area using bankfull width. 
+
+
+#### Tasks
+
+
+
+## Quick note
 **Date**: 2023-05_07
 **People:** [[Francisco J. Guerrero]]
 **Products:** [[Scripts]], [[scaling_figures]]

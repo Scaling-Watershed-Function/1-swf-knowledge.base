@@ -80,7 +80,7 @@ slope_order <- filter(phys_dat_mod3,reach_slope>=0) %>%
   facet_wrap(~basin, ncol = 2)
 slope_order
 
-# We proceed to replace missing slope values with the averAge for their correspondent
+# We proceed to replace missing slope values with the average for their correspondent
 # stream order
 
 phys_dat_mod4 <- phys_dat_mod3%>% 
