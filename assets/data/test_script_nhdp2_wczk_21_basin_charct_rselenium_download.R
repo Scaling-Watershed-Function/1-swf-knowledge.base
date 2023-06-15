@@ -57,9 +57,6 @@ rs_driver_object <- rsDriver(browser = "chrome",
                              port = free_port(),
                              extraCapabilities = chrome_options)
 
-
-
-
 # Open a client browser for webscrapping
 remDr <- rs_driver_object$client
 
@@ -185,11 +182,6 @@ my_row <- 1
 
 row <- new_table_rows[[my_row]]
 
-downloads_folder <- if (Sys.getenv("OS")=="Windows_NT"){
-  file.path("C:/Users", Sys.getenv("USERNAME"), "Downloads") 
-} else{file.path(Sys.getenv("HOME"), "Downloads")}
-
-
 download_pattern <- my_files_table[my_row,"file_name"]
 
 
@@ -226,6 +218,8 @@ table_rows <- remDr$findElements(using = "css selector", value = table_selector)
 
 # Select the desired row (replace 1 with the desired row number)
 row <- table_rows[[2]]
+
+download_pattern <- my_files_table[my_row,"file_name"]
 
 download_selector <- "#attached-files-section > div > div > div.sb-expander-content > div.table-responsive > table > tbody > tr:nth-child(2) > td:nth-child(1) > span.sb-file-get.sb-download-link"
 

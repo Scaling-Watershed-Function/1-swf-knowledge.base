@@ -21,11 +21,11 @@ librarian::shelf(tidyverse,
 
 # Opening a Selenium client-server object
 rs_driver_object <- rsDriver(browser = "chrome",
-                             chromever = "112.0.5615.49",
+                             chromever = "latest",
                              verbose = FALSE,
                              port = free_port())
+
 remDr <- rs_driver_object$client
-remDr$close() #This will close the first browser that is not needed for webscrapping.
 
 # Downloading data:
 
@@ -34,7 +34,7 @@ remDr$close() #This will close the first browser that is not needed for webscrap
 target_url <- "https://www.sciencebase.gov/catalog/item/5761b67de4b04f417c2d30ae"
 
 # Open a client browser for webscrapping
-remDr$open()
+
 remDr$navigate(target_url)
 Sys.sleep(5) # Wait for the page to load
 

@@ -59,7 +59,7 @@ phys_dat_mod3 <- phys_dat_mod2 %>%
 
 summary(phys_dat_mod3)
 
-# We observe 52 missing values (-9998) for stream slope. Se we proceed to check how 
+# We observe missing values (-9998) for stream slope. Se we proceed to check how 
 # many of them are and how those empty values for stream slope are related to the
 # dataset
 
@@ -105,7 +105,7 @@ summary(phys_dat_mod4)
 
 summary(filter(phys_dat_mod4, mean_ann_flow_m3s==0))
 
-# we have 94 values all corresponding to first order streams, yet, mean_ann_vel_ms
+# we have 22 values all corresponding to first order streams, yet, mean_ann_vel_ms
 # is non-zero for these reaches. 
 
 q_plot <- ggplot(data = filter(phys_dat_mod4,
@@ -156,7 +156,7 @@ phys_dat_mod6 <- phys_dat_mod5 %>%
 # Checking magnitudes
 summary(1/phys_dat_mod6$mean_ann_flow_m3s)
 
-# We have 51 zero values for bank full width, depth, and cross_sectional area
+# We have 8 zero values for bank full width, depth, and cross_sectional area
 
 summary(filter(phys_dat_mod6,bnkfll_width_m==0))
 
