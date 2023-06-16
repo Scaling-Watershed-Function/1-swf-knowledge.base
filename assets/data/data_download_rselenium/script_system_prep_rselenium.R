@@ -102,7 +102,7 @@ binman::list_versions("chromedriver")
 
 # Client-Server Object
 rs_driver_object <- rsDriver(browser = "chrome",
-                             chromever = "112.0.5615.49",
+                             chromever = "latest",
                              verbose = FALSE,
                              port = free_port())
 
