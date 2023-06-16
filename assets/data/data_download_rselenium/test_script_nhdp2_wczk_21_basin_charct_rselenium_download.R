@@ -27,6 +27,11 @@ librarian::shelf(tidyverse,
 # Set a target url
 target_url <- "https://www.sciencebase.gov/catalog/item/57976a0ce4b021cadec97890"
 
+# Set the path to the downloads folder
+downloads_folder <- if (Sys.getenv("OS")=="Windows_NT"){
+  file.path("C:/Users", Sys.getenv("USERNAME"), "Downloads")
+} else{file.path(Sys.getenv("HOME"), "Downloads")}
+
 
 # Opening a Selenium client-server object with specific download preferences
 # Set the download preferences (to allow multiple file downloads without pop ups)
@@ -43,11 +48,6 @@ chrome_options <- list(
     )
   )
 )
-
-# Set the path to the downloads folder
-downloads_folder <- if (Sys.getenv("OS")=="Windows_NT"){
-  file.path("C:/Users", Sys.getenv("USERNAME"), "Downloads")
-} else{file.path(Sys.getenv("HOME"), "Downloads")}
 
 
 # Open Selenium Server
