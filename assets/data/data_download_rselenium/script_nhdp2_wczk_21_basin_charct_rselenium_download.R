@@ -1,7 +1,7 @@
 ###############################################################################
 # Downloading NHDPlus Version 2.1 Data (Select Basin Characteristics)
 ###############################################################################
-
+ gc()
 # Pre-requisites:
 # If running for the first time,
 # make sure you have ran the file "script_system_prep_RSelenium.R"
@@ -24,8 +24,6 @@ librarian::shelf(tidyverse,
                  methods,
                  R.utils)
 
-# Set a target url
-target_url <- "https://www.sciencebase.gov/catalog/item/57976a0ce4b021cadec97890"
 
 # Set the path to the downloads folder
 downloads_folder <- if (Sys.getenv("OS")=="Windows_NT"){
@@ -52,13 +50,16 @@ chrome_options <- list(
 
 # Open Selenium Server
 rs_driver_object <- rsDriver(browser = "chrome",
-                             chromever = "114.0.5735.90",
+                             chromever = "latest",
                              verbose = FALSE,
                              port = free_port(),
                              extraCapabilities = chrome_options)
 
 # Open a client browser for webscrapping
 remDr <- rs_driver_object$client
+
+# Set a target url
+target_url <- "https://www.sciencebase.gov/catalog/item/57976a0ce4b021cadec97890"
 
 # Navigate to your target url
 remDr$navigate(target_url)
@@ -197,44 +198,6 @@ while (length(list.files(path = downloads_folder, pattern = download_pattern)) =
   Sys.sleep(1)
 }
 
-##########################################################################################
-# Downloading Hydrologic data (Schwartz et al., 2019)
-#######################################################################################
-
-target_url <- "https://www.sciencebase.gov/catalog/item/5d16509ee4b0941bde5d8ffe"
-
-# Navigate to your target url
-remDr$navigate(target_url)
-
-# Wait for the page to load
-Sys.sleep(5) 
-
-# Downloading data
-# table selector
-table_selector <- "#attached-files-section > div > div > div.sb-expander-content > div.table-responsive > table > tbody > tr"
-
-# Find the rows in the table
-table_rows <- remDr$findElements(using = "css selector", value = table_selector)
-
-# Select the desired row (replace 1 with the desired row number)
-row <- table_rows[[2]]
-
-download_pattern <- my_files_table[my_row,"file_name"]
-
-download_selector <- "#attached-files-section > div > div > div.sb-expander-content > div.table-responsive > table > tbody > tr:nth-child(2) > td:nth-child(1) > span.sb-file-get.sb-download-link"
-
-# Find the download button element
-download_button_element <- remDr$findElement(using = "css selector", 
-                                             value = download_selector)
-
-# Execute the JavaScript event attached to the element
-remDr$executeScript("arguments[0].click()", list(download_button_element))
-
-# Wait for the download to complete
-while (length(list.files(path = downloads_folder, pattern = download_pattern)) == 0) {
-  Sys.sleep(1)
-}
-
 # Reading files from downloads directory
 
 retrieve_and_merge_data <- function(downloads_folder) {
@@ -295,8 +258,19 @@ retrieve_and_merge_data <- function(downloads_folder) {
 rs_driver_object$server$stop()
 
 bsn_chr_dat <- retrieve_and_merge_data("C:/Users/guer310/Downloads")
+bsn_chr_dat <- bsn_chr_dat %>% 
+  rename(comid = COMID)
 
+# Merging with Blodgett (2023) and Weiczeroek (2021)
 
+hydro_dat_swf <- read_csv(paste(raw_data,"230620_enhanced_nhdp_2_swf.csv",sep = '/'),
+                          show_col_types = FALSE)
 
+wczk21_dat <- hydro_dat_swf %>% 
+  select(comid) %>% 
+  merge(.,bsn_chr_dat,
+        by = "comid",
+        all.x = TRUE)
 
-
+write.csv(wczk21_dat,paste(raw_data,"230620_swf_basin_characteristics.csv", sep = '/'),
+           row.names = FALSE)

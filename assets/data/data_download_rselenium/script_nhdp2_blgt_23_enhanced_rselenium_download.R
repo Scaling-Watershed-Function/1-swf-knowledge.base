@@ -1,9 +1,10 @@
 ###############################################################################
 # Downloading NHDPlus Version 2.1 Data (Enhanced Network Connectivity)
+# Blodgett, 2023 (version Feb. 2023)
 ###############################################################################
 
 # Pre-requisites:
-# Make sure you have ran the file "script_system_prep_rselenium.R"
+# Make sure you have ran the file "script_system_prep_RSelenium.R"
 
 # Local Import-Export
 
@@ -17,26 +18,53 @@ librarian::shelf(tidyverse,
                  wdman,
                  rvest,
                  data.table,
-                 utils)
+                 utils, 
+                 readr,
+                 xml2, 
+                 methods,
+                 R.utils)
 
-# Opening a Selenium client-server object
+# Set path to downloads folder
+downloads_folder <- if (Sys.getenv("OS") == "Windows_NT") {
+  file.path("C:/Users", Sys.getenv("USERNAME"), "Downloads")
+} else {
+  file.path(Sys.getenv("HOME"), "Downloads")
+}
+
+# Opening a Selenium client-server object with specific download preferences
+# Set the download preferences (to allow multiple file downloads without pop ups)
+chrome_options <- list(
+  chromeOptions = list(
+    prefs = list(
+      "download.default_directory" = "~/Downloads",
+      "download.prompt_for_download" = FALSE,
+      "download.directory_upgrade" = TRUE,
+      "download.overwrite" = TRUE,
+      "profile.default_content_settings.popups" = 0,
+      "profile.content_settings.exceptions.automatic_downloads.*.setting" = 1,
+      "safebrowsing.enabled" = TRUE
+    )
+  )
+)
+
 rs_driver_object <- rsDriver(browser = "chrome",
-                             chromever = "112.0.5615.49",
+                             chromever = "latest",
                              verbose = FALSE,
-                             port = free_port())
-remDr <- rs_driver_object$client
-remDr$close() #This will close the first browser that is not needed for webscrapping.
+                             port = free_port(),
+                             extraCapabilities = chrome_options)
 
-# Downloading data example:
-
-# To start downloading data, we first need to specify the url we want to navigate to
-
-target_url <- "https://www.sciencebase.gov/catalog/item/63cb311ed34e06fef14f40a3"
 
 # Open a client browser for webscrapping
-remDr$open()
+remDr <- rs_driver_object$client
+
+# To start downloading data, we first need to specify the url we want to navigate to
+target_url <- "https://www.sciencebase.gov/catalog/item/63cb311ed34e06fef14f40a3"
+
+# Navigate to your target url
 remDr$navigate(target_url)
-Sys.sleep(5) # Wait for the page to load
+
+# Wait for the page to load
+Sys.sleep(5) 
 
 # Explore the page and find css selector
 
@@ -53,30 +81,45 @@ colnames(files_table) <- c("dataset",
                            "view",
                            "size",
                            "file_type")
-# Downloading data
+
+files_table <- files_table %>% 
+  mutate(file_name = sub("\\s.*", "", .$dataset),
+         file_extension = sub("^.*\\.", "", file_name),
+         child = rownames(.),
+         size_unit = sub("[^[:alpha:]]+", "", size),
+         size_MB = if_else(size_unit=="KB",parse_number(size)/1000,parse_number(size)))
+
+my_selection <- 2
+
+my_files_table <- files_table[my_selection,]
+
 # table selector
 table_selector <- "#attached-files-section > div > div > div.sb-expander-content > div.table-responsive > table > tbody > tr"
 
 # Find the rows in the table
 table_rows <- remDr$findElements(using = "css selector", value = table_selector)
 
-# Select the desired row (replace 1 with the desired row number)
-row <- table_rows[[2]]
+# Generate new version of table_rows
+new_table_rows <- lapply(my_selection, function(i) {
+  table_rows[[i]]
+})
 
-download_selector <- "#attached-files-section > div > div > div.sb-expander-content > div.table-responsive > table > tbody > tr:nth-child(2) > td:nth-child(1) > span"
-
-# Find the download button element
-download_button_element <- remDr$findElement(using = "css selector", 
-                                             value = download_selector)
-
-# Execute the JavaScript event attached to the element
-remDr$executeScript("arguments[0].click()", list(download_button_element))
-
-# Wait for the file to download
-Sys.sleep(80)
-
-# Set the path to the downloads folder
-downloads_folder <- file.path(Sys.getenv("HOME"), "Downloads")
+for (my_row in 1:length(new_table_rows)) {
+  row <- new_table_rows[[my_row]]
+  
+  download_pattern <- my_files_table[my_row, "file_name"]
+  
+  download_selector <- paste0("#attached-files-section > div > div > div.sb-expander-content > div.table-responsive > table > tbody > tr:nth-child(", my_files_table$child[my_row], ") > td:nth-child(1) > span")
+  download_button_element <- remDr$findElement(using = "css selector", value = download_selector)
+  
+  # Execute the JavaScript event attached to the element
+  remDr$executeScript("arguments[0].click(); window.confirm = function(message) { return true; };", list(download_button_element))
+  
+  # Wait for the download to complete
+  while (length(list.files(path = downloads_folder, pattern = download_pattern)) == 0) {
+    Sys.sleep(1)
+  }
+}
 
 # Find the most recent file in the downloads folder
 downloaded_files <- list.files(downloads_folder, full.names = TRUE)
@@ -100,10 +143,16 @@ my_data <- read_csv(temp_file_path,
 
 my_data$huc_4 <- substr(my_data$reachcode, start = 1, stop = 4)
 
-enh_nhd2_pnw <- filter(my_data, huc_4 ==1703 | huc_4==1709)
+enh_nhd2_pnw <- filter(my_data, huc_4==1703 | huc_4==1709)
+
+enh_nhd2_wil <- filter(my_data, huc_4=="0107")
+
+enh_nhd2_swf <- rbind(enh_nhd2_pnw,enh_nhd2_wil)
 
 write.csv(enh_nhd2_pnw,paste(raw_data,"230423_enhanced_nhdp_2_yrb_wrb.csv", sep = '/'),
            row.names = FALSE)
+write.csv(enh_nhd2_swf,paste(raw_data,"230626_enhanced_nhdp_2_swf.csv", sep = '/'),
+          row.names = FALSE)
 
 # Delete the most recent file from the downloads folder
 file.remove(most_recent_file)

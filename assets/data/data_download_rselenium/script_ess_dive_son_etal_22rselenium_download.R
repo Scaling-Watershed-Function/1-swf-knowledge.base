@@ -7,8 +7,8 @@
 
 # Local Import-Export
 
-raw_data <- "raw"
-processed_data <- "processed"
+raw_data <- "../raw"
+processed_data <- "../processed"
 
 # Loading/installing required libraries
 librarian::shelf(tidyverse,
@@ -19,24 +19,54 @@ librarian::shelf(tidyverse,
                  data.table,
                  utils)
 
-# Opening a Selenium client-server object
+
+# Set the path to the downloads folder
+downloads_folder <- if (Sys.getenv("OS")=="Windows_NT"){
+  file.path("C:/Users", Sys.getenv("USERNAME"), "Downloads")
+} else{file.path(Sys.getenv("HOME"), "Downloads")}
+
+
+# Opening a Selenium client-server object with specific download preferences
+# Set the download preferences (to allow multiple file downloads without pop ups)
+chrome_options <- list(
+  chromeOptions = list(
+    prefs = list(
+      "download.default_directory" = "~/Downloads",
+      "download.prompt_for_download" = FALSE,
+      "download.directory_upgrade" = TRUE,
+      "download.overwrite" = TRUE,
+      "profile.default_content_settings.popups" = 0,
+      "profile.content_settings.exceptions.automatic_downloads.*.setting" = 1,
+      "safebrowsing.enabled" = TRUE
+    )
+  )
+)
+
+# Open RSelenium Server
 rs_driver_object <- rsDriver(browser = "chrome",
-                             chromever = "112.0.5615.49",
+                             chromever = "latest",
                              verbose = FALSE,
-                             port = free_port())
-remDr <- rs_driver_object$client
-remDr$close() #This will close the first browser that is not needed for webscrapping.
+                             port = free_port(),
+                             extraCapabilities = chrome_options)
 
-# Downloading data example:
-
-# To start downloading data, we first need to specify the url we want to navigate to
-
-target_url <- "https://data.ess-dive.lbl.gov/view/doi:10.15485/1962818"
 
 # Open a client browser for webscrapping
-remDr$open()
+remDr <- rs_driver_object$client
+
+################################################################################
+# ESS-DIVE MOdel Inputs, Outputs, Scripts - Spatial variation microbial resp.
+# Son et al., 2022 (ver. 3.0 Jan-2021)
+################################################################################
+
+
+# To start downloading data, we first need to specify the url we want to navigate to
+target_url <- "https://data.ess-dive.lbl.gov/view/doi:10.15485/1962818"
+
+# Go to the web page
 remDr$navigate(target_url)
-Sys.sleep(5) # Wait for the page to load
+
+# Wait for the page to load
+Sys.sleep(5) 
 
 
 # Find the expand button and click on it (if exists)
