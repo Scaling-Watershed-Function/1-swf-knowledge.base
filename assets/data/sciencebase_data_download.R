@@ -26,9 +26,12 @@ librarian::shelf(tidyverse,
                  xml2, 
                  methods,
                  R.utils)
-
-# Set a target url
-target_url <- "https://www.sciencebase.gov/catalog/item/57976a0ce4b021cadec97890"
+# Downloading data
+downloads_folder <- if (Sys.getenv("OS") == "Windows_NT") {
+  file.path("C:/Users", Sys.getenv("USERNAME"), "Downloads")
+} else {
+  file.path(Sys.getenv("HOME"), "Downloads")
+}
 
 
 # Opening a Selenium client-server object with specific download preferences
@@ -62,6 +65,9 @@ remDr <- rs_driver_object$client
 # Weiczeroek et al., 2018 (ver. 3.0 Jan-2021)
 ################################################################################
 
+# Set a target url
+target_url <- "https://www.sciencebase.gov/catalog/item/57976a0ce4b021cadec97890"
+
 # Navigate to your target URL
 remDr$navigate(target_url)
 
@@ -94,12 +100,16 @@ my_selection <- c(1, 2, 4, 5, 6, 11)
 
 my_files_table <- files_table[my_selection,]
 
-# Downloading data
-downloads_folder <- if (Sys.getenv("OS") == "Windows_NT") {
-  file.path("C:/Users", Sys.getenv("USERNAME"), "Downloads")
-} else {
-  file.path(Sys.getenv("HOME"), "Downloads")
-}
+# table selector
+table_selector <- "#attached-files-section > div > div > div.sb-expander-content > div.table-responsive > table > tbody > tr"
+
+# Find the rows in the table
+table_rows <- remDr$findElements(using = "css selector", value = table_selector)
+
+# Generate new version of table_rows
+new_table_rows <- lapply(my_selection, function(i) {
+  table_rows[[i]]
+})
 
 for (my_row in 1:length(new_table_rows)) {
   row <- new_table_rows[[my_row]]
@@ -169,13 +179,6 @@ new_table_rows <- lapply(my_selection, function(i) {
   table_rows[[i]]
 })
 
-# Downloading data
-downloads_folder <- if (Sys.getenv("OS") == "Windows_NT") {
-  file.path("C:/Users", Sys.getenv("USERNAME"), "Downloads")
-} else {
-  file.path(Sys.getenv("HOME"), "Downloads")
-}
-
 for (my_row in 1:length(new_table_rows)) {
   row <- new_table_rows[[my_row]]
   
@@ -244,12 +247,6 @@ new_table_rows <- lapply(my_selection, function(i) {
   table_rows[[i]]
 })
 
-# Downloading data
-downloads_folder <- if (Sys.getenv("OS") == "Windows_NT") {
-  file.path("C:/Users", Sys.getenv("USERNAME"), "Downloads")
-} else {
-  file.path(Sys.getenv("HOME"), "Downloads")
-}
 
 for (my_row in 1:length(new_table_rows)) {
   row <- new_table_rows[[my_row]]
@@ -318,13 +315,6 @@ new_table_rows <- lapply(my_selection, function(i) {
   table_rows[[i]]
 })
 
-# Downloading data
-downloads_folder <- if (Sys.getenv("OS") == "Windows_NT") {
-  file.path("C:/Users", Sys.getenv("USERNAME"), "Downloads")
-} else {
-  file.path(Sys.getenv("HOME"), "Downloads")
-}
-
 for (my_row in 1:length(new_table_rows)) {
   row <- new_table_rows[[my_row]]
   
@@ -342,68 +332,89 @@ for (my_row in 1:length(new_table_rows)) {
   }
 }
 
+################################################################################
 # Reading files from downloads directory
+################################################################################
 
 retrieve_and_merge_data <- function(downloads_folder) {
-  # Get the current time
   current_time <- Sys.time()
+  time_threshold <- current_time - 60 * 60 * 2
   
-  # Calculate the time threshold for file selection (1 hour ago)
-  time_threshold <- current_time - 60 * 60 * 2  # 60 seconds * 60 minutes * 2 = 2 hours
-  
-  # Retrieve the zip files downloaded within the last hour
-  downloaded_files <- list.files(path = downloads_folder, full.names = TRUE, pattern = ".zip$", recursive = TRUE)
+  downloaded_files <- list.files(path = downloads_folder, full.names = TRUE, pattern = "\\.(zip|csv)$", recursive = TRUE)
   recent_files <- file.info(downloaded_files)$mtime > time_threshold
-  
-  # Filter the downloaded files to keep only the recent ones
   downloaded_files <- downloaded_files[recent_files]
   
   temp_dir <- tempdir()
   
   extract_and_read <- function(file) {
-    # Extract the file name without the extension
     file_name <- tools::file_path_sans_ext(basename(file))
-    
-    # Create a new directory with the file name
     new_dir <- file.path(temp_dir, file_name)
     dir.create(new_dir)
     
-    # Unzip the file into the new directory
-    unzip(file, exdir = new_dir)
+    if (tolower(tools::file_ext(file)) == "zip") {
+      unzip(file, exdir = new_dir)
+      extracted_file <- list.files(path = new_dir, pattern = "\\.csv$", full.names = TRUE)
+      file_extension <- "csv"
+    } else {
+      extracted_file <- file
+      file_extension <- tools::file_ext(extracted_file)
+    }
     
-    # Get the extracted file path
-    extracted_file <- list.files(path = new_dir, full.names = TRUE)
-    
-    # Determine the file extension
-    file_extension <- tools::file_ext(extracted_file)
-    
-    # Read the contents of the extracted file based on the file extension
     if (tolower(file_extension) %in% c("txt", "csv")) {
-      # Read delimited or CSV file
       data <- readr::read_delim(extracted_file, show_col_types = FALSE)
     } else {
       data <- read_csv(extracted_file, show_col_types = FALSE)
     }
     
-    # # Read the contents of the extracted file
-    # read_delim(extracted_file, show_col_types = FALSE)
+    data
   }
   
-  # Extract and read the contents of the recent zip files
+  # extracted_data <- lapply(downloaded_files, extract_and_read)
+  # 
+  # comid_column <- grep("(?i)comid", names(extracted_data[[1]]), ignore.case = TRUE, value = TRUE, perl = TRUE)
+  # 
+  # if (length(comid_column) > 0) {
+  #   comid_column <- comid_column[1]  # Select the first matched column
+  #   
+  #   for (i in seq_along(extracted_data)) {
+  #     col_names <- names(extracted_data[[i]])
+  #     matching_columns <- grep(comid_column, col_names, ignore.case = TRUE, value = TRUE, perl = TRUE)
+  #     if (length(matching_columns) > 0) {
+  #       names(extracted_data[[i]])[matching_columns] <- "COMID"
+  #     }
+  #   }
+  # }
+  # 
+  # bsn_chr_data <- Reduce(function(x, y) merge(x, y, by = "COMID", all.x = TRUE), extracted_data)
+  # 
+  # return(bsn_chr_data)
+  
   extracted_data <- lapply(downloaded_files, extract_and_read)
   
-  # Merge the extracted data into a single dataframe
-  bsn_chr_data <- Reduce(function(x, y) merge(x, y, by = "COMID", all.x = TRUE), extracted_data)
+  comid_column <- grep("(?i)comid", names(extracted_data[[1]]), ignore.case = TRUE, value = TRUE, perl = TRUE)
   
-  return(bsn_chr_data)
+  if (length(comid_column) > 0) {
+    comid_column <- comid_column[1]  # Select the first matched column
+    
+    for (i in seq_along(extracted_data)) {
+      col_names <- names(extracted_data[[i]])
+      matching_columns <- grep(comid_column, col_names, ignore.case = TRUE, value = TRUE, perl = TRUE)
+      if (length(matching_columns) > 0) {
+        names(extracted_data[[i]])[matching_columns] <- "COMID"
+      }
+    }
+  }
+  
+  bsn_chr_data <- Reduce(function(x, y) merge(x, y, by = intersect(names(x), names(y)), all.x = TRUE), extracted_data)
+  
+  
 }
+
 
 # Stop the Selenium server and close the browser
 rs_driver_object$server$stop()
 
 # Creating combined dataset of basin characteristics
-bsn_chr_dat <- retrieve_and_merge_data("C:/Users/guer310/Downloads")
-
 bsn_chr_dat <- retrieve_and_merge_data(paste(downloads_folder))
 
 
