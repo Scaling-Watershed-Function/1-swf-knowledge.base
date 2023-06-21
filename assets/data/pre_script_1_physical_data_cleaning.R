@@ -69,11 +69,49 @@ write.csv(phys_dat_mod2,paste(raw_data,"230620_phys_dat_mod_2.csv", sep = "/"),
 
 
 
+###############################################################################
+# Surface area scaling
+
+stream_sa_dat <- phys_dat_ro %>% 
+  select(basin,
+         comid,
+         tocomid,
+         wshd_area_km2,
+         reach_type,
+         reach_length_km,
+         bnkfll_width_m) %>% 
+  mutate(stream_area_m2 = reach_length_km*1000*bnkfll_width_m)
+
+library(nhdplusTools)
+
+library(purrr)
+library(dplyr)
+
+accm_dat <- stream_sa_dat %>% 
+  filter(reach_type=="StreamRiver") %>%
+  group_by(basin) %>% 
+  select(comid,
+         tocomid,
+         basin,
+         wshd_area_km2,
+         stream_area_m2,
+         bnkfll_width_m) %>% 
+  mutate(across(stream_area_m2:bnkfll_width_m, ~ calculate_arbolate_sum(data.frame(ID = comid,
+                                                                                toID = tocomid,
+                                                                                length = .x))) %>% 
+           set_names(paste0("accm_", names(select(., stream_area_m2:bnkfll_width_m))))) 
 
 
-
-
-
+p <- ggplot(data = accm_dat,
+            aes(x = wshd_area_km2,
+                y = accm_stream_area_m2))+
+  geom_point()+
+  geom_smooth()+
+  scale_x_log10()+
+  scale_y_log10()+
+  geom_abline()+
+  facet_wrap(~basin,ncol = 3)
+p
 
 
 
