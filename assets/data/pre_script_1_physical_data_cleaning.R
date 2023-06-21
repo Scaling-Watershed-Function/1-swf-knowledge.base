@@ -21,6 +21,19 @@ processed_data <- "processed"
 phys_dat_ro <- read_csv(paste(raw_data,"230620_ord_basin_hydrogeom_swf.csv", sep = '/'),
                         show_col_types = FALSE)
 
+son_etal_dat <- read_csv(paste(raw_data,"230406_son_etal_22_results_zen.csv", sep = '/'),
+                         show_col_types = FALSE)
+
+
+ntwk_dat <- phys_dat_ro %>% 
+  merge(.,
+        son_etal_dat %>% 
+          filter(.,time_type=="annual"),
+        by = "comid",
+        all.x = TRUE)
+
+write.csv(ntwk_dat,paste(raw_data,"230620_guerrero_etal_network_swf.csv", sep = "/"),
+          row.names = FALSE)
 
 # Exploring the data via summary
 
