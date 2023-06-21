@@ -17,7 +17,7 @@ processed_data <- "processed"
 
 # Data preparation script: "script_physical_data_wrangling"
 
-phys_dat_ro <- read_csv(paste(raw_data,"230430_ord_basin_hydrogeom_yrb_wrb.csv", sep = '/'),
+phys_dat_ro <- read_csv(paste(raw_data,"230620_ord_basin_hydrogeom_swf.csv", sep = '/'),
                      show_col_types = FALSE)
 
 variable <-  c("comid",
@@ -209,7 +209,7 @@ data_dictionary <- tibble(variable,
                               description,
                               references)
               
-write.csv(data_dictionary,paste(processed_data,"230429_dd_basin_char_hydr_geom_yrb_wrb.csv", sep = '/'),
+write.csv(data_dictionary,paste(processed_data,"230620_dd_basin_char_hydr_geom_swf.csv", sep = '/'),
           row.names = FALSE)
 
 

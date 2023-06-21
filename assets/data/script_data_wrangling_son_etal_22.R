@@ -20,6 +20,7 @@ download_table <- read_csv(paste(raw_data,"table_ess_dive_downloads_son_etal_22.
 # Model inputs
 my_data_selection = 9
 my_download_url <- download_table$links[my_data_selection]
+
 mod_inp <- tempfile(pattern = 'model_inputs',
                     tmpdir = tempdir(),
                     fileext = '.zip')

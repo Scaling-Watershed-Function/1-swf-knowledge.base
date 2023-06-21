@@ -18,7 +18,7 @@ processed_data <- "processed"
 # Physical Characteristics and Hydrology
 
 # We use the enhanced NHDPlus V.2. as the reference dataset for COMIDs (Blodgett_23_Network_Attributes)
-blgt23_dat <- read_csv(paste(raw_data,"230423_enhanced_nhdp_2_yrb_wrb.csv", sep = '/'),
+blgt23_dat <- read_csv(paste(raw_data,"230620_enhanced_nhdp_2_swf.csv", sep = '/'),
                       show_col_types = FALSE)
 
 # Original dataset citation
@@ -35,7 +35,7 @@ blgt23_dat <- read_csv(paste(raw_data,"230423_enhanced_nhdp_2_yrb_wrb.csv", sep 
 # Download script: script_nhdp2_blgt_23_enhanced_rselenium_download.R
 
 # Physical characteristics of the river basins (Wieczeroek_21_Select_Attributes)
-wczk21_dat <-  read_csv(paste(raw_data,"230428_pnw_basin_characteristics.csv", sep = '/'),
+wczk21_dat <-  read_csv(paste(raw_data,"230620_swf_basin_characteristics.csv", sep = '/'),
                        show_col_types = FALSE)
 
 # Original dataset citation
@@ -55,7 +55,7 @@ wczk21_dat <-  read_csv(paste(raw_data,"230428_pnw_basin_characteristics.csv", s
 
 
 # Hydrological data (Schwarz_19_Ancillary_Attributes)
-schz19_dat <- read_csv(paste(raw_data,"230423_main_nhdp_2_yrb_wrb.csv", sep = '/'),
+schz19_dat <- read_csv(paste(raw_data,"230620_main_nhdp_2_swf.csv", sep = '/'),
                       show_col_types = FALSE)
 
 #Original dataset citation: 
@@ -119,8 +119,8 @@ phys_dat <- blgt23_dat %>%
          huc_2_region_id = vpuid,
          huc_4_subregion_id = huc_4) %>%
   mutate(basin = if_else(huc_4_subregion_id == 1703,
-                         "yakima",
-                         "willamette")) %>% 
+                         "yakima",if_else(huc_4_subregion_id==1709,
+                         "willamette","ipswich"))) %>% 
   mutate(reach_slope = reach_slope/1000) %>%
   merge(.,
         wczk21_dat %>% 
@@ -257,7 +257,7 @@ phys_dat_ro <- phys_dat %>%
          mean_ann_flow_m3s,
          mean_ann_vel_ms)
 
-write.csv(phys_dat_ro,paste(raw_data,"230430_ord_basin_hydrogeom_yrb_wrb.csv", sep = '/'),
+write.csv(phys_dat_ro,paste(raw_data,"230620_ord_basin_hydrogeom_swf.csv", sep = '/'),
           row.names = FALSE)        
 
 

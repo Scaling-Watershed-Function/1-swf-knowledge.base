@@ -18,7 +18,7 @@ librarian::shelf(tidyverse,
 raw_data <- "raw"
 processed_data <- "processed"
 
-phys_dat_mod2 <- read_csv(paste(raw_data,"230504_phys_dat_mod_2.csv", sep = '/'),
+phys_dat_mod2 <- read_csv(paste(raw_data,"230620_phys_dat_mod_2.csv", sep = '/'),
                         show_col_types = FALSE)
 
 
@@ -37,7 +37,7 @@ n_plot <- ggplot(data = filter(phys_dat_mod2,
                  aes(x = as.factor(stream_order),
                      y = roughness,
                      color=as.factor(stream_order)))+
-  facet_wrap(~basin,ncol = 2)+
+  facet_wrap(~basin,ncol = 3)+
   geom_boxplot()+
   theme(legend.position = "none")
 n_plot
@@ -77,7 +77,8 @@ slope_order <- filter(phys_dat_mod3,reach_slope>=0) %>%
              color = as.factor(stream_order)))+
   geom_boxplot()+
   scale_y_log10()+
-  facet_wrap(~basin, ncol = 2)
+  facet_wrap(~basin, ncol = 3)+
+  theme(legend.position = "none")
 slope_order
 
 # We proceed to replace missing slope values with the average for their correspondent
@@ -100,13 +101,26 @@ phys_dat_mod4 <- phys_dat_mod3%>%
 
 summary(phys_dat_mod4)
 
+slope_order <- phys_dat_mod4 %>% 
+  select(stream_order,
+         basin,
+         reach_slope) %>% 
+  ggplot(aes(x = as.factor(stream_order),
+             y = reach_slope,
+             color = as.factor(stream_order)))+
+  geom_boxplot()+
+  scale_y_log10()+
+  facet_wrap(~basin, ncol = 3)+
+  theme(legend.position = "none")
+slope_order
+
 
 # Mean annual flow
 
 summary(filter(phys_dat_mod4, mean_ann_flow_m3s==0))
 
-# we have 22 values all corresponding to first order streams, yet, mean_ann_vel_ms
-# is non-zero for these reaches. 
+# we have 20 values all corresponding to first order streams, so we remove these
+# streams
 
 q_plot <- ggplot(data = filter(phys_dat_mod4,
                                mean_ann_flow_m3s>0),
@@ -116,75 +130,13 @@ q_plot <- ggplot(data = filter(phys_dat_mod4,
   geom_point()+
   scale_y_log10()+
   scale_x_log10()+
-  facet_wrap(~basin, ncol = 2)
+  facet_wrap(~basin, ncol = 3)
 q_plot
 
 
-# We replace these missing values with predictions from a regression between 
-# mean_ann_flow_m3s on mean_ann_vel_ms and other regressors
-
-q_mod <- lm(log(mean_ann_flow_m3s)~log(mean_ann_vel_ms)+
-              wshd_area_km2+
-              basin+
-              mean_ann_runf_mm,
-            data = filter(phys_dat_mod4,
-                          mean_ann_flow_m3s>0),
-            na.action = na.omit)
-
-summary(q_mod)
-
-
-phys_dat_mod5 <- phys_dat_mod4 %>% 
-  mutate(mean_ann_flow_m3s = if_else(mean_ann_flow_m3s==0,
-                                     exp(predict.lm(q_mod,.)),
-                                     mean_ann_flow_m3s))
+phys_dat_mod5 <- filter(phys_dat_mod4, mean_ann_flow_m3s!=0) 
 
 summary(phys_dat_mod5)
-
-# Checking magnitudes
-summary(1/phys_dat_mod5$mean_ann_flow_m3s)
-
-# A maximum of 1.139 e+10 indicates the predicted flows are unrealistically low.
-# We will replace these values with 1% of the first quantile, in this case
-# 0.00042
-
-phys_dat_mod6 <- phys_dat_mod5 %>% 
-  mutate(mean_ann_flow_m3s = if_else(mean_ann_flow_m3s < 0.0000042,
-                                     0.000042,
-                                     mean_ann_flow_m3s))
-
-# Checking magnitudes
-summary(1/phys_dat_mod6$mean_ann_flow_m3s)
-
-# We have 8 zero values for bank full width, depth, and cross_sectional area
-
-summary(filter(phys_dat_mod6,bnkfll_width_m==0))
-
-# We replace them with their corresponding predictions from mean annual flow following
-# hydraulic geometry w = aQ^b
-
-w_mod <- lm(log(bnkfll_width_m)~log(mean_ann_flow_m3s)+basin,
-            data = filter(phys_dat_mod6,
-                          bnkfll_width_m>0))
-summary(w_mod)
-
-d_mod <- lm(log(bnkfll_depth_m)~log(mean_ann_flow_m3s)+basin,
-            data = filter(phys_dat_mod6,
-                          bnkfll_depth_m>0))
-summary(d_mod)
-
-phys_dat_mod7 <- phys_dat_mod6 %>% 
-  mutate(bnkfll_width_m = if_else(bnkfll_width_m==0,
-                                  exp(predict.lm(w_mod,.)),
-                                  bnkfll_width_m),
-         bnkfll_depth_m = if_else(bnkfll_depth_m==0,
-                                  exp(predict.lm(d_mod,.)),
-                                  bnkfll_depth_m),
-         bnkfll_xsec_area_m2 = if_else(bnkfll_xsec_area_m2 ==0,
-                                       bnkfll_width_m*bnkfll_depth_m,
-                                       bnkfll_xsec_area_m2))
-
-summary(phys_dat_mod7)
 
 # Checking magnitudes
 
@@ -193,12 +145,22 @@ summary(phys_dat_mod7)
 # catchment area, we can recalculate this missing values: 
 
 
-phys_dat_mod8 <- phys_dat_mod7 %>% 
+phys_dat_mod6 <- phys_dat_mod5 %>% 
   mutate(wshd_stream_dens=tot_stream_length_km/wshd_area_km2,
          ctch_stream_dens=reach_length_km/ctch_area_km2)
+
+stream_dens <- ggplot(phys_dat_mod6,
+                      aes(x=wshd_area_km2,
+                          y=wshd_stream_dens,
+                          color=basin))+
+  geom_point()+
+  scale_x_log10()+
+  scale_y_log10()+
+  facet_wrap(~basin,ncol = 3)
+stream_dens
 
 # Cummulative values will be recalculated along with other cummulative variables
 # as part of the data analysis. 
 
-write.csv(phys_dat_mod8,paste(raw_data,"230504_phys_dat_mod8.csv", sep = "/"),
+write.csv(phys_dat_mod8,paste(raw_data,"230620_phys_dat_mod6.csv", sep = "/"),
           row.names = FALSE)
