@@ -77,10 +77,20 @@ stream_sa_dat <- phys_dat_ro %>%
          comid,
          tocomid,
          wshd_area_km2,
+         mean_ann_flow_m3s,
          reach_type,
          reach_length_km,
          bnkfll_width_m) %>% 
-  mutate(stream_area_m2 = reach_length_km*1000*bnkfll_width_m)
+  mutate(stream_area_m2 = reach_length_km*1000*bnkfll_width_m) %>% 
+  mutate(wilk_bnkfll_width_m = if_else(wshd_area_km2<5,
+                                       2.18*wshd_area_km2^0.191,
+                                       if_else(wshd_area_km2<336,
+                                               1.41*wshd_area_km2^0.462,
+                                               if_else(wshd_area_km2>336,
+                                                       7.18*wshd_area_km2^0.183,NA)))) %>% 
+  mutate(wilk_stream_area_m2 = reach_length_km*1000*wilk_bnkfll_width_m)
+
+
 
 library(nhdplusTools)
 
@@ -88,13 +98,16 @@ library(purrr)
 library(dplyr)
 
 accm_dat <- stream_sa_dat %>% 
-  filter(reach_type=="StreamRiver") %>%
   group_by(basin) %>% 
   select(comid,
          tocomid,
          basin,
          wshd_area_km2,
+         mean_ann_flow_m3s,
+         reach_type,
          stream_area_m2,
+         reach_length_km,
+         wilk_stream_area_m2,
          bnkfll_width_m) %>% 
   mutate(across(stream_area_m2:bnkfll_width_m, ~ calculate_arbolate_sum(data.frame(ID = comid,
                                                                                 toID = tocomid,
@@ -102,18 +115,28 @@ accm_dat <- stream_sa_dat %>%
            set_names(paste0("accm_", names(select(., stream_area_m2:bnkfll_width_m))))) 
 
 
-p <- ggplot(data = accm_dat,
+p <- ggplot(data = filter(accm_dat, reach_type=="StreamRiver"),
             aes(x = wshd_area_km2,
-                y = accm_stream_area_m2))+
+                y = accm_reach_length_km))+
   geom_point()+
-  geom_smooth()+
+  geom_smooth(method = 'lm')+
   scale_x_log10()+
   scale_y_log10()+
   geom_abline()+
   facet_wrap(~basin,ncol = 3)
 p
 
-
+p <- ggplot(data = accm_dat,
+            aes(x = wshd_area_km2,
+                y = accm_wilk_stream_area_m2,
+                color = reach_type))+
+  geom_point()+
+  geom_smooth(method = 'lm')+
+  scale_x_log10()+
+  scale_y_log10()+
+  geom_abline()+
+  facet_wrap(basin~reach_type,ncol = 5)
+p
 
 
 
