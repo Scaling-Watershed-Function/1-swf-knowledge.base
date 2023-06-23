@@ -101,38 +101,12 @@ phys_dat_mod4 <- phys_dat_mod3%>%
 
 summary(phys_dat_mod4)
 
-slope_order <- phys_dat_mod4 %>% 
-  select(stream_order,
-         basin,
-         reach_slope) %>% 
-  ggplot(aes(x = as.factor(stream_order),
-             y = reach_slope,
-             color = as.factor(stream_order)))+
-  geom_boxplot()+
-  scale_y_log10()+
-  facet_wrap(~basin, ncol = 3)+
-  theme(legend.position = "none")
-slope_order
-
-
 # Mean annual flow
 
 summary(filter(phys_dat_mod4, mean_ann_flow_m3s==0))
 
 # we have 20 values all corresponding to first order streams, so we remove these
 # streams
-
-q_plot <- ggplot(data = filter(phys_dat_mod4,
-                               mean_ann_flow_m3s>0),
-                 aes(x = mean_ann_vel_ms,
-                     y = mean_ann_flow_m3s,
-                     color = basin))+
-  geom_point()+
-  scale_y_log10()+
-  scale_x_log10()+
-  facet_wrap(~basin, ncol = 3)
-q_plot
-
 
 phys_dat_mod5 <- filter(phys_dat_mod4, mean_ann_flow_m3s!=0) 
 
@@ -150,8 +124,8 @@ phys_dat_mod6 <- phys_dat_mod5 %>%
          ctch_stream_dens=reach_length_km/ctch_area_km2)
 
 stream_dens <- ggplot(phys_dat_mod6,
-                      aes(x=wshd_area_km2,
-                          y=wshd_stream_dens,
+                      aes(x=ctch_area_km2,
+                          y=ctch_stream_dens,
                           color=basin))+
   geom_point()+
   scale_x_log10()+
@@ -162,5 +136,5 @@ stream_dens
 # Cummulative values will be recalculated along with other cummulative variables
 # as part of the data analysis. 
 
-write.csv(phys_dat_mod8,paste(raw_data,"230620_phys_dat_mod6.csv", sep = "/"),
+write.csv(phys_dat_mod6,paste(raw_data,"230620_phys_dat_mod6.csv", sep = "/"),
           row.names = FALSE)

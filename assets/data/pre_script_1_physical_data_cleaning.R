@@ -12,7 +12,8 @@
 librarian::shelf(tidyverse,
                  utils,
                  quantreg,
-                 gginnards)
+                 gginnards,
+                 nhdplusTools)
 
 # Local Import-Export
 raw_data <- "raw"
@@ -30,7 +31,8 @@ ntwk_dat <- phys_dat_ro %>%
         son_etal_dat %>% 
           filter(.,time_type=="annual"),
         by = "comid",
-        all.x = TRUE)
+        all.x = TRUE) %>% 
+  filter(basin!="ipswich")
 
 write.csv(ntwk_dat,paste(raw_data,"230620_guerrero_etal_network_swf.csv", sep = "/"),
           row.names = FALSE)
@@ -47,14 +49,19 @@ summary(phys_dat_ro)
 # NAs
 
 
-phys_dat_mod1 <- filter(phys_dat_ro, reach_type=="StreamRiver")
+phys_dat_mod1 <- phys_dat_ro %>% 
+  filter(reach_type!="CanalDitch" & 
+           reach_type!="Connector") %>% 
+  filter(reach_type!="Pipeline")
 
 summary(phys_dat_mod1)
 
-phys_dat_mod2 <- filter(phys_dat_mod1, wshd_area_km2!=0 & ctch_area_km2!=0)
+phys_dat_mod2 <- phys_dat_mod1 %>% 
+  # filter(wshd_area_km2!=0 & 
+  #          ctch_area_km2!=0) 
 
-summary(phys_dat_mod2)
-
+summary(phys_dat_mod2) 
+  
 write.csv(phys_dat_mod2,paste(raw_data,"230620_phys_dat_mod_2.csv", sep = "/"),
           row.names = FALSE)
 
@@ -72,10 +79,11 @@ write.csv(phys_dat_mod2,paste(raw_data,"230620_phys_dat_mod_2.csv", sep = "/"),
 ###############################################################################
 # Surface area scaling
 
-stream_sa_dat <- phys_dat_ro %>% 
+stream_sa_dat <- phys_dat_mod2 %>% 
   select(basin,
          comid,
          tocomid,
+         ctch_area_km2,
          wshd_area_km2,
          mean_ann_flow_m3s,
          reach_type,
@@ -91,12 +99,6 @@ stream_sa_dat <- phys_dat_ro %>%
   mutate(wilk_stream_area_m2 = reach_length_km*1000*wilk_bnkfll_width_m)
 
 
-
-library(nhdplusTools)
-
-library(purrr)
-library(dplyr)
-
 accm_dat <- stream_sa_dat %>% 
   group_by(basin) %>% 
   select(comid,
@@ -107,6 +109,7 @@ accm_dat <- stream_sa_dat %>%
          reach_type,
          stream_area_m2,
          reach_length_km,
+         ctch_area_km2,
          wilk_stream_area_m2,
          bnkfll_width_m) %>% 
   mutate(across(stream_area_m2:bnkfll_width_m, ~ calculate_arbolate_sum(data.frame(ID = comid,
@@ -115,19 +118,20 @@ accm_dat <- stream_sa_dat %>%
            set_names(paste0("accm_", names(select(., stream_area_m2:bnkfll_width_m))))) 
 
 
-p <- ggplot(data = filter(accm_dat, reach_type=="StreamRiver"),
+p <- ggplot(data = accm_dat,
             aes(x = wshd_area_km2,
-                y = accm_reach_length_km))+
+                y = accm_ctch_area_km2,
+                color = reach_type))+
   geom_point()+
   geom_smooth(method = 'lm')+
   scale_x_log10()+
   scale_y_log10()+
   geom_abline()+
-  facet_wrap(~basin,ncol = 3)
+  facet_wrap(reach_type~basin,ncol = 3)
 p
 
 p <- ggplot(data = accm_dat,
-            aes(x = wshd_area_km2,
+            aes(x = accm_ctch_area_km2,
                 y = accm_wilk_stream_area_m2,
                 color = reach_type))+
   geom_point()+
@@ -135,12 +139,47 @@ p <- ggplot(data = accm_dat,
   scale_x_log10()+
   scale_y_log10()+
   geom_abline()+
-  facet_wrap(basin~reach_type,ncol = 5)
+  facet_wrap(reach_type~basin,ncol = 3)
 p
 
 
+acm_ntwk_dat <- ntwk_dat %>% 
+  filter(is.na(logtotco2g_m2_day)==FALSE) %>% 
+  filter(reach_type!="CanalDitch" & 
+           reach_type!="Connector") %>% 
+  filter(reach_type!="Pipeline") %>% 
+  filter(reach_type!="CanalDitch" & 
+           reach_type!="Connector") %>% 
+  filter(reach_type!="Pipeline") %>% 
+  mutate(stream_area_m2 = reach_length_km*1000*bnkfll_width_m) %>% 
+  mutate(tot_co2g_day = logtotco2g_m2_day^10 *stream_area_m2) %>% 
+  select(comid,
+         tocomid,
+         basin,
+         wshd_area_km2,
+         mean_ann_flow_m3s,
+         reach_type,
+         stream_area_m2,
+         tot_co2g_day,
+         reach_length_km,
+         ctch_area_km2,
+         bnkfll_width_m) %>% 
+  mutate(across(stream_area_m2:bnkfll_width_m, ~ calculate_arbolate_sum(data.frame(ID = comid,
+                                                                                   toID = tocomid,
+                                                                                   length = .x))) %>% 
+           set_names(paste0("accm_", names(select(., stream_area_m2:bnkfll_width_m))))) 
 
 
-
+p <- ggplot(data = acm_ntwk_dat,
+            aes(x = wshd_area_km2,
+                y = accm_tot_co2g_day/wshd_area_km2,
+                color = reach_type))+
+  geom_point()+
+  geom_smooth(method = 'lm')+
+  scale_x_log10()+
+  scale_y_log10()+
+  geom_abline()+
+  facet_wrap(~basin,ncol = 2)
+p
 
 

@@ -3,7 +3,7 @@
 ###############################################################################
 
 # Pre-requisites:
-# Make sure you have ran the file "script_system_prep_rselenium.R"
+# Make sure you have ran the file "script_system_prep_RSelenium.R"
 
 # Local Import-Export
 
@@ -17,14 +17,43 @@ librarian::shelf(tidyverse,
                  wdman,
                  rvest,
                  data.table,
-                 utils)
+                 utils, 
+                 readr,
+                 xml2, 
+                 methods,
+                 R.utils)
 
-# Opening a Selenium client-server object
+# Set path to downloads folder
+downloads_folder <- if (Sys.getenv("OS") == "Windows_NT") {
+  file.path("C:/Users", Sys.getenv("USERNAME"), "Downloads")
+} else {
+  file.path(Sys.getenv("HOME"), "Downloads")
+}
+
+# Opening a Selenium client-server object with specific download preferences
+# Set the download preferences (to allow multiple file downloads without pop ups)
+chrome_options <- list(
+  chromeOptions = list(
+    prefs = list(
+      "download.default_directory" = "~/Downloads",
+      "download.prompt_for_download" = FALSE,
+      "download.directory_upgrade" = TRUE,
+      "download.overwrite" = TRUE,
+      "profile.default_content_settings.popups" = 0,
+      "profile.content_settings.exceptions.automatic_downloads.*.setting" = 1,
+      "safebrowsing.enabled" = TRUE
+    )
+  )
+)
+
 rs_driver_object <- rsDriver(browser = "chrome",
                              chromever = "latest",
                              verbose = FALSE,
-                             port = free_port())
+                             port = free_port(),
+                             extraCapabilities = chrome_options)
 
+
+# Open a client browser for webscrapping
 remDr <- rs_driver_object$client
 
 # Downloading data:
@@ -77,10 +106,6 @@ remDr$executeScript("arguments[0].click()", list(download_button_element))
 # Wait for the file to download
 Sys.sleep(80)
 
-# Set the path to the downloads folder
-downloads_folder <- if (Sys.getenv("OS")=="Windows_NT"){
-  file.path("C:/Users", Sys.getenv("USERNAME"), "Downloads") 
-} else{file.path(Sys.getenv("HOME"), "Downloads")}
 
 # Find the most recent file in the downloads folder
 downloaded_files <- list.files(downloads_folder, full.names = TRUE)
@@ -104,13 +129,13 @@ my_data <- read_csv(unzip(temp_file_path, exdir = temp_dir),
 
 # We need to filter this data using the enhanced NHDPv2
 
-enh_nhd <- read_csv(paste(raw_data,"230423_enhanced_nhdp_2_yrb_wrb.csv", sep = '/'),
+phys_dat_ro <- read_csv(paste(raw_data,"230620_ord_basin_hydrogeom_swf.csv", sep = '/'),
                     show_col_types = FALSE)
 
 # Catchment level data
-nlcd_cat_yrb_wrb <- enh_nhd %>% 
+nlcd_cat_yrb_wrb <- phys_dat_ro %>% 
   select(comid,
-         huc_4) %>% 
+         huc_4_subregion_id) %>% 
   merge(.,
         my_data,
         by.x = "comid",
@@ -120,7 +145,7 @@ nlcd_cat_yrb_wrb <- enh_nhd %>%
 # Delete the most recent file from the downloads folder
 file.remove(most_recent_file)
 
-write.csv(nlcd_cat_yrb_wrb,paste(raw_data,"230424_nlcd_cat_yrb_wrb.csv", sep = '/'),
+write.csv(nlcd_cat_yrb_wrb,paste(raw_data,"230622_nlcd_cat_swf.csv", sep = '/'),
           row.names = FALSE)
 
 # TOT CONUS Dataset
@@ -142,8 +167,6 @@ remDr$executeScript("arguments[0].click()", list(download_button_element))
 # Wait for the file to download
 Sys.sleep(80)
 
-# Set the path to the downloads folder
-downloads_folder <- file.path(Sys.getenv("HOME"), "Downloads")
 
 # Find the most recent file in the downloads folder
 downloaded_files <- list.files(downloads_folder, full.names = TRUE)
@@ -166,9 +189,9 @@ my_data <- read_csv(unzip(temp_file_path, exdir = temp_dir),
                     show_col_types = FALSE)
 
 # Watershed level data
-nlcd_wsd_yrb_wrb <- enh_nhd %>% 
+nlcd_wsd_yrb_wrb <- phys_dat_ro %>% 
   select(comid,
-         huc_4) %>% 
+         huc_4_subregion_id) %>% 
   merge(.,
         my_data,
         by.x = "comid",
@@ -178,14 +201,11 @@ nlcd_wsd_yrb_wrb <- enh_nhd %>%
 # Delete the most recent file from the downloads folder
 file.remove(most_recent_file)
 
-write.csv(nlcd_wsd_yrb_wrb,paste(raw_data,"230424_nlcd_wsd_yrb_wrb.csv", sep = '/'),
+write.csv(nlcd_wsd_yrb_wrb,paste(raw_data,"230622_nlcd_wsd_swf.csv", sep = '/'),
           row.names = FALSE)
 
 # Stop the Selenium server and close the browser
 rs_driver_object$server$stop()
-
-
-
 
 
 ############################### T E S T #######################################
