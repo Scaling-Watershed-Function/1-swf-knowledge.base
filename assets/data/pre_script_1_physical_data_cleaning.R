@@ -19,8 +19,58 @@ librarian::shelf(tidyverse,
 raw_data <- "raw"
 processed_data <- "processed"
 
-phys_dat_ro <- read_csv(paste(raw_data,"230620_ord_basin_hydrogeom_swf.csv", sep = '/'),
+phys_sni_dat_ro <- read_csv(paste(raw_data,"230620_ord_basin_sni_hydrogeom_pnw.csv", sep = '/'),
                         show_col_types = FALSE)
+
+# Exploring the data via summary
+
+summary(phys_sni_dat_ro)
+
+# It seems that there are several datapoints with watershed area = 0
+
+wsd0_dat <- filter(phys_sni_dat_ro,wshd_area_km2==0) # 43 observations
+
+summary(wsd0_dat)
+
+# These data all correspond to first order streams, so we remove them from the analysis
+
+phys_sni_dat_mod1 <- filter(phys_sni_dat_ro,wshd_area_km2>0)
+
+summary(phys_sni_dat_mod1)
+
+# Next set of conflicting data catchment areas = 0
+
+ctc0_dat <- filter(phys_sni_dat_mod1,ctch_area_km2==0) # 89 observations
+
+summary(ctc0_dat)
+
+# It seems to contain data across multiple river orders. We will remove first order 
+# streams first
+
+phys_sni_dat_mod2 <- phys_sni_dat_mod1 %>% 
+  mutate(ctch_select = if_else(ctch_area_km2 == 0 & stream_order == 1,
+                               "out",
+                               "keep")) %>% 
+  filter(.,ctch_select=="keep") %>% 
+  select(-ctch_select)
+
+# High order reaches with catchment areas = 0
+ho_ctc0_dat <- filter(phys_sni_dat_mod2, ctch_area_km2 == 0) # 52 observations
+
+summary(ho_ctc0_dat)
+
+# Verifying that the high order reaches 
+p <- ggplot(data = ho_ctc0_dat,
+            aes(x = wshd_area_km2,
+                y = tot_stream_length_km,
+                color = as.factor(stream_order)))+
+  geom_point()+
+  scale_y_log10()+
+  scale_x_log10()+
+  facet_wrap(~basin,ncol = 2)
+p
+
+
 
 son_etal_dat <- read_csv(paste(raw_data,"230406_son_etal_22_results_zen.csv", sep = '/'),
                          show_col_types = FALSE)
