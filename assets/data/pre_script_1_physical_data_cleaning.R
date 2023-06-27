@@ -13,14 +13,102 @@ librarian::shelf(tidyverse,
                  utils,
                  quantreg,
                  gginnards,
-                 nhdplusTools)
+                 nhdplusTools,
+                 leaflet,
+                 sp,
+                 sf)
 
 # Local Import-Export
 raw_data <- "raw"
 processed_data <- "processed"
 
-phys_dat_ro <- read_csv(paste(raw_data,"230620_ord_basin_hydrogeom_swf.csv", sep = '/'),
+phys_nsi_dat_ref <- read_csv(paste(raw_data,"phys_nsi_dat_reference.csv", sep = '/'),
                         show_col_types = FALSE)
+
+phys_nsi_dat_shp <- sf::st_transform(st_read(paste(raw_data,"shape_files","nis_reference","230623_nis_network_ywrb.shp",sep = "/")),4326)
+
+
+
+# Flowlines with no assigned watershed/catchment areas could mostly correspond to 
+# disconnected segments
+
+summary(filter(phys_nsi_dat_ref, wshd_area_km2 == 0))
+
+# We find 43 datapoints from first order streams with watershed areas.
+
+phys_nsi_dat_mod1 <- filter(phys_nsi_dat_ref, wshd_area_km2 > 0)
+
+# Looking at datapoints with catchment areas = 0 within the filtered dataset
+
+summary(filter(phys_nsi_dat_mod1, ctch_area_km2 == 0))
+
+# We find 89 data points with catchment areas = 0 distributed across multiple stream
+# orders, so need to check their locations before deciding on how to proceed. 
+
+# Mapping zero values for catchment area
+
+leaflet(phys_nsi_dat_shp) %>% 
+  addPolylines(weight = 2) %>% 
+  addPolylines(data =filter(phys_nsi_dat_shp,AreaSqKM == 0),
+               weight =6,
+               opacity = 1,
+               color = "magenta")
+
+leaflet(phys_nsi_dat_shp) %>%
+  addTiles() %>%
+  addMarkers(weight = 2) %>%
+  addMarkers(data = filter(phys_nsi_dat_shp, AreaSqKM == 0),
+             weight = 6,
+             opacity = 1,
+             color = "magenta")
+
+
+coordinates <- strsplit(phys_nsi_dat_mod1$geometry, ",")
+coordinates <- lapply(coordinates, function(x) {
+  x <- as.numeric(x)
+  matrix(x, ncol = 2, byrow = TRUE)
+})
+
+# Convert the geometry column to LINESTRING
+phys_nsi_dat_shp_1 <- st_cast(phys_nsi_dat_shp, "LINESTRING")
+
+# Create a leaflet map and add polylines
+leaflet() %>%
+  addTiles() %>%
+  addPolylines(data = phys_nsi_dat_shp, weight = 2) %>%
+  addPolylines(data = filter(phys_nsi_dat_shp, AreaSqKM == 0),
+               weight = 6,
+               opacity = 1,
+               color = "magenta")
+
+
+leaflet() %>%
+  addTiles() %>%
+  addMarkers(data = phys_nsi_dat_shp, weight = 2) %>%
+  addMarkers(data = filter(phys_nsi_dat_shp, AreaSqKM == 0),
+             weight = 6,
+             opacity = 1,
+             color = "magenta")
+
+
+# Create a leaflet map and add polylines
+leaflet() %>% 
+  addTiles() %>% 
+  addPolylines(data = coordinates)
+
+library(sp)
+
+# Convert the list of coordinates to a SpatialLinesDataFrame
+lines <- lapply(coordinates, function(coords) Line(coords))
+lines <- SpatialLinesDataFrame(SpatialLines(lines), data = phys_nsi_dat_mod1)
+
+# Create a leaflet map and add polylines
+leaflet() %>% 
+  addTiles() %>% 
+  addPolylines(data = lines)
+
+
+
 
 son_etal_dat <- read_csv(paste(raw_data,"230406_son_etal_22_results_zen.csv", sep = '/'),
                          show_col_types = FALSE)

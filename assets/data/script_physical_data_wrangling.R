@@ -15,17 +15,6 @@ processed_data <- "processed"
 
 # Loading raw data
 
-# National Stream Internet - Reference Hydrological Network
-nagl17_dat <- read_csv(paste(raw_data,"230623_nis_network_ywrb.csv", sep = '/'),
-                       show_col_types = FALSE)
-
-# Original dataset citation
-# Nagel, D., S. Wollrab, S. Parkes-Payne, E. Peterson, D. Isaak, and J. Ver Hoef. 2017. 
-# National Stream Internet hydrography datasets for spatial-stream-network (SSN) analysis. 
-# Rocky Mountain Research Station, U.S. Forest Service Data Archive, Fort Collins, CO.
-
-# download script: script_nsi_network_nagl_17_rselenium_download.
-
 # Physical Characteristics and Hydrology
 
 # We use the enhanced NHDPlus V.2. as the reference dataset for COMIDs (Blodgett_23_Network_Attributes)
@@ -97,9 +86,17 @@ schz19_dat <- read_csv(paste(raw_data,"230620_main_nhdp_2_swf.csv", sep = '/'),
 # blgt_23 dataset also includes a Cleaned up network, added tocomid from 
 # tonode/fromnode topology, and removed unwanted modifications from E2NHDPlusV2 and NWMv2.1.
 
+# National Stream Internet - Reference Hydrological Network
+nagl17_dat <-st_read(paste(raw_data,"shape_files","nis_reference","230623_nis_network_ywrb.shp",sep = '/'))
 
+# Original dataset citation
+# Nagel, D., S. Wollrab, S. Parkes-Payne, E. Peterson, D. Isaak, and J. Ver Hoef. 2017. 
+# National Stream Internet hydrography datasets for spatial-stream-network (SSN) analysis. 
+# Rocky Mountain Research Station, U.S. Forest Service Data Archive, Fort Collins, CO.
 
-# Merging data to selected variables from 'nagl17_dat'
+# download script: script_nsi_network_nagl_17_rselenium_download.
+
+# Merging data 
 
 phys_dat <- blgt23_dat %>% 
   select(comid,
@@ -271,17 +268,23 @@ phys_dat_ro <- phys_dat %>%
 # Merge with SNI dataset
 
 phys_sni_dat_ro <- nagl17_dat %>% 
-  select(COMID) %>% 
+  select(COMID,
+         DUP_COMID,
+         DUP_ArSqKM,
+         DUP_Length,
+         geometry) %>% 
   merge(.,
         phys_dat_ro,
         by.x = "COMID",
         by.y = "comid") %>% 
   rename(comid = COMID)
 
+summary(phys_sni_dat_ro)
+
 write.csv(phys_dat_ro,paste(raw_data,"230620_ord_basin_hydrogeom_swf.csv", sep = '/'),
           row.names = FALSE)        
 
-write.csv(phys_sni_dat_ro,paste(raw_data,"230620_ord_basin_sni_hydrogeom_pnw.csv", sep = '/'),
+write.csv(phys_sni_dat_ro,paste(raw_data,"phys_nsi_dat_reference.csv", sep = '/'),
           row.names = FALSE)     
 
 
