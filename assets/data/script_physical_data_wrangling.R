@@ -15,6 +15,23 @@ processed_data <- "processed"
 
 # Loading raw data
 
+
+# NEXSS Input data
+gomz23_dat <- read_csv(paste(raw_data,"HUC_17_nexss_input_base_variables.csv", sep = '/'),
+                                     show_col_types = FALSE)
+
+# National Stream Internet - Reference Hydrological Network
+nagl17_dat <- read_csv(paste(raw_data,"230623_nis_network_ywrb.csv", sep = '/'),
+                       show_col_types = FALSE)
+
+# Original dataset citation
+# Nagel, D., S. Wollrab, S. Parkes-Payne, E. Peterson, D. Isaak, and J. Ver Hoef. 2017. 
+# National Stream Internet hydrography datasets for spatial-stream-network (SSN) analysis. 
+# Rocky Mountain Research Station, U.S. Forest Service Data Archive, Fort Collins, CO.
+
+# download script: script_nsi_network_nagl_17_rselenium_download.
+
+
 # Physical Characteristics and Hydrology
 
 # We use the enhanced NHDPlus V.2. as the reference dataset for COMIDs (Blodgett_23_Network_Attributes)
@@ -269,9 +286,6 @@ phys_dat_ro <- phys_dat %>%
 
 phys_sni_dat_ro <- nagl17_dat %>% 
   select(COMID,
-         DUP_COMID,
-         DUP_ArSqKM,
-         DUP_Length,
          geometry) %>% 
   merge(.,
         phys_dat_ro,
@@ -279,12 +293,76 @@ phys_sni_dat_ro <- nagl17_dat %>%
         by.y = "comid") %>% 
   rename(comid = COMID)
 
-summary(phys_sni_dat_ro)
+
+# NEXSS Input Data
+gomz23_dat_ro <- gomz23_dat %>% 
+# Changing units for consistency  
+  mutate(wshd_area_km2_g = `DrainageArea[m2]`/1000000,
+         reach_length_km_g = `Length[m]`/1000,) %>%
+# Renaming variables for consistency  
+  rename(stream_order_g = so,
+         sinuosity_g = `sinuosity[-]`,
+         slope_g = `slope[-]`,
+         d50m_g = `D50[m]`,
+         mean_ann_width_m_g = `w[m]`,
+         bnkfll_width_m_g = `wbkf[m]`,
+         mean_ann_depth_m_g = `d[m]`,
+         bnkfll_depth_m_g = `dbkf[m]`,
+         mean_ann_flow_m3s_g = `Qma[m3/s]`,
+         bnkfll_q_m3s_g = `Qbf[m3/s]`,
+         mean_ann_vel_ms_g = `Uma[m/s]`,
+         hydrl_cond_ms_g = `K[m/s]`,
+         porosity_ms_g = `poro[m/s]`,
+         lateral_hyprh_flux_x = `Jx[-]`,
+         lateral_hyprh_flux_y = `Jy[-]`,
+         lateral_hyprh_flux_yx = `Jyx[-]`) %>% 
+  # Calculating stream area
+  mutate(stream_area_m2_g = reach_length_km_g*1000*mean_ann_width_m_g) %>% 
+  # Selecting variables for merge
+  select(comid,
+         FromNode,
+         ToNode,
+         wshd_area_km2_g,
+         reach_length_km_g,
+         stream_order_g,
+         stream_area_m2_g,
+         sinuosity_g,
+         slope_g,
+         d50m_g,
+         mean_ann_width_m_g,
+         bnkfll_width_m_g,
+         mean_ann_depth_m_g,
+         bnkfll_depth_m_g,
+         mean_ann_flow_m3s_g,
+         bnkfll_q_m3s_g,
+         mean_ann_vel_ms_g,
+         hydrl_cond_ms_g,
+         porosity_ms_g,
+         lateral_hyprh_flux_x,
+         lateral_hyprh_flux_y,
+         lateral_hyprh_flux_yx)
+
+# Integrating NEXSS Input Data
+phys_sni_nxss_dat <- phys_sni_dat_ro %>% 
+  merge(.,
+        gomz23_dat_ro,
+        by = "comid",
+        all.x = TRUE)
+
 
 write.csv(phys_dat_ro,paste(raw_data,"230620_ord_basin_hydrogeom_swf.csv", sep = '/'),
           row.names = FALSE)        
 
 write.csv(phys_sni_dat_ro,paste(raw_data,"phys_nsi_dat_reference.csv", sep = '/'),
           row.names = FALSE)     
+
+write.csv(phys_sni_nxss_dat,paste(raw_data,"230623_ord_basin_sni_nxss_hydrogeom_pnw.csv", sep = '/'),
+          row.names = FALSE) 
+
+
+
+summary(phys_sni_dat_ro)
+
+
 
 

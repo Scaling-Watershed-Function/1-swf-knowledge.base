@@ -22,92 +22,56 @@ librarian::shelf(tidyverse,
 raw_data <- "raw"
 processed_data <- "processed"
 
-phys_nsi_dat_ref <- read_csv(paste(raw_data,"phys_nsi_dat_reference.csv", sep = '/'),
+phys_sni_dat_ro <- read_csv(paste(raw_data,"230620_ord_basin_sni_hydrogeom_pnw.csv", sep = '/'),
                         show_col_types = FALSE)
 
-phys_nsi_dat_shp <- sf::st_transform(st_read(paste(raw_data,"shape_files","nis_reference","230623_nis_network_ywrb.shp",sep = "/")),4326)
+# Exploring the data via summary
 
+summary(phys_sni_dat_ro)
 
+# It seems that there are several datapoints with watershed area = 0
 
-# Flowlines with no assigned watershed/catchment areas could mostly correspond to 
-# disconnected segments
+wsd0_dat <- filter(phys_sni_dat_ro,wshd_area_km2==0) # 43 observations
 
-summary(filter(phys_nsi_dat_ref, wshd_area_km2 == 0))
+summary(wsd0_dat)
 
-# We find 43 datapoints from first order streams with watershed areas.
+# These data all correspond to first order streams, so we remove them from the analysis
 
-phys_nsi_dat_mod1 <- filter(phys_nsi_dat_ref, wshd_area_km2 > 0)
+phys_sni_dat_mod1 <- filter(phys_sni_dat_ro,wshd_area_km2>0)
 
-# Looking at datapoints with catchment areas = 0 within the filtered dataset
+summary(phys_sni_dat_mod1)
 
-summary(filter(phys_nsi_dat_mod1, ctch_area_km2 == 0))
+# Next set of conflicting data catchment areas = 0
 
-# We find 89 data points with catchment areas = 0 distributed across multiple stream
-# orders, so need to check their locations before deciding on how to proceed. 
+ctc0_dat <- filter(phys_sni_dat_mod1,ctch_area_km2==0) # 89 observations
 
-# Mapping zero values for catchment area
+summary(ctc0_dat)
 
-leaflet(phys_nsi_dat_shp) %>% 
-  addPolylines(weight = 2) %>% 
-  addPolylines(data =filter(phys_nsi_dat_shp,AreaSqKM == 0),
-               weight =6,
-               opacity = 1,
-               color = "magenta")
+# It seems to contain data across multiple river orders. We will remove first order 
+# streams first
 
-leaflet(phys_nsi_dat_shp) %>%
-  addTiles() %>%
-  addMarkers(weight = 2) %>%
-  addMarkers(data = filter(phys_nsi_dat_shp, AreaSqKM == 0),
-             weight = 6,
-             opacity = 1,
-             color = "magenta")
+phys_sni_dat_mod2 <- phys_sni_dat_mod1 %>% 
+  mutate(ctch_select = if_else(ctch_area_km2 == 0 & stream_order == 1,
+                               "out",
+                               "keep")) %>% 
+  filter(.,ctch_select=="keep") %>% 
+  select(-ctch_select)
 
+# High order reaches with catchment areas = 0
+ho_ctc0_dat <- filter(phys_sni_dat_mod2, ctch_area_km2 == 0) # 52 observations
 
-coordinates <- strsplit(phys_nsi_dat_mod1$geometry, ",")
-coordinates <- lapply(coordinates, function(x) {
-  x <- as.numeric(x)
-  matrix(x, ncol = 2, byrow = TRUE)
-})
+summary(ho_ctc0_dat)
 
-# Convert the geometry column to LINESTRING
-phys_nsi_dat_shp_1 <- st_cast(phys_nsi_dat_shp, "LINESTRING")
-
-# Create a leaflet map and add polylines
-leaflet() %>%
-  addTiles() %>%
-  addPolylines(data = phys_nsi_dat_shp, weight = 2) %>%
-  addPolylines(data = filter(phys_nsi_dat_shp, AreaSqKM == 0),
-               weight = 6,
-               opacity = 1,
-               color = "magenta")
-
-
-leaflet() %>%
-  addTiles() %>%
-  addMarkers(data = phys_nsi_dat_shp, weight = 2) %>%
-  addMarkers(data = filter(phys_nsi_dat_shp, AreaSqKM == 0),
-             weight = 6,
-             opacity = 1,
-             color = "magenta")
-
-
-# Create a leaflet map and add polylines
-leaflet() %>% 
-  addTiles() %>% 
-  addPolylines(data = coordinates)
-
-library(sp)
-
-# Convert the list of coordinates to a SpatialLinesDataFrame
-lines <- lapply(coordinates, function(coords) Line(coords))
-lines <- SpatialLinesDataFrame(SpatialLines(lines), data = phys_nsi_dat_mod1)
-
-# Create a leaflet map and add polylines
-leaflet() %>% 
-  addTiles() %>% 
-  addPolylines(data = lines)
-
-
+# Verifying that the high order reaches 
+p <- ggplot(data = ho_ctc0_dat,
+            aes(x = wshd_area_km2,
+                y = tot_stream_length_km,
+                color = as.factor(stream_order)))+
+  geom_point()+
+  scale_y_log10()+
+  scale_x_log10()+
+  facet_wrap(~basin,ncol = 2)
+p
 
 
 son_etal_dat <- read_csv(paste(raw_data,"230406_son_etal_22_results_zen.csv", sep = '/'),
