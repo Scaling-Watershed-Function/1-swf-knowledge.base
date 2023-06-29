@@ -26,8 +26,7 @@ librarian::shelf(tidyverse,
                  R.utils,
                  sp,
                  sf,
-                 leaflet,
-                 rgdal)
+                 leaflet)
 
 # Set path to downloads folder
 downloads_folder <- if (Sys.getenv("OS") == "Windows_NT") {
@@ -175,33 +174,13 @@ rs_driver_object$server$stop()
 
 data <- retrieve_data(paste(downloads_folder))
 
-pnw_shapefiles <- sf::st_transform(st_read(paste(data[[1]][6])),4326)
-
+pnw_shapefiles <- st_read(paste(data[[1]][6]))
 
 pnw_data <- pnw_shapefiles %>% 
   mutate(HUC4 = substr(REACHCODE,1,4)) %>% 
   filter(HUC4 == "1703" | HUC4 == "1709")
-
-leaflet() %>% 
-  addTiles() %>% 
-  addMarkers(data = pnw_data$geometry)
-
-  addPolylines(data =filter(pnw_data,AreaSqKM == 0),
-               weight =6,
-               opacity = 1,
-               color = "magenta")
   
 st_write(pnw_data,paste(raw_data,"shape_files","nis_reference","230623_nis_network_ywrb.shp",sep = '/'))
-
-
-
-
-
-
-
-
-
-
 
 
 

@@ -144,120 +144,129 @@ for (i in 1:length(new_table_rows)){
 # Stop the Selenium server and close the browser
 rs_driver_object$server$stop()
 
-# Reading files from downloads directory
-
-# Get the current time
-current_time <- Sys.time()
-
-# Calculate the time threshold for file selection (1 hour ago)
-time_threshold <- current_time - 60 * 60 * 2  # 60 seconds * 60 minutes * 2 = 2 hours
+retrieve_data <- function(downloads_folder) {
+  # Get the current time
+  current_time <- Sys.time()
   
-# Retrieve the zip files downloaded within the last hour
-downloaded_files <- list.files(path = downloads_folder, full.names = TRUE, recursive = TRUE)
-recent_files <- file.info(downloaded_files)$mtime > time_threshold
+  # Calculate the time threshold for file selection (2 hours ago)
+  time_threshold <- current_time - 60 * 60 * 2  # 60 seconds * 60 minutes * 2 = 2 hours
+  
+  # Retrieve all files downloaded within the last 2 hours
+  downloaded_files <- list.files(path = downloads_folder, full.names = TRUE, recursive = TRUE)
+  recent_files <- file.info(downloaded_files)$mtime > time_threshold
+  
+  # Filter the downloaded files to keep only the recent ones
+  downloaded_files <- downloaded_files[recent_files]
+  
+  temp_dir <- tempdir()
+  
+  extracted_files <- vector("list", length(downloaded_files))
+  
+  all_files <- vector("list", length(downloaded_files))
+  
+  for (i in seq_along(downloaded_files)) {
+    file_path <- downloaded_files[i]
+    
+    # Check if the file is a zip file
+    is_zip <- tools::file_ext(file_path) == "zip"
+    
+    # Extract the file name without the extension
+    file_name <- tools::file_path_sans_ext(basename(file_path))
+    
+    if (is_zip) {
+      # Create a new directory with the file name
+      new_dir <- file.path(temp_dir, file_name)
+      dir.create(new_dir)
+      
+      # Unzip the file into the new directory
+      unzip(file_path, exdir = new_dir)
+      
+      # Get the extracted file paths
+      extracted_files[[i]] <- list.files(path = new_dir, full.names = TRUE)
+      
+      # Move the zip file to the temporary directory
+      file.rename(file_path, file.path(temp_dir, basename(file_path)))
+      
+      # Print the file names within the folder
+      cat("Files in", file_name, "folder:\n")
+      cat(paste0(extracted_files[[i]], "\n"), sep = "")
+      cat("\n")
+    } else {
+      # Move the non-zip file to the temporary directory
+      file.rename(file_path, file.path(temp_dir, basename(file_path)))
+    }
+    
+    # Add the file path to the list of all files
+    all_files[[i]] <- file.path(temp_dir, basename(file_path))
+    
+    # Print the file path
+    cat("File:", file.path(temp_dir, basename(file_path)), "\n")
+  }
+  
+  list(all_files = unlist(all_files), extracted_files = unlist(extracted_files))
+}
 
-# Filter the downloaded files to keep only the recent ones
-downloaded_files <- downloaded_files[recent_files]
+file_paths <- retrieve_data(paste(downloads_folder))
 
+# zip files
 
+unzip_list <- list.files(paste(file_paths[2]), full.names = TRUE)
+print(unzip_list)
 
+# Moving the needed files into their corresponding folder within raw data
 
+# Creating folders to store csv files and shapes separately
 
+# Defining the path to the new "model_inputs" folder
+model_inputs_data <- paste(raw_data, "data_preprocessing", "model_inputs", sep = '/')
 
+# Creating the subfolder for the csv data
+model_data_folder <- file.path(model_inputs_data, "model_data")
+dir.create(model_data_folder, recursive = TRUE)
 
+# Creating the subfolder for the shapefiles
+model_shapes_folder <- file.path(model_inputs_data, "model_shapes")
+dir.create(model_shapes_folder, recursive = TRUE)
 
+# Selecting csv files to move to the subfolder model_data
 
+# Index of the elements to extract
+subset_indices <- c(9,18,19,20,21,22)
 
+# Extract subset of elements from the list
+csv_extract <- unzip_list[subset_indices]
 
-
-
-
-
-
-
-
-
-
-
-
-"#table-container > div > table > tbody > tr:nth-child(1) > td.download-btn.btn-container > a"
-
-"#table-container > div > table > tbody > tr:nth-child(2) > td.download-btn.btn-container > a"
-
-# Extract the table as a data frame
-table_html <- remDr$findElement(using = "css selector", 
-                                value = "#table-container")$getElementAttribute("outerHTML")[[1]]
-table_df <- read_html(table_html) %>% html_table()
-
-files_table <- as.data.frame(table_df[1]) 
-
-
-
-# Extract the download links for each row
-table_selector <- "#table-container > div > table > tbody"
-
-table_rows <- remDr$findElements(using = "css selector", value = "#table-container > div > table > tbody > tr")
-
-download_links <- lapply(1:length(table_rows), function(i) {
-  # Construct the selector for the download link for the i-th row
-  download_link_selector <- paste0("#table-container > div > table > tbody > tr:nth-child(", i, ") > td.download-btn.btn-container > a")
-  # Extract the 'href' attribute of the download link
-  download_link_element <- remDr$findElement(using = "css selector", value = download_link_selector)
-  download_link_element$getElementAttribute("href")
-})
-
-# Printing table with download links
-download_list <- as.data.frame(unlist(download_links))
-colnames(download_list) <- "links"
-download_table <- files_table %>% 
-  select(name,file_type,size) %>% 
-  cbind(download_list)
-
-print(download_table)
-
-# Saving download table for future reference
-
-write.csv(download_table,paste(raw_data,"table_ess_dive_downloads_son_etal_22.csv", sep = '/'),
-          row.names = FALSE)
-
-# Downloading data
-
-# Find the rows in the table
-table_rows_a <- remDr$findElements(using = "css selector", value = table_selector)
-
-
-
-# Decide whether you want to download the full data package or specific files. To specify
-# the file(s) you want to download, write the row number below for their download button below.
-# For, instance, the link for full download is on the first row, so you would write 
-
-# `my_data_selection <- 1`. 
-
-# In our example we are interested in downloading the files in the folder "model_inputs.zip".
-# The download link for this zip folder is 2, so we write:
-
-my_data_selection <- 2
-
-# It is possible to download multiple files at the same time by using a loop function. But, for right now 
-# for simplicity, we will let the users decide the best way to do so, and focus in one download at a time. 
-
-# We will place our files in the downloads folder and extract them into a temporary
-# directory to illustrate the options available for storing files. 
-
+# Convert subset_elements to a vector
+csv_files <- unlist(csv_extract)
 
 
+# Move files to model_data folder
+for (i in 1:length(csv_files)) {
+  file.rename(csv_files[i], file.path(model_data_folder, basename(csv_files[i])))
+}
+
+# Selecting shapefiles to be stored in the subfolder model_shapes
+
+# Index of the elements to extract
+subset_indices <- seq(53,60,1)
+
+# Extract subset of elements from the list
+shapes_extract <- unzip_list[subset_indices]
+
+# Convert subset_elements to a vector
+shape_files <- unlist(shapes_extract)
 
 
+# Move files to model_shapes folder
+for (i in 1:length(shape_files)) {
+  file.rename(shape_files[i], file.path(model_shapes_folder, basename(shape_files[i])))
+}
 
 
+# Happy coding!
+
+# Reproducibility is the key to open, equitable, and accessible science. By the
+# people, for the people!
 
 
-# Stop the Selenium server and close the browser
-rmDriver
-
-
-
-
-
-"#table-container > div > table > tbody > tr:nth-child(1) > td.download-btn.btn-container > a"
 
