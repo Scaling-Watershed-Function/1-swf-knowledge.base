@@ -30,14 +30,14 @@ set.seed(2703)
 # External Import
 #TBD
 
-# Local import
+# Local import - Son et al., model input data
 
-input_data <- "./model_inputs" 
+model_data <- "./model_inputs/model_data" 
+model_shapes <- "./model_inputs/model_shapes" 
 
-# Local import and export paths
+# Local import and export paths to data files for further analysis
 
 raw_data <- "../1-swf-knowledge.base/assets/data/raw" 
-
 processed_data <- "../1-swf-knowledge.base/assets/data/processed"
 
 ############ loading NHDPlus Data (Shapefiles) ##################################################
