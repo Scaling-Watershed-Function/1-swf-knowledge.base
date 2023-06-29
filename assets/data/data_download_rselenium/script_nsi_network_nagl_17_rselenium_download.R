@@ -3,11 +3,6 @@
 # Nagel et al., 2017
 ###############################################################################
 
-###############################################################################
-# Downloading NHDPlus Version 2.1 Data (Enhanced Network Connectivity)
-# Blodgett, 2023 (version Feb. 2023)
-###############################################################################
-
 # Pre-requisites:
 # Make sure you have ran the file "script_system_prep_RSelenium.R"
 
@@ -15,6 +10,7 @@
 
 raw_data <- "../raw"
 processed_data <- "../processed"
+
 
 # Loading/installing required libraries
 librarian::shelf(tidyverse,
@@ -30,7 +26,8 @@ librarian::shelf(tidyverse,
                  R.utils,
                  sp,
                  sf,
-                 leaflet)
+                 leaflet,
+                 rgdal)
 
 # Set path to downloads folder
 downloads_folder <- if (Sys.getenv("OS") == "Windows_NT") {
@@ -99,7 +96,7 @@ files_table$Stream.Line.and.Prediction.Point.Shapefiles..zip.format. <- NULL
 # Selecting the desired processing unit (NHD Plus V2: from 01-Northeast to 18-California)
 # according to their position on files_table
 
-my_selection <- c(18,19,20)  # Example vector of selections
+my_selection <- c(20)  # Example vector of selections
 
 my_files_table <- files_table[my_selection, ]
 
@@ -178,13 +175,33 @@ rs_driver_object$server$stop()
 
 data <- retrieve_data(paste(downloads_folder))
 
-pnw_shapefiles <- st_read(paste(data[[3]][6]))
+pnw_shapefiles <- sf::st_transform(st_read(paste(data[[1]][6])),4326)
+
 
 pnw_data <- pnw_shapefiles %>% 
   mutate(HUC4 = substr(REACHCODE,1,4)) %>% 
   filter(HUC4 == "1703" | HUC4 == "1709")
+
+leaflet() %>% 
+  addTiles() %>% 
+  addMarkers(data = pnw_data$geometry)
+
+  addPolylines(data =filter(pnw_data,AreaSqKM == 0),
+               weight =6,
+               opacity = 1,
+               color = "magenta")
   
-write.csv(pnw_data,paste(raw_data,"230623_nis_network_ywrb.csv",sep = '/'),
-          row.names = FALSE)
+st_write(pnw_data,paste(raw_data,"shape_files","nis_reference","230623_nis_network_ywrb.shp",sep = '/'))
+
+
+
+
+
+
+
+
+
+
+
 
 

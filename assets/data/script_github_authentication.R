@@ -4,9 +4,9 @@
 
 #By Zhian Kamvar
 
+librarian::shelf(usethis,
+                 credentials)
 
-library("usethis")
-library("credentials")
 git_sitrep() # git situation report
 
 #Read more about what this GitHub remote configurations means at:

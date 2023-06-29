@@ -13,7 +13,10 @@ librarian::shelf(tidyverse,
                  utils,
                  quantreg,
                  gginnards,
-                 nhdplusTools)
+                 nhdplusTools,
+                 leaflet,
+                 sp,
+                 sf)
 
 # Local Import-Export
 raw_data <- "raw"
@@ -69,7 +72,6 @@ p <- ggplot(data = ho_ctc0_dat,
   scale_x_log10()+
   facet_wrap(~basin,ncol = 2)
 p
-
 
 
 son_etal_dat <- read_csv(paste(raw_data,"230406_son_etal_22_results_zen.csv", sep = '/'),
