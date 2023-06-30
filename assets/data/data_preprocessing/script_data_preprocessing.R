@@ -31,14 +31,12 @@ set.seed(2703)
 #TBD
 
 # Local import - Son et al., model input data
-
-model_data <- "./model_inputs/model_data" 
-model_shapes <- "./model_inputs/model_shapes" 
+model_data <- "model_inputs/model_data" 
+model_shapes <- "model_inputs/model_shapes" 
 
 # Local import and export paths to data files for further analysis
-
-raw_data <- "../1-swf-knowledge.base/assets/data/raw" 
-processed_data <- "../1-swf-knowledge.base/assets/data/processed"
+raw_data <- "../raw" 
+processed_data <- "../processed"
 
 ############ loading NHDPlus Data (Shapefiles) ##################################################
 
@@ -48,9 +46,9 @@ processed_data <- "../1-swf-knowledge.base/assets/data/processed"
 
 # Shapefiles
 # Yakima River Basin
-nhd_yrb_stream<-sf::st_transform(st_read(paste(input_data,"shapes/nhd_CR_stream_sub9.shp",sep = "/")),4326)
+nhd_yrb_stream<-sf::st_transform(st_read(paste(model_shapes,"nhd_CR_stream_sub9.shp",sep = "/")),4326)
 # Willamette River Basin
-nhd_wrb_stream<-sf::st_transform(st_read(paste(input_data,"shapes/nhd_CR_stream_sub8.shp",sep = "/")),4326)
+nhd_wrb_stream<-sf::st_transform(st_read(paste(model_shapes,"nhd_CR_stream_sub8.shp",sep = "/")),4326)
 
 # The willamette file contains two extra variables: Name and HUC4. Adding these columns to 
 # the yakima file
@@ -60,7 +58,6 @@ nhd_yrb_stream <-  nhd_yrb_stream %>%
          HUC4 = 1703) 
 
 # First, I will combine the shapefiles:
-
 nhd_pnw <- rbind(nhd_wrb_stream,
                  nhd_yrb_stream) %>% 
   rename(comid = COMID,
@@ -69,7 +66,6 @@ nhd_pnw <- rbind(nhd_wrb_stream,
          huc_4 = HUC4) 
 
 # Let's take a look at this data on a map
-
 
 # Using leaflet to look into maps:
 
@@ -86,10 +82,51 @@ nhd_pnw <- rbind(nhd_wrb_stream,
 # Call the function 'addProviderTiles' and paste the name chosen between ""
 # In the chunk below I chose "Esri.WorldImagery"
 
-
 leaflet(nhd_pnw) %>% 
   addPolylines(weight = 2) %>%  
   addProviderTiles("Esri.WorldImagery")
+
+# Now, let's take a look at data gaps in terms of model predictors, as well as
+# model predictions
+
+son_rcm_predict <- read_csv(paste(raw_data,"230406_son_etal_22_results_zen.csv",sep = '/'),
+                   show_col_types = FALSE)
+
+# The dataset son_rcm_predict contains both values for predicted and predictor variables.
+# These data also include annual, spring, and summer time scales. We will use "logtotco2g_m2_day"
+# to map gaps
+
+nhd_pnw <- nhd_pnw %>% 
+  merge(.,
+        son_rcm_predict %>% 
+          filter(time_type == "annual") %>% 
+          select(comid,
+                 logtotco2g_m2_day),
+        by = "comid",
+        all.x = TRUE)
+
+# Plotting the data using leaflet
+
+leaflet(nhd_pnw) %>% 
+  addPolylines(weight = 2) %>%  
+  addPolylines(data =filter(nhd_pnw,is.na(logtotco2g_m2_day)==FALSE),
+               weight = 5,
+               opacity = 1,
+               color = "magenta") %>% 
+  addProviderTiles("Esri.WorldImagery")
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 # National Stream Internet
