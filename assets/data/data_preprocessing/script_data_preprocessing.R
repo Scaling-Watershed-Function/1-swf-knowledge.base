@@ -108,14 +108,15 @@ nhd_pnw <- nhd_pnw %>%
 # Plotting the data using leaflet
 
 leaflet(nhd_pnw) %>% 
-  addPolylines(weight = 2) %>%  
   addPolylines(data =filter(nhd_pnw,is.na(logtotco2g_m2_day)==FALSE),
-               weight = 5,
+               weight = 2,
                opacity = 1,
-               color = "magenta") %>% 
+               color = "blue") %>%
+  # addPolylines(data =filter(nhd_pnw,is.na(logtotco2g_m2_day)),
+  #              weight = 2,
+  #              opacity = 1,
+  #              color = "magenta") %>%   
   addProviderTiles("Esri.WorldImagery")
-
-
 
 
 
