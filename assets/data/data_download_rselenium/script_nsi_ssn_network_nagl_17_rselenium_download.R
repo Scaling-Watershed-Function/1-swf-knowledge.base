@@ -97,7 +97,7 @@ files_table$Stream.Line.and.Prediction.Point.Shapefiles..zip.format. <- NULL
 
 my_selection <- c(20)  # Example vector of selections
 
-my_files_table <- files_table[my_selection, ]
+my_files_table <- files_table[my_selection,]
 
 # Table selector
 table_selector <- "#Content-outer > div > div.NorWeST_1 > table:nth-child(2) > tbody > tr:nth-child(2) > td > table > tbody > tr"
@@ -105,13 +105,18 @@ table_selector <- "#Content-outer > div > div.NorWeST_1 > table:nth-child(2) > t
 # Find the rows in the table
 table_rows <- remDr$findElements(using = "css selector", value = table_selector)
 
+# File name
+
+filename <- #pagetitle
+
+
 for (my_row in seq_along(my_selection)) {
   selection <- my_selection[my_row]
   row <- table_rows[[selection]]
   
   download_pattern <- my_files_table[my_row, "file_name"]
   
-  download_selector <- paste0("#Content-outer > div > div.NorWeST_1 > table:nth-child(2) > tbody > tr:nth-child(2) > td > table > tbody > tr:nth-child(", selection + 1, ") > td:nth-child(2) > p:nth-child(2) > a")
+  download_selector <- paste0("#Content-outer > div > div.NorWeST_1 > table:nth-child(2) > tbody > tr:nth-child(2) > td > table > tbody > tr:nth-child(", selection + 1, ") > td:nth-child(2) > p:nth-child(1) > a")
   download_button_element <- remDr$findElement(using = "css selector", value = download_selector)
   
   # Execute the JavaScript event attached to the element

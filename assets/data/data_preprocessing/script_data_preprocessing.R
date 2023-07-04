@@ -86,6 +86,72 @@ leaflet(nhd_pnw) %>%
   addPolylines(weight = 2) %>%  
   addProviderTiles("Esri.WorldImagery")
 
+# Exploring connectivity across these networks. We need to append the "tocomid" values to 
+# use the calculate_arbolate_sum from the nhdplusTools package.
+
+# We will use the blgt23_dat file to extract the "tocomid" values:
+
+
+blgt23_dat <- read_csv(paste(raw_data,"230620_enhanced_nhdp_2_swf.csv", sep = '/'),
+                       show_col_types = FALSE)
+
+nhd_pnw_tocomid <- nhd_pnw %>% 
+  merge(.,
+        blgt23_dat %>%
+          select(comid,tocomid),
+        by = "comid",
+        all.x = TRUE)
+
+# There are 2918 datapoints in the shape file that are not included in the enhanced
+# version of the nhdplus 2.1
+
+# Let's take a look at these data points
+
+leaflet(nhd_pnw_tocomid) %>% 
+  addPolylines(weight = 2) %>%  
+  # addPolylines(data =filter(nhd_pnw_tocomid,is.na(tocomid)==TRUE),
+  #              weight = 2,
+  #              opacity = 1,
+  #              color = "magenta") %>% 
+  addProviderTiles("Esri.WorldImagery")
+
+# A visual inspection of these NA values indicates that most of them correspond to 
+# artificial canals and ditches that are outside of the prediction scope for the model. 
+
+# So, we should be able to remove these data and calculate an arbolate sum to verify 
+# connectivity
+
+
+nhd_pnw_clean <- nhd_pnw_tocomid %>% 
+  filter(is.na(tocomid)==FALSE) %>% 
+  mutate(reach_index = 1,
+         basin = if_else(huc_4 == "1703",
+                         "yakima",
+                         "willamette"))%>% 
+  group_by(basin) %>% 
+  mutate(accm_reach_index = calculate_arbolate_sum(data.frame(ID = comid,
+                                                              toID = tocomid,
+                                                              length = reach_index)),
+         connectivity = (max(accm_reach_index)/sum(reach_index))*100)
+  
+# Connectivity indexes are quite low: 25.48% for Willamette and 17.80 for Yakima. 
+
+#Let's check for connectivity in the blgt23_dat
+
+blgt23_dat <-  blgt23_dat %>% 
+  mutate(reach_index = 1,
+         basin = if_else(huc_4 == "1703",
+                         "yakima",
+                         if_else(huc_4 == "1709",
+                                 "willamette",
+                                 "ipswich")))%>% 
+  group_by(basin) %>% 
+  mutate(accm_reach_index = calculate_arbolate_sum(data.frame(ID = comid,
+                                                              toID = tocomid,
+                                                              length = reach_index)),
+         connectivity = (max(accm_reach_index)/sum(reach_index))*100)
+
+
 # Now, let's take a look at data gaps in terms of model predictors, as well as
 # model predictions
 
