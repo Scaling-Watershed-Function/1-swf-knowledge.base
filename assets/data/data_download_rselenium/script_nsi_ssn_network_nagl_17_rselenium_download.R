@@ -105,10 +105,6 @@ table_selector <- "#Content-outer > div > div.NorWeST_1 > table:nth-child(2) > t
 # Find the rows in the table
 table_rows <- remDr$findElements(using = "css selector", value = table_selector)
 
-# File name
-
-filename <- #pagetitle
-
 
 for (my_row in seq_along(my_selection)) {
   selection <- my_selection[my_row]
