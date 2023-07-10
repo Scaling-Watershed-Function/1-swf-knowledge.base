@@ -181,7 +181,7 @@ pnw_data <- pnw_shapefiles %>%
   mutate(HUC4 = substr(REACHCODE,1,4)) %>% 
   filter(HUC4 == "1703" | HUC4 == "1709")
   
-st_write(pnw_data,paste(raw_data,"shape_files","nis_reference","230623_nis_network_ywrb.shp",sep = '/'))
+st_write(pnw_data,paste(raw_data,"shape_files","nsi_reference","230623_nsi_network_ywrb.shp",sep = '/'))
 
 
 

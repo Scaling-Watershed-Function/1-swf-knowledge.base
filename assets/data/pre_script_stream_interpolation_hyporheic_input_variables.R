@@ -3,21 +3,23 @@
 ################################################################################
 
 # Author: Francisco J. Guerrero
+gc(reset = TRUE)
 
 librarian::shelf(tidyverse,
                  ggplot2,
+                 sfnetworks,
                  sp,
                  sf,
                  leaflet,
                  utils,
-                 zen4R,
                  nhdplusTools,
                  htmlwidgets,
                  tidygraph,
                  sfheaders,
-                 rgdal)
-
-
+                 rgdal,
+                 data.table)
+                 
+                 
 # Local import / export paths
 
 raw_data <- "raw" 
@@ -35,6 +37,13 @@ current20_pnw_dat <- read_csv(paste(raw_data,"current20_hyporheic_pnw_data.csv",
 
 enh_nhd21_dat <- read_csv(paste(raw_data,"230620_enhanced_nhdp_2_swf.csv", sep = '/'),
                           show_col_types = FALSE)
+
+# Shapefiles
+nsi_pnw_stream <- sf::st_transform(st_read(paste(raw_data,"shape_files", "nsi_reference","230623_nsi_network_ywrb.shp", sep = '/')),4326)
+
+# Removing duplicated comids
+nis_pnw_stream <- nis_pnw_stream %>% 
+  filter(DUP_COMID == 0)
 
 # Merging datasets
 
@@ -201,99 +210,27 @@ leaflet(nis_pnw_stream_dat) %>%
   addProviderTiles("Esri.WorldImagery")
 
 
-# Checking the spatial pattern of lateral hyporheic flows in the Willamette River
-
-lat_hyp_flow_plot <- nis_pnw_stream_dat %>% 
-  select(basin,
-         streamorder,
-         c_q_hz_lateral_m_div_s) %>% 
-  filter(streamorder!= 9) %>% 
-  ggplot(aes(x = as.factor(streamorder),
-             y = c_q_hz_lateral_m_div_s,
-             color = as.factor(streamorder)))+
-  scale_y_log10()+
-  geom_boxplot()+
-  facet_wrap(~basin, ncol = 2)+
-  theme(legend.position = "none")
-lat_hyp_flow_plot
-
-# Interpolation across the flow network with nhdplusTools
-
-# Read the NHDPlus flowline dataset
-w_flowlines <- st_as_sf(filter(nis_pnw_stream_dat,
-                               HUC4 == "1709" ))
-
-# Create a tidygraph object from the flowlines dataset
-graph <- as_tbl_graph(w_flowlines, directed = TRUE)
-
-# Define the variable to use for filling NA values
-desired_variable <- "c_q_hz_lateral_m_div_s"
-
-
-# Function to fill NA values from upstream and downstream flowlines
-fill_na_values <- function(data, var) {
-  updated_data <- data
-  
-  # Find initial NA values
-  na_indices <- which(is.na(updated_data[[var]]))
-  
-  while (length(na_indices) > 0) {
-    # Find upstream and downstream flowlines for NA values
-    upstream <- filter(updated_data, comid %in% updated_data$tocomid[na_indices])
-    downstream <- filter(updated_data, tocomid %in% updated_data$comid[na_indices])
-    
-    # Find non-NA neighbor values
-    neighbor_values <- c(upstream[[var]], downstream[[var]])
-    non_na_values <- neighbor_values[!is.na(neighbor_values)]
-    
-    if (length(non_na_values) > 0) {
-      # Calculate the average of non-NA neighbor values for NA indices
-      updated_data[[var]][na_indices] <- rep(mean(non_na_values), length(na_indices))
-    }
-    
-    # Find updated NA values
-    na_indices <- which(is.na(updated_data[[var]]))
-  }
-  
-  return(updated_data)
-}
-
-# Fill NA values in the flowlines dataset
-filled_flowlines <- fill_na_values(w_flowlines, desired_variable)
-
-
-lat_int_hyp_flow_plot <- filled_flowlines %>% 
-  select(basin,
-         streamorder,
-         c_q_hz_lateral_m_div_s) %>% 
-  filter(streamorder!= 9) %>% 
-  ggplot(aes(x = as.factor(streamorder),
-             y = c_q_hz_lateral_m_div_s,
-             color = as.factor(streamorder)))+
-  scale_y_log10()+
-  geom_boxplot()+
-  theme(legend.position = "none")
-lat_int_hyp_flow_plot
-
 ################################################################################
-library(tidygraph)
-library(dplyr)
-library(sf)
-library(sfheaders)
-library(igraph)
+# GAP Filling
+################################################################################
 
 # Define the variable to use for filling NA values
 desired_variable <- "c_d50_m"
 
 # Read the NHDPlus flowline dataset
 flowlines <- st_as_sf(nis_pnw_stream_dat %>% 
-                        filter(HUC4 == "1709") %>% 
                         select(comid,
                                tocomid,
                                {{desired_variable}}))
 
 # Create a tidygraph object from the flowlines dataset
 graph <- as_tbl_graph(flowlines, directed = TRUE)
+
+# Convert the dataset to an sfnetwork object
+sfn <- as_sfnetwork(flowlines)
+
+# Plot the river network
+# plot(sfn, edge.arrow.size = 1.0, edge.color = "blue", vertex.color = "magenta", vertex.size = 0.5)
 
 
 # Function to fill NA values from upstream and downstream flowlines
@@ -325,7 +262,7 @@ fill_na_values <- function(data, var) {
 }
 
 # Set the number of iterations
-num_iterations <- 500
+num_iterations <- 5
 
 # Set the percentage for the random sample size (modify as desired)
 sample_percentage <- 0.1
@@ -374,27 +311,63 @@ for (i in 1:num_iterations) {
 # Combine the results into a single data frame
 combined_results <- bind_rows(results)
 
-# Calculate averages and standard deviations for desired variable and cumulative sum
-summary_stats <- combined_results %>%
-  rowwise() %>%
-  summarize(avg_desired_variable = mean({{ desired_variable }}, na.rm = TRUE),
-            sd_desired_variable = sd({{ desired_variable }}, na.rm = TRUE),
-            avg_accm_desired_variable = mean(across(starts_with("accm_")), na.rm = TRUE),
-            sd_accm_desired_variable = sd(across(starts_with("accm_")), na.rm = TRUE))
+# Convert combined_results to a data.table
+dt <- as.data.table(combined_results)
 
-# Print the summary statistics
-print(summary_stats)
+# Calculate summary statistics by comid
+# Calculate summary statistics by comid
+summary_stats <- dt[, .(
+  !!paste0("avg_", desired_variable) == mean(get(desired_variable), na.rm = TRUE),
+  !!paste0("sd_", desired_variable) == sd(get(desired_variable), na.rm = TRUE),
+  !!paste0("avg_accm_", desired_variable) == mean(get(starts_with("accm_")), na.rm = TRUE),
+  !!paste0("sd_accm_", desired_variable) == sd(get(starts_with("accm_")), na.rm = TRUE)
+), by = comid]
 
 
-test <- as.data.frame(filled_flowlines)
+# Calculate summary statistics by comid
+summary_stats <- dt[, .(avg_c_d50_m = mean(c_d50_m, na.rm = TRUE),
+                        sd_c_d50_m = sd(c_d50_m, na.rm = TRUE),
+                        avg_accm_c_d50_m = mean(accm_c_d50_m, na.rm = TRUE),
+                        sd_accm_c_d50_m = sd(accm_c_d50_m, na.rm = TRUE)),
+                        by = comid]
 
-# Remove duplicate rows from the dataframe
-test <- distinct(test, comid, tocomid, .keep_all = TRUE)
+# View the summary statistics
+summary_stats
 
-# Perform the mutation to calculate cumulative sum
-test <- test %>% 
-  mutate(!!paste0("accm_", desired_variable) := calculate_arbolate_sum(data.frame(ID = comid,
-                                                                                  toID = tocomid,
-                                                                                  length = !!sym(desired_variable))))
-# Shapefiles
-nis_pnw_stream <- sf::st_transform(st_read(paste(raw_data,"shape_files", "nis_reference","230623_nis_network_ywrb.shp", sep = '/')),4326)
+nis_pnw_stream_interpolated_dat <- nis_pnw_stream_dat %>% 
+  merge(.,
+        summary_stats %>% 
+          select(comid,
+                 avg_c_d50_m,
+                 avg_accm_c_d50_m,
+                 sd_c_d50_m,
+                 sd_accm_c_d50_m))
+
+eval_plot <- ggplot(data = filter(nis_pnw_stream_interpolated_dat,
+                                  is.na(c_d50_m)==FALSE),
+                    aes(x = c_d50_m,
+                        y = avg_c_d50_m,
+                        color = FTYPE))+
+  geom_point()+
+  scale_x_log10()+
+  scale_y_log10()+
+  geom_abline()+
+  facet_wrap(~basin, ncol = 2)
+eval_plot
+  
+nis_pnw_stream_interpolated_dat <- nis_pnw_stream_interpolated_dat %>% 
+  mutate(d50_diff = abs((c_d50_m - avg_c_d50_m)))
+
+
+
+leaflet(nis_pnw_stream_interpolated_dat) %>% 
+  # addPolylines(data = filter(combined_results, is.na(c_d50_m)==FALSE),
+  #              weight = 4,
+  #              color = "darkorange",
+  #              opacity = 1) %>% 
+  addPolylines(data = filter(combined_results, "d50_diff" > 0.01),
+               weight = 4,
+               color = "magenta",
+               opacity = 1) %>%
+  addPolylines(weight = 2) %>% 
+  addProviderTiles("Esri.WorldImagery")
