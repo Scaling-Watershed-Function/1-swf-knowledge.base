@@ -31,6 +31,9 @@ newest23_pnw_dat <- read_csv(paste(raw_data,"newest23_hyporheic_pnw_data.csv", s
 current20_pnw_dat <- read_csv(paste(raw_data,"current20_hyporheic_pnw_data.csv", sep = '/'),
           show_col_types = FALSE)
 
+enh_nhd21_dat <- read_csv(paste(raw_data,"230620_enhanced_nhdp_2_swf.csv", sep = '/'),
+                          show_col_types = FALSE)
+
 # Shapefiles
 
 nis_pnw_stream <- sf::st_transform(st_read(paste(raw_data,"shape_files", "nis_reference","230623_nis_network_ywrb.shp", sep = '/')),4326)
@@ -273,4 +276,135 @@ lat_int_hyp_flow_plot <- filled_flowlines %>%
   geom_boxplot()+
   theme(legend.position = "none")
 lat_int_hyp_flow_plot
+
+################################################################################
+
+
+library(tidygraph)
+library(dplyr)
+library(sf)
+
+# Read the NHDPlus flowline dataset
+flowlines <- st_as_sf(filter(nis_pnw_stream_dat,
+                             HUC4 == "1709" ))
+
+# Create a tidygraph object from the flowlines dataset
+graph <- as_tbl_graph(flowlines, directed = TRUE)
+
+# Define the variable to use for filling NA values
+desired_variable <- "c_q_hz_lateral_m_div_s"
+
+
+# Function to fill NA values from upstream and downstream flowlines
+fill_na_values <- function(data, var) {
+  updated_data <- data
+  
+  # Find initial NA values
+  na_indices <- which(is.na(updated_data[[var]]))
+  
+  while (length(na_indices) > 0) {
+    # Find upstream and downstream flowlines for NA values
+    upstream <- filter(updated_data, comid %in% updated_data$tocomid[na_indices])
+    downstream <- filter(updated_data, tocomid %in% updated_data$comid[na_indices])
+    
+    # Find non-NA neighbor values
+    neighbor_values <- c(upstream[[var]], downstream[[var]])
+    non_na_values <- neighbor_values[!is.na(neighbor_values)]
+    
+    if (length(non_na_values) > 0) {
+      # Calculate the average of non-NA neighbor values for NA indices
+      updated_data[[var]][na_indices] <- rep(mean(non_na_values), length(na_indices))
+    }
+    
+    # Find updated NA values
+    na_indices <- which(is.na(updated_data[[var]]))
+  }
+  
+  return(updated_data)
+}
+
+# Set the number of iterations
+num_iterations <- 500
+
+# Set the percentage for the random sample size (modify as desired)
+sample_percentage <- 0.1
+
+# Calculate the sample size as a percentage of the dataset length
+sample_size <- round(sample_percentage * nrow(flowlines))
+
+# Create a list to store results of each iteration
+results <- vector("list", num_iterations)
+
+# Run iterations
+for (i in 1:num_iterations) {
+  # Take a random sample of flowlines with desired variable not NA
+  random_sample <- flowlines %>%
+    filter(!is.na({{ desired_variable }})) %>%
+    sample_n(size = sample_size, replace = FALSE)
+  
+  # Get the remaining data as temp_flowlines
+  temp_flowlines <- flowlines %>%
+    anti_join(random_sample, by = "comid")
+  
+  # Replace the values of the desired variable with NA in the random sample
+  random_sample <- random_sample %>%
+    mutate({{ desired_variable }} := NA)
+  
+  # Bind the random sample with temp_flowlines
+  combined_data <- bind_rows(random_sample, temp_flowlines)
+  
+  # Fill NA values in temp_flowlines using fill_na_values function
+  filled_flowlines <- fill_na_values(combined_data, {{ desired_variable }})
+  
+  # Calculate cumulative sum for the filled desired variable
+  accm_var <- calculate_arbolate_sum(data.frame(ID = filled_flowlines$comid, toID = filled_flowlines$tocomid, length = filled_flowlines[[desired_variable]]))
+  
+  # Create a new column for the cumulative sum
+  filled_flowlines <- filled_flowlines %>%
+    mutate(across(all_of(desired_variable), ~ accm_var))
+  
+  # Store the result in the list
+  results[[i]] <- filled_flowlines
+}
+
+# Combine the results into a single data frame
+combined_results <- bind_rows(results)
+
+# Calculate averages and standard deviations for desired variable and cumulative sum
+summary_stats <- combined_results %>%
+  summarize(avg_desired_variable = mean({{ desired_variable }}, na.rm = TRUE),
+            sd_desired_variable = sd({{ desired_variable }}, na.rm = TRUE),
+            avg_accm_desired_variable = mean(across(starts_with("accm_")), na.rm = TRUE),
+            sd_accm_desired_variable = sd(across(starts_with("accm_")), na.rm = TRUE))
+
+# Print the summary statistics
+print(summary_stats)
+# Combine the results into a single data frame
+combined_results <- bind_rows(results)
+
+# Calculate averages and standard deviations for desired variable and cumulative sum
+summary_stats <- combined_results %>%
+  summarize(avg_desired_variable = mean({{ desired_variable }}, na.rm = TRUE),
+            sd_desired_variable = sd({{ desired_variable }}, na.rm = TRUE),
+            avg_accm_desired_variable = mean(across(starts_with("accm_")), na.rm = TRUE),
+            sd_accm_desired_variable = sd(across(starts_with("accm_")), na.rm = TRUE))
+
+# Print the summary statistics
+print(summary_stats)
+
+# Combine the results into a single data frame
+combined_results <- bind_rows(results)
+
+# Calculate averages and standard deviations for desired variable and cumulative sum
+summary_stats <- combined_results %>%
+  summarize(avg_desired_variable = mean({{ desired_variable }}, na.rm = TRUE),
+            sd_desired_variable = sd({{ desired_variable }}, na.rm = TRUE),
+            avg_accm_desired_variable = mean(across(starts_with("accm_")), na.rm = TRUE),
+            sd_accm_desired_variable = sd(across(starts_with("accm_")), na.rm = TRUE))
+
+# Print the summary statistics
+print(summary_stats)
+
+
+
 
