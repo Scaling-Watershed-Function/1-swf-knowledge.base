@@ -13,7 +13,9 @@ librarian::shelf(tidyverse,
                  zen4R,
                  nhdplusTools,
                  htmlwidgets,
-                 tidygraph)
+                 tidygraph,
+                 sfheaders,
+                 rgdal)
 
 
 # Local import / export paths
@@ -33,10 +35,6 @@ current20_pnw_dat <- read_csv(paste(raw_data,"current20_hyporheic_pnw_data.csv",
 
 enh_nhd21_dat <- read_csv(paste(raw_data,"230620_enhanced_nhdp_2_swf.csv", sep = '/'),
                           show_col_types = FALSE)
-
-# Shapefiles
-
-nis_pnw_stream <- sf::st_transform(st_read(paste(raw_data,"shape_files", "nis_reference","230623_nis_network_ywrb.shp", sep = '/')),4326)
 
 # Merging datasets
 
@@ -278,21 +276,24 @@ lat_int_hyp_flow_plot <- filled_flowlines %>%
 lat_int_hyp_flow_plot
 
 ################################################################################
-
-
 library(tidygraph)
 library(dplyr)
 library(sf)
+library(sfheaders)
+library(igraph)
+
+# Define the variable to use for filling NA values
+desired_variable <- "c_d50_m"
 
 # Read the NHDPlus flowline dataset
-flowlines <- st_as_sf(filter(nis_pnw_stream_dat,
-                             HUC4 == "1709" ))
+flowlines <- st_as_sf(nis_pnw_stream_dat %>% 
+                        filter(HUC4 == "1709") %>% 
+                        select(comid,
+                               tocomid,
+                               {{desired_variable}}))
 
 # Create a tidygraph object from the flowlines dataset
 graph <- as_tbl_graph(flowlines, directed = TRUE)
-
-# Define the variable to use for filling NA values
-desired_variable <- "c_q_hz_lateral_m_div_s"
 
 
 # Function to fill NA values from upstream and downstream flowlines
@@ -338,17 +339,15 @@ results <- vector("list", num_iterations)
 # Run iterations
 for (i in 1:num_iterations) {
   # Take a random sample of flowlines with desired variable not NA
-  random_sample <- flowlines %>%
-    filter(!is.na({{ desired_variable }})) %>%
-    sample_n(size = sample_size, replace = FALSE)
+  non_na_indices <- which(!is.na(flowlines[[desired_variable]]))
+  random_indices <- sample(non_na_indices, size = sample_size, replace = FALSE)
+  random_sample <- flowlines[random_indices, ]
   
   # Get the remaining data as temp_flowlines
-  temp_flowlines <- flowlines %>%
-    anti_join(random_sample, by = "comid")
+  temp_flowlines <- flowlines[-random_indices, ]
   
   # Replace the values of the desired variable with NA in the random sample
-  random_sample <- random_sample %>%
-    mutate({{ desired_variable }} := NA)
+  random_sample[[desired_variable]] <- NA
   
   # Bind the random sample with temp_flowlines
   combined_data <- bind_rows(random_sample, temp_flowlines)
@@ -356,12 +355,17 @@ for (i in 1:num_iterations) {
   # Fill NA values in temp_flowlines using fill_na_values function
   filled_flowlines <- fill_na_values(combined_data, {{ desired_variable }})
   
+  # Remove duplicated comid's (legacy from the streametwork dataset)
+  filled_flowlines <- distinct(filled_flowlines, comid, tocomid, .keep_all = TRUE)
+  
   # Calculate cumulative sum for the filled desired variable
-  accm_var <- calculate_arbolate_sum(data.frame(ID = filled_flowlines$comid, toID = filled_flowlines$tocomid, length = filled_flowlines[[desired_variable]]))
+  accm_var <- calculate_arbolate_sum(data.frame(ID = filled_flowlines$comid, 
+                                                toID = filled_flowlines$tocomid, 
+                                                length = filled_flowlines[[desired_variable]]))
   
   # Create a new column for the cumulative sum
   filled_flowlines <- filled_flowlines %>%
-    mutate(across(all_of(desired_variable), ~ accm_var))
+    mutate(!!paste0("accm_", desired_variable) := accm_var)
   
   # Store the result in the list
   results[[i]] <- filled_flowlines
@@ -372,31 +376,7 @@ combined_results <- bind_rows(results)
 
 # Calculate averages and standard deviations for desired variable and cumulative sum
 summary_stats <- combined_results %>%
-  summarize(avg_desired_variable = mean({{ desired_variable }}, na.rm = TRUE),
-            sd_desired_variable = sd({{ desired_variable }}, na.rm = TRUE),
-            avg_accm_desired_variable = mean(across(starts_with("accm_")), na.rm = TRUE),
-            sd_accm_desired_variable = sd(across(starts_with("accm_")), na.rm = TRUE))
-
-# Print the summary statistics
-print(summary_stats)
-# Combine the results into a single data frame
-combined_results <- bind_rows(results)
-
-# Calculate averages and standard deviations for desired variable and cumulative sum
-summary_stats <- combined_results %>%
-  summarize(avg_desired_variable = mean({{ desired_variable }}, na.rm = TRUE),
-            sd_desired_variable = sd({{ desired_variable }}, na.rm = TRUE),
-            avg_accm_desired_variable = mean(across(starts_with("accm_")), na.rm = TRUE),
-            sd_accm_desired_variable = sd(across(starts_with("accm_")), na.rm = TRUE))
-
-# Print the summary statistics
-print(summary_stats)
-
-# Combine the results into a single data frame
-combined_results <- bind_rows(results)
-
-# Calculate averages and standard deviations for desired variable and cumulative sum
-summary_stats <- combined_results %>%
+  rowwise() %>%
   summarize(avg_desired_variable = mean({{ desired_variable }}, na.rm = TRUE),
             sd_desired_variable = sd({{ desired_variable }}, na.rm = TRUE),
             avg_accm_desired_variable = mean(across(starts_with("accm_")), na.rm = TRUE),
@@ -406,5 +386,15 @@ summary_stats <- combined_results %>%
 print(summary_stats)
 
 
+test <- as.data.frame(filled_flowlines)
 
+# Remove duplicate rows from the dataframe
+test <- distinct(test, comid, tocomid, .keep_all = TRUE)
 
+# Perform the mutation to calculate cumulative sum
+test <- test %>% 
+  mutate(!!paste0("accm_", desired_variable) := calculate_arbolate_sum(data.frame(ID = comid,
+                                                                                  toID = tocomid,
+                                                                                  length = !!sym(desired_variable))))
+# Shapefiles
+nis_pnw_stream <- sf::st_transform(st_read(paste(raw_data,"shape_files", "nis_reference","230623_nis_network_ywrb.shp", sep = '/')),4326)
