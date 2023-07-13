@@ -8,8 +8,8 @@
 
 # Local Import-Export
 
-raw_data <- "../raw"
-processed_data <- "../processed"
+raw_data <- "raw_data"
+processed_data <- "processed_data"
 
 # Loading/installing required libraries
 librarian::shelf(tidyverse,
@@ -22,7 +22,13 @@ librarian::shelf(tidyverse,
                  readr,
                  xml2, 
                  methods,
-                 R.utils)
+                 R.utils,
+                 fs,
+                 tools)
+
+# Reference comid's
+comid_reference <- read_csv("../enhanced_nhdplus_21/raw_data/230711_reference_comids.csv",
+                            show_col_types = FALSE) 
 
 
 # Set the path to the downloads folder
@@ -197,17 +203,18 @@ for (my_row in seq_along(new_table_rows)) {
 # Stop the Selenium server and close the browser
 rs_driver_object$server$stop()
 
-# Reading files from downloads directory
-
-retrieve_and_merge_data <- function(downloads_folder) {
+################################################################################
+# Processing Extracted Files
+################################################################################
+retrieve_data <- function(downloads_folder) {
   # Get the current time
   current_time <- Sys.time()
   
-  # Calculate the time threshold for file selection (1 hour ago)
+  # Calculate the time threshold for file selection (2 hours ago)
   time_threshold <- current_time - 60 * 60 * 2  # 60 seconds * 60 minutes * 2 = 2 hours
   
-  # Retrieve the zip files downloaded within the last hour
-  downloaded_files <- list.files(path = downloads_folder, full.names = TRUE, pattern = ".zip$", recursive = TRUE)
+  # Retrieve all files downloaded within the last 2 hours
+  downloaded_files <- list.files(path = downloads_folder, full.names = TRUE, recursive = TRUE)
   recent_files <- file.info(downloaded_files)$mtime > time_threshold
   
   # Filter the downloaded files to keep only the recent ones
@@ -215,58 +222,110 @@ retrieve_and_merge_data <- function(downloads_folder) {
   
   temp_dir <- tempdir()
   
-  extract_and_read <- function(file) {
+  extracted_files <- vector("list", length(downloaded_files))
+  
+  for (i in seq_along(downloaded_files)) {
+    file_path <- downloaded_files[i]
+    
+    # Check if the file is a zip file
+    is_zip <- tools::file_ext(file_path) == "zip"
+    
     # Extract the file name without the extension
-    file_name <- tools::file_path_sans_ext(basename(file))
+    file_name <- tools::file_path_sans_ext(basename(file_path))
     
-    # Create a new directory with the file name
-    new_dir <- file.path(temp_dir, file_name)
-    dir.create(new_dir)
-    
-    # Unzip the file into the new directory
-    unzip(file, exdir = new_dir)
-    
-    # Get the extracted file path
-    extracted_file <- list.files(path = new_dir, full.names = TRUE)
-    
-    # Determine the file extension
-    file_extension <- tools::file_ext(extracted_file)
-    
-    # Read the contents of the extracted file based on the file extension
-    if (tolower(file_extension) %in% c("txt", "csv")) {
-      # Read delimited or CSV file
-      data <- readr::read_delim(extracted_file, show_col_types = FALSE)
+    if (is_zip) {
+      tryCatch({
+        # Create a new directory with the file name
+        new_dir <- file.path(temp_dir, file_name)
+        dir.create(new_dir, recursive = TRUE, showWarnings = FALSE)
+        
+        # Unzip the file into the new directory
+        unzip(file_path, exdir = new_dir)
+        
+        # Get the extracted file paths
+        extracted_files_list <- list.files(path = new_dir, full.names = TRUE, recursive = TRUE)
+        
+        # Print the file names within the folder
+        cat("Files in", file_name, "folder:\n")
+        cat(paste0(extracted_files_list, "\n"), sep = "")
+        cat("\n")
+        
+        # Move the zip file to the temporary directory
+        file.rename(file_path, file.path(temp_dir, basename(file_path)))
+        
+        # Store the extracted file paths with their original extensions
+        extracted_files[[i]] <- extracted_files_list
+      }, error = function(e) {
+        cat("Failed to unzip", file_name, "\n")
+        cat("File:", file_path, "\n")
+        message(e)
+      })
     } else {
-      data <- read_csv(extracted_file, show_col_types = FALSE)
+      # Move the non-zip file to the temporary directory
+      file.rename(file_path, file.path(temp_dir, basename(file_path)))
+      
+      # Add the file path to the list of non-zip files
+      extracted_files[[i]] <- file.path(temp_dir, basename(file_path))
     }
-
-    # # Read the contents of the extracted file
-    # read_delim(extracted_file, show_col_types = FALSE)
+    
+    # Print the file path
+    cat("File:", file.path(temp_dir, basename(file_path)), "\n")
   }
   
-  # Extract and read the contents of the recent zip files
-  extracted_data <- lapply(downloaded_files, extract_and_read)
-  
-  # Merge the extracted data into a single dataframe
-  bsn_chr_data <- Reduce(function(x, y) merge(x, y, by = "COMID", all.x = TRUE), extracted_data)
-  
-  return(bsn_chr_data)
+  list(extracted_files = unlist(extracted_files), temp_dir = temp_dir)
 }
 
-bsn_chr_dat <- retrieve_and_merge_data("C:/Users/guer310/Downloads")
-bsn_chr_dat <- bsn_chr_dat %>% 
+# Access the extracted file paths using result$extracted_files
+result <- retrieve_data(paste(downloads_folder))
+extracted_files <- result$extracted_files
+extracted_files
+
+################################################################################
+# Processing & Saving Files
+
+process_files <- function(file_paths, temp_dir) {
+  destination_folder1 <- "metadata"
+  destination_folder2 <- "raw_data"
+  
+  data_list <- list()  # List to store individual txt data
+  
+  for (file_path in file_paths) {
+    extension <- tools::file_ext(file_path)
+    
+    if (extension == "xml") {
+      new_file_path <- file.path(destination_folder1, basename(file_path))
+      file.rename(file_path, new_file_path)
+    } else {
+      # Read the TXT files
+      basin_data <- read_delim(file_path, show_col_types = FALSE)
+      
+      # Perform any necessary data processing/manipulation
+      
+      # Merge basin data using the "COMID" variable
+      if (!is.null(data_list[["merged_data"]])) {
+        data_list[["merged_data"]] <- merge(data_list[["merged_data"]], basin_data, by = "COMID", all = TRUE)
+      } else {
+        data_list[["merged_data"]] <- basin_data
+      }
+    }
+  }
+data_list  
+}
+
+temp_dir <- tempfile()
+
+outputs <- process_files(extracted_files,temp_dir)
+
+raw_basin_data <- outputs$merged_data %>% 
   rename(comid = COMID)
 
-# Merging with Blodgett (2023) and Weiczeroek (2021)
+pnw_basin_data <- merge(comid_reference,
+                        raw_basin_data,
+                        by = "comid",
+                        all.x = TRUE) 
 
-hydro_dat_swf <- read_csv(paste(raw_data,"230620_enhanced_nhdp_2_swf.csv",sep = '/'),
-                          show_col_types = FALSE)
+# Save merged_data as a CSV file
+project_name <- basename(getwd())
+csv_file_path <- file.path(destination_folder2, paste0(project_name, ".csv"))
+write.csv(pnw_basin_data, file = csv_file_path, row.names = FALSE)
 
-wczk21_dat <- hydro_dat_swf %>% 
-  select(comid) %>% 
-  merge(.,bsn_chr_dat,
-        by = "comid",
-        all.x = TRUE)
-
-write.csv(wczk21_dat,paste(raw_data,"230620_swf_basin_characteristics.csv", sep = '/'),
-           row.names = FALSE)
