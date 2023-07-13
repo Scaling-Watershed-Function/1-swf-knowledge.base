@@ -1,0 +1,51 @@
+{
+  "collapse-filter": false,
+  "search": "",
+  "showTags": false,
+  "showAttachments": false,
+  "hideUnresolved": true,
+  "showOrphans": false,
+  "collapse-color-groups": true,
+  "colorGroups": [
+    {
+      "query": "path:PEOPLE",
+      "color": {
+        "a": 1,
+        "rgb": 12598018
+      }
+    },
+    {
+      "query": "path:PRODUCTS",
+      "color": {
+        "a": 1,
+        "rgb": 3319808
+      }
+    },
+    {
+      "query": "path:PLATFORMS/org_platforms",
+      "color": {
+        "a": 1,
+        "rgb": 505069
+      }
+    },
+    {
+      "query": "path:PLATFORMS/Tech_platforms",
+      "color": {
+        "a": 1,
+        "rgb": 12669664
+      }
+    }
+  ],
+  "collapse-display": true,
+  "showArrow": false,
+  "textFadeMultiplier": 0,
+  "nodeSizeMultiplier": 1,
+  "lineSizeMultiplier": 2.31928519151012,
+  "collapse-forces": true,
+  "centerStrength": 0.751781472684086,
+  "repelStrength": 11.5068289786223,
+  "linkStrength": 0.667744799594115,
+  "linkDistance": 374,
+  "scale": 0.21829154043040466,
+  "close": true
+}
