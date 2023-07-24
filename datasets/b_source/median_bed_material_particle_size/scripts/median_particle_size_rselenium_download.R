@@ -1,6 +1,6 @@
 ###############################################################################
-# Downloading NHDPlus Version 2.1 Data (Enhanced Network Connectivity)
-# Blodgett, 2023 (version Feb. 2023)
+# Downloading A national map of riverine median bed-material particle size over CONUS
+# Li et al., 2023 
 ###############################################################################
 
 # Pre-requisites:
@@ -22,7 +22,13 @@ librarian::shelf(tidyverse,
                  readr,
                  xml2, 
                  methods,
-                 R.utils)
+                 R.utils,
+                 foreign,
+                 sf)
+
+# Reference comid's
+comid_reference <- read_csv("../enhanced_nhdplus_21/raw_data/reference_comids_tocomids.csv",
+                            show_col_types = FALSE) 
 
 # Set path to downloads folder
 downloads_folder <- if (Sys.getenv("OS") == "Windows_NT") {
@@ -58,7 +64,7 @@ rs_driver_object <- rsDriver(browser = "chrome",
 remDr <- rs_driver_object$client
 
 # To start downloading data, we first need to specify the url we want to navigate to
-target_url <- "https://www.sciencebase.gov/catalog/item/63cb311ed34e06fef14f40a3"
+target_url <- "https://zenodo.org/record/4921987"
 
 # Navigate to your target url
 remDr$navigate(target_url)
@@ -66,9 +72,17 @@ remDr$navigate(target_url)
 # Wait for the page to load
 Sys.sleep(5) 
 
+# Saving the html as a plain text file in the metadata folder
+site = read_html(target_url)
+text_content = html_text(html_nodes(site, 'p,h1,h2,h3')) # comma separate
+
+# Save the text content as a text file
+txt_file_path <- file.path(getwd(), "metadata", "target_page.txt")
+writeLines(text_content, txt_file_path)
+
 # Explore the page and find css selector
 
-css_selector <- "#attached-files-section > div > div > div.sb-expander-content > div.table-responsive > table"
+css_selector <- "#collapseTwo > table"
 
 # Extract the table as a data frame
 table_html <- remDr$findElement(using = "css selector", 
@@ -78,23 +92,24 @@ table_df <- read_html(table_html) %>% html_table()
 files_table <- as.data.frame(table_df[1]) 
 
 colnames(files_table) <- c("dataset",
-                           "view",
                            "size",
-                           "file_type")
+                           "links")
+
 
 files_table <- files_table %>% 
   mutate(file_name = sub("\\s.*", "", .$dataset),
-         file_extension = sub("^.*\\.", "", file_name),
+         # file_extension = sub("^.*\\.", "", file_name),
          child = rownames(.),
          size_unit = sub("[^[:alpha:]]+", "", size),
          size_MB = if_else(size_unit=="KB",parse_number(size)/1000,parse_number(size)))
 
-my_selection <- c(1,2,5)
+
+my_selection <- c(2:3)
 
 my_files_table <- files_table[my_selection,]
 
 # table selector
-table_selector <- "#attached-files-section > div > div > div.sb-expander-content > div.table-responsive > table > tbody > tr"
+table_selector <- "#collapseTwo > table > tbody > tr"
 
 # Find the rows in the table
 table_rows <- remDr$findElements(using = "css selector", value = table_selector)
@@ -109,7 +124,7 @@ for (my_row in 1:length(new_table_rows)) {
   
   download_pattern <- my_files_table[my_row, "file_name"]
   
-  download_selector <- paste0("#attached-files-section > div > div > div.sb-expander-content > div.table-responsive > table > tbody > tr:nth-child(", my_files_table$child[my_row], ") > td:nth-child(1) > span")
+  download_selector <- paste0("#collapseTwo > table > tbody > tr:nth-child(", my_files_table$child[my_row], ") > td:nth-child(3) > span > a")
   download_button_element <- remDr$findElement(using = "css selector", value = download_selector)
   
   # Execute the JavaScript event attached to the element
@@ -121,12 +136,11 @@ for (my_row in 1:length(new_table_rows)) {
   }
 }
 
+################################################################################
+# Extracting Files
+################################################################################
 # Stop the Selenium server and close the browser
 rs_driver_object$server$stop()
-
-################################################################################
-# Data Retrieval
-################################################################################
 
 retrieve_data <- function(downloads_folder) {
   # Get the current time
@@ -146,8 +160,6 @@ retrieve_data <- function(downloads_folder) {
   
   extracted_files <- vector("list", length(downloaded_files))
   
-  all_files <- vector("list", length(downloaded_files))
-  
   for (i in seq_along(downloaded_files)) {
     file_path <- downloaded_files[i]
     
@@ -158,65 +170,89 @@ retrieve_data <- function(downloads_folder) {
     file_name <- tools::file_path_sans_ext(basename(file_path))
     
     if (is_zip) {
-      # Create a new directory with the file name
-      new_dir <- file.path(temp_dir, file_name)
-      dir.create(new_dir)
-      
-      # Unzip the file into the new directory
-      unzip(file_path, exdir = new_dir)
-      
-      # Get the extracted file paths
-      extracted_files[[i]] <- list.files(path = new_dir, full.names = TRUE)
-      
-      # Move the zip file to the temporary directory
-      file.rename(file_path, file.path(temp_dir, basename(file_path)))
-      
-      # Print the file names within the folder
-      cat("Files in", file_name, "folder:\n")
-      cat(paste0(extracted_files[[i]], "\n"), sep = "")
-      cat("\n")
+      tryCatch({
+        # Create a new directory with the file name
+        new_dir <- file.path(temp_dir, file_name)
+        dir.create(new_dir, recursive = TRUE, showWarnings = FALSE)
+        
+        # Unzip the file into the new directory
+        unzip(file_path, exdir = new_dir)
+        
+        # Get the extracted file paths
+        extracted_files_list <- list.files(path = new_dir, full.names = TRUE, recursive = TRUE)
+        
+        # Print the file names within the folder
+        cat("Files in", file_name, "folder:\n")
+        cat(paste0(extracted_files_list, "\n"), sep = "")
+        cat("\n")
+        
+        # Move the zip file to the temporary directory
+        file.rename(file_path, file.path(temp_dir, basename(file_path)))
+        
+        # Store the extracted file paths with their original extensions
+        extracted_files[[i]] <- extracted_files_list
+      }, error = function(e) {
+        cat("Failed to unzip", file_name, "\n")
+        cat("File:", file_path, "\n")
+        message(e)
+      })
     } else {
       # Move the non-zip file to the temporary directory
       file.rename(file_path, file.path(temp_dir, basename(file_path)))
+      
+      # Add the file path to the list of non-zip files
+      extracted_files[[i]] <- file.path(temp_dir, basename(file_path))
     }
-    
-    # Add the file path to the list of all files
-    all_files[[i]] <- file.path(temp_dir, basename(file_path))
     
     # Print the file path
     cat("File:", file.path(temp_dir, basename(file_path)), "\n")
   }
   
-  list(all_files = unlist(all_files), extracted_files = unlist(extracted_files))
+  list(extracted_files = unlist(extracted_files), temp_dir = temp_dir)
 }
+
+# Access the extracted file paths using result$extracted_files
+result <- retrieve_data(paste(downloads_folder))
+extracted_files <- result$extracted_files
+extracted_files
+
 ################################################################################
+# Processing & Saving Files
 
-file_paths <- retrieve_data(paste(downloads_folder))
-
-file_paths_d <- unlist(file_paths$all_files[1:length(file_paths$all_files)])
-
-destination_folder1 <- "metadata"
-destination_folder2 <- "raw_data"
-
-for (file_path in file_paths_d) {
-  extension <- tools::file_ext(file_path)
+process_files <- function(file_paths, temp_dir) {
+  destination_folder1 <- "metadata"
+  destination_folder2 <- "raw_data"
   
-  if (extension == "txt" || extension == "xml") {
-    new_file_path <- file.path(destination_folder1, basename(file_path))
-    file.rename(file_path, new_file_path)
-  } else if (extension == "csv") {
-    csv_data <- read_csv(file_path, show_col_types = FALSE)
-    csv_data$huc_4 <- substr(csv_data$reachcode, start = 1, stop = 4)
-    filtered_csv_data <- filter(csv_data, huc_4 == 1703 | huc_4 == 1709)
-    comid_tocomid_data <- select(filtered_csv_data, c(comid,tocomid))
-    csv_file_path <- paste(raw_data, "enhanced_nhdplus21_ywrb.csv", sep = '/')
-    comid_file_path <- paste(raw_data, "reference_comids_tocomids.csv", sep = '/')
-    write.csv(filtered_csv_data, csv_file_path, row.names = FALSE)
-    write.csv(comid_tocomid_data,comid_file_path,row.names = FALSE)
+  data_list <- list()  # List to store individual txt data
+  
+  for (file_path in file_paths) {
+    extension <- tools::file_ext(file_path)
+    
+    if (extension == "png") {
+      new_file_path <- file.path(destination_folder1, basename(file_path))
+      file.rename(file_path, new_file_path)
+    } else {
+      # Read the dbf files
+      basin_data <- read.dbf(file_path)
+      
+      # Perform any necessary data processing/manipulation
+      basin_data <- basin_data %>% 
+        rename(comid = COMID,
+               stream_order = StreamOrde,
+               wshd_area_km2 = TotDASqKM,
+               d50_mm = D50.mm.)
+      
+      pnw_basin_data <- merge(comid_reference,
+                              basin_data,
+                              by = "comid",
+                              all.x = TRUE) 
+      project_name <- basename(getwd())
+      csv_file_path <- file.path(destination_folder2, paste0(project_name, ".csv"))
+      write.csv(pnw_basin_data, file = csv_file_path, row.names = FALSE)
+    }
   }
 }
 
+temp_dir <- tempfile()
 
-
-
-
+outputs <- process_files(extracted_files,temp_dir)

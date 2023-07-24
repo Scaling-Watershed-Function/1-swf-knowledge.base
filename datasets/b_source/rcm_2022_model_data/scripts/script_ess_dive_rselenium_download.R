@@ -21,7 +21,7 @@ librarian::shelf(tidyverse,
                  utils)
 
 # Reference comid's
-comid_reference <- read_csv("../enhanced_nhdplus_21/raw_data/230711_reference_comids.csv",
+comid_reference <- read_csv("../enhanced_nhdplus_21/raw_data/reference_comids_tocomids.csv",
                             show_col_types = FALSE) 
 
 # Set the path to the downloads folder
