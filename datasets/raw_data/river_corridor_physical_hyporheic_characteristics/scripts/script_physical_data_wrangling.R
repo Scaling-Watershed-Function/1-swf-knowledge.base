@@ -17,29 +17,27 @@ librarian::shelf(tidyverse,
                  foreign)
 
 # Local Import-Export
-source_data <- "../../../b_source/raw"
-merged_data <- "./merged_data"
-metadata <- "./metadata"
-
-"b_source/raw/enhanced_nhdplus_21/raw_data/enhanced_nhdplus21_ywrb.csv"
+source_data <- "../../raw_data"
+local_data <- "./data"
+local_metadata <- "./metadata"
 
 # Loading source data
 
-enh_nhdplus21_dat <- read_csv(paste(source_data,"enhanced_nhdplus_21","raw_data","enhanced_nhdplus21_ywrb.csv", sep = '/'),
+enh_nhdplus21_dat <- read_csv(paste(source_data,"enhanced_nhdplus_21","data","enhanced_nhdplus21_ywrb.csv", sep = '/'),
                                      show_col_types = FALSE)
 
-bsn_chr_nhdplus21_dat <- read_csv(paste(source_data,"select_basin_charact_nhdplus_21","raw_data","select_basin_charact_nhdplus_21.csv", sep = '/'),
+bsn_chr_nhdplus21_dat <- read_csv(paste(source_data,"select_basin_charact_nhdplus_21","data","select_basin_charact_nhdplus_21.csv", sep = '/'),
                                   show_col_types = FALSE)
 
-anc_attb_nhdplus21_dat <- read_csv(paste(source_data,"ancillary_hydro_attributes_nhdplus_21","raw_data","ancillary_hydro_attributes_nhdplus_21.csv", sep = '/'),
+anc_attb_nhdplus21_dat <- read_csv(paste(source_data,"ancillary_hydro_attributes_nhdplus_21","data","ancillary_hydro_attributes_nhdplus_21.csv", sep = '/'),
                                    show_col_types = FALSE)
 
-rcm_22_model_dat <- read_csv(paste(source_data,"rcm_2022_model_data","raw_data","merged_nexss_inputs.csv", sep = '/'),
+rcm_22_model_dat <- read_csv(paste(source_data,"rcm_2022_model_data","data","merged_nexss_inputs.csv", sep = '/'),
                              show_col_types = FALSE)
 
-nsi_ssn_ntwk_dat <- st_transform(st_read(paste(source_data,"nsi_ssn_network","raw_data","nsi_network_ywrb.shp",sep = "/")),4326)
+nsi_ssn_ntwk_dat <- st_transform(st_read(paste(source_data,"nsi_ssn_network","data","nsi_network_ywrb.shp",sep = "/")),4326)
 
-med_bed_part_dat <- read_csv(paste(source_data,"median_bed_material_particle_size","raw_data","median_bed_material_particle_size.csv", sep = '/'),
+med_bed_part_dat <- read_csv(paste(source_data,"median_bed_material_particle_size","data","median_bed_material_particle_size.csv", sep = '/'),
                              show_col_types = FALSE)
 
 # Checking stream network connectivity for RCM model data
