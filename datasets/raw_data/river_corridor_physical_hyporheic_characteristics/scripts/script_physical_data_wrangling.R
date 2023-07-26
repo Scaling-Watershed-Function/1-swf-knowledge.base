@@ -394,7 +394,8 @@ st_write(nsi_rcm_phys_sto,
          overwrite_layer = TRUE, 
          delete_layer = TRUE)
 
-data <- read_csv(paste(local_data,"river_corridors_physical_hyporheic_char.csv", sep = '/'))
+data <- read_csv(paste(local_data,"river_corridors_physical_hyporheic_char.csv", sep = '/'),
+                 show_col_types = FALSE)
 
 
 p <- ggplot(data = data,
@@ -410,3 +411,94 @@ p
 d50_mod <- lm(log10(d50_m)~(log10(reach_slope)+log10(wshd_area_km2))*basin + stream_order,
               data = filter(data, wshd_area_km2 > 0 & reach_slope > 0),
               na.action = na.omit)
+
+summary(d50_mod)
+
+p <- ggplot(data = data,
+            aes(x = roughness,
+                y = d50_m,
+                color = as.factor(stream_order)))+
+  geom_point()+
+  scale_x_log10()+
+  scale_y_log10()+
+  facet_wrap(basin~as.factor(stream_order), ncol = 8, nrow = 2)
+p
+
+reg_data <- data %>% 
+  filter(wshd_area_km2 > 0 & reach_slope > 0) %>% 
+  filter(bnkfll_width_m > 0 & mean_ann_flow_m3s > 0)
+
+d50_mod_jl <- lm(log10(d50_m)~(log10(reach_slope)+log10(bnkfll_width_m)+log10(mean_ann_flow_m3s))*basin + stream_order,
+              data = reg_data,
+              na.action = na.omit)
+
+summary(d50_mod_jl)
+
+reg_data <- reg_data %>% 
+  mutate(q = 3.004*mean_ann_flow_m3s^0.426,
+         w = bnkfll_width_m,
+         s = 100*reach_slope^-0.153,
+         qs = q*s,
+         ln = log(w/qs),
+         p = ln/-0.002,
+         d50_lj = exp(p),
+         d50_lj2 = (bnkfll_width_m/ (3.004 * mean_ann_flow_m3s^0.426 * reach_slope^-0.153)) ^ (1 / -0.002))
+         
+summary(reg_data)
+
+
+d50_dat <- reg_data %>% 
+  filter(is.na(d50_m)==FALSE) %>% 
+  mutate(bnkfll_lj = 3.004*mean_ann_flow_m3s^0.426*reach_slope^-0.153*d50_m^-0.002)
+summary(d50_dat)
+
+
+p <- ggplot(data = d50_dat,
+            aes(x = bnkfll_width_m,
+                y = bnkfll_lj,
+                color = log(reach_slope)))+
+  geom_point()+
+  geom_abline()+
+  scale_x_log10()+
+  scale_y_log10()+
+  facet_wrap(~basin, ncol = 2)
+p
+
+d50_mod2 <- lm(log(d50_m)~(log(bnkfll_width_m)+log(reach_slope)+log(mean_ann_flow_m3s)+log(wshd_area_km2))*basin+stream_order,
+               data = d50_dat,
+               na.action = na.omit)
+
+summary(d50_mod2)
+  
+
+d50_dat <- d50_dat %>% 
+  mutate(p_d50_m = exp(predict.lm(d50_mod2,.)))
+summary(d50_dat)
+
+p <- ggplot(data = d50_dat,
+            aes(x = d50_m,
+                y = p_d50_m))+
+  geom_point()+
+  geom_abline()+
+  scale_x_log10()+
+  scale_y_log10()+
+  facet_wrap(~basin, ncol = 2)
+p
+
+reg_data <- reg_data %>% 
+  mutate(d50_lj = bnkfll_depth_m^-.05*reach_slope^0.765*mean_ann_flow_m3s^0.213,
+         d50_m_lj2 = bnkfll_depth_m^-500*reach_slope^76.5*mean_ann_flow_m3s^-213)
+
+
+summary(reg_data)
+
+p <- ggplot(data = reg_data,
+            aes(x = d50_m,
+                y = d50_lj,
+                color =as.factor(stream_order)))+
+  geom_point()+
+  geom_abline()+
+  scale_x_log10()+
+  scale_y_log10()+
+  facet_wrap(~basin, ncol = 2)
+p
