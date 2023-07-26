@@ -10,8 +10,7 @@ gc()
 
 # Local Import-Export
 
-raw_data <- "./raw_data"
-processed_data <- "./processed_data"
+raw_data <- "./data"
 metadata <- "./metadata"
 
 
@@ -28,10 +27,11 @@ librarian::shelf(tidyverse,
                  methods,
                  R.utils,
                  fs,
-                 tools)
+                 tools,
+                 vroom)
 
 # Reference comid's
-comid_reference <- read_csv("../enhanced_nhdplus_21/raw_data/reference_comids_tocomids.csv",
+comid_reference <- read_csv("../enhanced_nhdplus_21/data/reference_comids_tocomids.csv",
                             show_col_types = FALSE) 
 
 # Set the path to the downloads folder
@@ -130,12 +130,12 @@ for (my_row in 1:length(new_table_rows)) {
   }
 }
 
-# Stop the Selenium server and close the browser
-rs_driver_object$server$stop()
-
 ################################################################################
 # Extracting Files
 ################################################################################
+# Stop the Selenium server and close the browser
+rs_driver_object$server$stop()
+
 retrieve_data <- function(downloads_folder) {
   # Get the current time
   current_time <- Sys.time()
@@ -215,7 +215,7 @@ extracted_files
 
 process_files <- function(file_paths, temp_dir) {
   destination_folder1 <- "metadata"
-  destination_folder2 <- "raw_data"
+  destination_folder2 <- "data"
   
   data_list <- list()  # List to store individual txt data
   
@@ -230,9 +230,17 @@ process_files <- function(file_paths, temp_dir) {
       basin_data <- read_csv(file_path, show_col_types = FALSE)
       
       # Perform any necessary data processing/manipulation
-      basin_data <- basin_data %>% 
-        rename(comid = ComID)
       
+      # Select columns of type double (dbl) to avoid parsing issues
+      # Select columns of type double (dbl)
+      selected_columns <- basin_data %>% 
+        select(1:43) %>% 
+        select(where(is.double)) %>% 
+        setNames(tolower(gsub(" ", "_", colnames(.)))) 
+      
+      # If you want to keep the original dataframe with only the double columns, you can reassign it like this:
+      basin_data <- selected_columns
+
       pnw_basin_data <- merge(comid_reference,
                               basin_data,
                               by = "comid",
@@ -249,6 +257,18 @@ temp_dir <- tempfile()
 outputs <- process_files(extracted_files,temp_dir)
 
 
+# Testing for any parsing issues (detected in a previous version of this code)
 
+# Read the CSV file using vroom
+data <- vroom("./data/ancillary_hydro_attributes_nhdplus_21.csv",
+              show_col_types = FALSE)
 
+# Check for parsing issues
+parsing_problems <- problems(data)
+
+# Print the parsing issues for inspection
+print(parsing_problems)
+
+data <- read_csv("./data/ancillary_hydro_attributes_nhdplus_21.csv", 
+                 show_col_types = FALSE)
 

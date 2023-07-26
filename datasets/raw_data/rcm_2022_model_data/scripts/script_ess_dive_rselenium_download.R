@@ -7,8 +7,7 @@
 
 # Local Import-Export
 
-raw_data <- "./raw_data"
-processed_data <- "./processed_data"
+raw_data <- "./data"
 metadata <- "./metadata"
 
 # Loading/installing required libraries
