@@ -37,7 +37,7 @@ rcm_22_model_dat <- read_csv(paste(source_data,"rcm_2022_model_data","data","mer
 
 nsi_ssn_ntwk_dat <- st_transform(st_read(paste(source_data,"nsi_ssn_network","data","nsi_network_ywrb.shp",sep = "/")),4326)
 
-med_bed_part_dat <- read_csv(paste(source_data,"median_bed_material_particle_size","data","median_bed_material_particle_size.csv", sep = '/'),
+med_bed_part_dat <- read_csv(paste(source_data,"rcm_2022_hyporheic_provisional","data","current20_hyporheic_pnw_data.csv", sep = '/'),
                              show_col_types = FALSE)
 
 # Checking stream network connectivity for RCM model data
@@ -233,22 +233,22 @@ phys_dat <- enh_nhdplus21_dat %>%
   merge(.,
         anc_attb_nhdplus21_dat %>% 
           select(comid,
-                 FromNode,
-                 ToNode,
-                 PrecipV,
-                 TempV,
-                 RunOffV,
-                 MAFlowUcfs,
-                 MAVelUfps,
-                 IncFlwUcfs) %>% 
-          rename(from_node = FromNode,
-                 to_node = ToNode,
-                 precipt = PrecipV,
-                 temp = TempV,
-                 runoff = RunOffV,
-                 mean_ann_flow = MAFlowUcfs,
-                 mean_ann_vel = MAVelUfps,
-                 inc_flw = IncFlwUcfs) %>% 
+                 fromnode,
+                 tonode,
+                 precipv,
+                 tempv,
+                 runoffv,
+                 maflowucfs,
+                 mavelufps,
+                 incflwucfs) %>% 
+          rename(from_node = fromnode,
+                 to_node = tonode,
+                 precipt = precipv,
+                 temp = tempv,
+                 runoff = runoffv,
+                 mean_ann_flow = maflowucfs,
+                 mean_ann_vel = mavelufps,
+                 inc_flw = incflwucfs) %>% 
           mutate(mean_ann_pcpt_mm = precipt/100,
                  mean_ann_temp_dc = temp/100,
                  mean_ann_runf_mm = runoff,
@@ -334,15 +334,26 @@ nsi_rcm_phys_dat_0 <- nsi_rcm_ntwk_dat %>%
   merge(.,
         phys_dat_ro,
         by = "comid",
-        all.x = TRUE) 
+        all.x = TRUE) %>% 
+  merge(.,
+        med_bed_part_dat %>% 
+          rename(d50_m = D50_m) %>% 
+          mutate(d50_mm = d50_m * 1000) %>% 
+          select(comid,
+                 logK_m_div_s,
+                 d50_mm,
+                 d50_m),
+        by = "comid",
+        all.x = TRUE)
 
 # Saving data files as data and as shapefile (to include geometry)
 
-nsi_rcm_phys_dat <- as.data.frame(nsi_rcm_phys_dat_0 %>% 
-  select(-geometry))
+nsi_rcm_phys_dat <- nsi_rcm_phys_dat_0 %>% 
+  sf::st_drop_geometry() %>% 
+  as.data.frame()
 
 # Saving as CSV file
-write.csv(nsi_rcm_phys_dat,paste(merged_data,"river_corridors_physical_hyporheic_char.csv", sep = '/'),
+write.csv(nsi_rcm_phys_dat,paste(local_data,"river_corridors_physical_hyporheic_char.csv", sep = '/'),
           row.names = FALSE)
 
 # Saving as an st object
@@ -364,6 +375,7 @@ nsi_rcm_phys_sto <- nsi_rcm_phys_dat_0 %>%
          log_rt_l_s,
          log_qz_v_ms,
          log_qz_l_ms,
+         d50_m,
          geometry)
 
 # Determine the maximum width required for the 'tocomid' field
@@ -373,7 +385,7 @@ max_tocomid_width <- max(nchar(as.character(nsi_rcm_phys_sto$tocomid)))
 nsi_rcm_phys_sto$tocomid <- format(nsi_rcm_phys_sto$tocomid, width = max_tocomid_width)
 
 # Specify the file path for saving the shapefile
-output_file <- paste(merged_data,"river_corridors_physical_hyporheic_geom.shp", sep = '/')
+output_file <- paste(local_data,"river_corridors_physical_hyporheic_geom.shp", sep = '/')
 
 # Write the 'nsi_rcm_phys_sto' data frame to a shapefile
 st_write(nsi_rcm_phys_sto, 
@@ -382,4 +394,19 @@ st_write(nsi_rcm_phys_sto,
          overwrite_layer = TRUE, 
          delete_layer = TRUE)
 
+data <- read_csv(paste(local_data,"river_corridors_physical_hyporheic_char.csv", sep = '/'))
 
+
+p <- ggplot(data = data,
+            aes(x = reach_slope,
+                y = d50_m,
+                color = as.factor(stream_order)))+
+  geom_point()+
+  scale_x_log10()+
+  scale_y_log10()+
+  facet_wrap(basin~as.factor(stream_order), ncol = 8, nrow = 2)
+p
+
+d50_mod <- lm(log10(d50_m)~(log10(reach_slope)+log10(wshd_area_km2))*basin + stream_order,
+              data = filter(data, wshd_area_km2 > 0 & reach_slope > 0),
+              na.action = na.omit)
