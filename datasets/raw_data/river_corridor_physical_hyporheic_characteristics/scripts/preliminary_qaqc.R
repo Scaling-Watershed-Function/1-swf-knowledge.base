@@ -26,6 +26,9 @@ local_metadata <- "./metadata"
 nsi_rcm_phys_dat <- read_csv(paste(local_data,"river_corridors_physical_hyporheic_char.csv", sep = '/'),
                  show_col_types = FALSE)
 
+nlcd_2001_dat <- read_csv(paste(source_data,"nlcd_2001_v2019","data","nlcd_2001_v2019_NLCD01_TOT_CONUS.csv", sep = '/'),
+                          show_col_types = FALSE)
+
 # Let's take a look at the data
 
 summary(nsi_rcm_phys_dat)
@@ -245,7 +248,7 @@ maf_mod <- lm(log(mean_ann_flow_m3s)~(log(wshd_area_km2)+log(mean_ann_runf_mm))*
                 filter(mean_ann_flow_m3s>0),
               na.action = na.omit)
 summary(maf_mod)
-plot(maf_mod)
+#plot(maf_mod)
 
 
 nsi_rcm_phys_qaqc_dat <- nsi_rcm_phys_qaqc_dat %>% 
@@ -260,7 +263,7 @@ bfw_mod <- lm(log(bnkfll_width_m)~(log(wshd_area_km2)+log(mean_ann_runf_mm))*bas
                 filter(bnkfll_width_m>0),
               na.action = na.omit)
 summary(bfw_mod)
-plot(bfw_mod)
+#plot(bfw_mod)
 
 nsi_rcm_phys_qaqc_dat <- nsi_rcm_phys_qaqc_dat %>% 
   mutate(bnkfll_width_m = if_else(bnkfll_width_m> 0, 
@@ -287,7 +290,7 @@ bkd_mod <- lm(log(bnkfll_depth_m)~(log(wshd_area_km2)+log(mean_ann_flow_m3s)*bas
                 filter(bnkfll_depth_m > 0),
               na.action = na.omit)
 summary(bkd_mod)
-plot(bkd_mod)
+#plot(bkd_mod)
 
 nsi_rcm_phys_qaqc_dat <- nsi_rcm_phys_qaqc_dat %>% 
   mutate(bnkfll_depth_m = if_else(bnkfll_depth_m> 0, 
@@ -497,19 +500,66 @@ nsi_rcm_phys_qaqc_dat <- nsi_rcm_phys_qaqc_dat %>%
         all.x = TRUE)
 
 
-d50_mod2 <- lm(log(d50_m)~(log(bnkfll_width_m)+log(reach_slope)+log(mean_ann_flow_m3s)+log(wshd_area_km2))*basin+stream_order,
+# Adding percentage forest to the model
+
+nsi_rcm_phys_qaqc_dat <- nsi_rcm_phys_qaqc_dat %>%
+  merge(.,
+        nlcd_2001_dat %>% 
+          select(comid,
+                 TOT_NLCD01_42) %>% 
+          rename(pct_forest = TOT_NLCD01_42),
+        by = "comid",
+        all.x = TRUE) %>% 
+  mutate(pct_forest_1 = pct_forest + 1)
+
+d50_mod2 <- lm(log(d50_m)~(log(bnkfll_width_m)+log(reach_slope)+log(mean_ann_flow_m3s)+log(wshd_area_km2)+log(pct_forest_1))*basin+stream_order,
                data = nsi_rcm_phys_qaqc_dat,
                na.action = na.omit)
 
 summary(d50_mod2)
 
 nsi_rcm_phys_qaqc_dat <- nsi_rcm_phys_qaqc_dat %>% 
-  mutate(d50_m = if_else(is.na(d50_m)==FALSE,
-                         d50_m,
-                         exp(predict.lm(d50_mod2,.))),
-         d50_m = if_else(d50_m < 0.000001,
-                         0.000001,
-                         d50_m),
-         d50_mm = d50_m * 1000)
+  mutate(pred_d50_m = exp(predict.lm(d50_mod2,.)),
+         pred_d50_m = if_else(pred_d50_m<0.00001,
+                              0.00001,
+                              pred_d50_m),
+         pred_d50_m = if_else(pred_d50_m > 4.0,
+                              4.0,
+                              pred_d50_m),
+         pred_d50m_lj = bnkfll_width_m^500 * mean_ann_flow_m3s^213 * reach_slope^76.5)
 
 summary(nsi_rcm_phys_qaqc_dat)
+
+p <- ggplot(data = nsi_rcm_phys_qaqc_dat %>% 
+              filter(is.na(d50_m)==FALSE),
+            aes(x = d50_m,
+                y = pred_d50_m))+
+  geom_point(alpha = 0.35)+
+  geom_abline(slope = 1, 
+              color = "darkred", 
+              linetype = "dashed")+
+  scale_x_log10()+
+  scale_y_log10()+
+  labs(x = "Existing D50(m) values",
+       y = "Predicted D50(m) values")+
+  facet_wrap(~basin, ncol = 2)+
+  theme_minimal()+
+  theme(legend.position = "none")
+p
+
+bnkfll_dat <- nsi_rcm_phys_qaqc_dat %>% 
+  filter(is.na(d50_m)==FALSE) %>% 
+  mutate(bnkfll_lj = 1.334*mean_ann_flow_m3s^0.44*reach_slope^-0.22*d50_m^-0.11)
+summary(bnkfll_dat)
+
+
+p <- ggplot(data = bnkfll_dat,
+            aes(x = bnkfll_width_m,
+                y = bnkfll_lj,
+                color = log(reach_slope)))+
+  geom_point()+
+  geom_abline()+
+  scale_x_log10()+
+  scale_y_log10()+
+  facet_wrap(~basin, ncol = 2)
+p
