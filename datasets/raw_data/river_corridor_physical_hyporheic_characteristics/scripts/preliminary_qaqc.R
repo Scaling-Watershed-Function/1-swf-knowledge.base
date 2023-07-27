@@ -1,31 +1,53 @@
+################################################################################
+# SCALING WATERSHED FUNCTION: PHYSICAL DATA QA/QC
+################################################################################
 
+#Author: Francisco J. Guerrero
+gc()
+# Loading required packages: 
 
+librarian::shelf(tidyverse,
+                 utils,
+                 leaflet,
+                 sp,
+                 sf,
+                 nhdplusTools,
+                 GGally,
+                 htmltools,
+                 foreign,
+                 data.table)
 
+# Local Import-Export
+source_data <- "../../raw_data"
+local_data <- "./data"
+local_metadata <- "./metadata"
 
+nsi_rcm_phys_dat <- read_csv(paste(local_data,"river_corridors_physical_hyporheic_char.csv", sep = '/'),
+                 show_col_types = FALSE)
 
+# Let's take a look at the data
 
+summary(nsi_rcm_phys_dat)
 
+# Variables including zero values
 
+# Calculate the number of zeros in each column
+zero_counts <- colSums(nsi_rcm_phys_dat == 0, na.rm = TRUE)
 
+# Create a new dataframe to store the report
+zero_report <- data.frame(variable = names(zero_counts), Zeros = zero_counts) %>% 
+  filter(Zeros > 0)
 
+# Print the report without row names
+print(zero_report, row.names = FALSE)
 
+# We will first remove DUP_COMID that are a special feature of the NSI dataset and test 
+# for connectivity
 
-test_dat <- rcm_22_model_dat %>% 
-  merge(.,
-        phys_dat_ro,
-        by = "comid",
-        all.x = TRUE) %>% 
-  select(-tocomid.y) %>% 
-  rename(tocomid = tocomid.x)
+# Testing initial network connectivity
 
-summary(filter(test_dat, reach_slope > 0))
-
-# 16588 data points
-
-# Testing connectivity
-
-test_dat_connectivity <- test_dat %>% 
-  filter(ctch_area_km2 > 0) %>%
+test_dat_connectivity <- nsi_rcm_phys_dat %>% 
+  filter(DUP_COMID == 0) %>% 
   group_by(basin) %>% 
   mutate(inc_comid = 1,
          tot_comid = sum(inc_comid),
@@ -37,154 +59,141 @@ test_dat_connectivity <- test_dat %>%
   ungroup()
 test_dat_connectivity
 
-missing_ctch_area <- filter(test_dat, ctch_area_km2 == 0)
-summary(missing_ctch_area)
+########## DATASET MODIFICATION ################################################ 
+# We will drop the DUP_COMIDS == 1 and DUP_ArSqKM from the dataset  
+################################################################################
 
+# Let's now take a look at those comid's with zero values for watershed areas. 
+# According to Blodgett (2023, pers. coms.) these zero values may correspond to 
+# flowlines that are not connected to the network but were found and digitized
 
-# Checking for redundant variables
+summary(filter(nsi_rcm_phys_dat, wshd_area_km2 == 0))
 
-p <- ggplot(data = filter(test_dat,
-                          ctch_area_km2 > 0),
-            aes(x = reach_length_km,
-                y = ctch_area_km2))+
-  scale_x_log10()+
-  scale_y_log10()+
-  geom_point()+
-  geom_abline()+
-  geom_smooth(span = 0.15)+
-  facet_wrap(~basin, ncol = 2)
-p
+# All the flowlines with zero values in wshd area are first order streams, so let's
+# run a connectivity test that ignores these values: 
 
-library(ggplot2)
-library(dplyr)
-
-# Filter the data to remove rows with missing 'ctch_area_km2' values
-filtered_data <- filter(test_dat, ctch_area_km2 > 0)
-
-# Fit the loess model
-model <- loess(log10(ctch_area_km2) ~ log10(reach_length_km), data = filtered_data, span = 0.15)
-
-# Filter the data to get rows with missing 'ctch_area_km2' values
-missing_data <- filter(test_dat, is.na(ctch_area_km2) | ctch_area_km2 < 0)
-
-# Predict the missing 'ctch_area_km2' values using the loess model
-predicted_values <- 10^predict(model, newdata = missing_data)
-
-# Update the missing 'ctch_area_km2' values with the predicted values
-missing_data$ctch_area_km2 <- predicted_values
-
-# Combine the original data and the data with predicted values
-estimated_data <- rbind(filtered_data, missing_data)
-
-# Plot the data with estimated values
-p <- ggplot(data = estimated_data,
-            aes(x = reach_length_km, y = ctch_area_km2)) +
-  scale_x_log10() +
-  scale_y_log10() +
-  geom_point() +
-  geom_abline(intercept = coef(model)[1], slope = coef(model)[2], color = "blue") +
-  geom_smooth(span = 0.15, color = "red") +
-  facet_wrap(~basin, ncol = 2)
-
-print(p)
-
-
-
-
-# remove LENGTHKM, length_m, REACHCODE, tocomid.y,HUC4, FDATE, RESOLUTION, GNIS_ID,
-# GNIS_NAME. There are 181 locations for which there are large discrepancies between
-# wshd_area_km2 and TotDASqKM, we keep wshd_area_km2 from enhanced nhdplus v. 2.1
-# as well as ctch_area_km2 instead of AreaSqKM. We will also rename tocomid.x to tocomid,
-# and replace mean annual width values with their corresponding prediction from wshd_area_km2
-
-
-nsi_rcm_phys_dat <- as.data.frame(nsi_rcm_phys_dat_0 %>% 
-                                    select(-geometry)) %>% 
-  select(-c(LENGTHKM,
-            length_m,
-            REACHCODE,
-            tocomid.y,
-            HUC4,
-            FDATE,
-            RESOLUTION,
-            GNIS_ID,
-            GNIS_NAME,
-            TotDASqKM,
-            AreaSqKM,
-            geometry)) %>% 
-  mutate(nlogw_m = predict(lm(logw_m~log10(wshd_area_km2)+basin,
-                              data = .,
-                              na.action = na.omit))) %>% 
-  select(-logw_m) %>% 
-  rename(tocomid = tocomid.x,
-         logw_m = nlogw_m) %>% 
-  mutate(stream_sa_m2 = 10^logw_m * reach_length_km*1000) %>% 
-  merge(.,
-        med_bed_part_dat %>% 
-          select(comid,d50_mm),
-        by = "comid",
-        all.x = TRUE) 
-
-# QA/QC
-
-# Let's check the nsi_rcm_phys_dat for addtional missing values
-
-summary(nsi_rcm_phys_dat)
-
-# We find 29 NAs for roughness, -9999 values for reach slopes, -9999 values for
-# accumulated stream slopes, 2 NAs for accumulated stream density, 261 NAs for
-# catchment stream density, 2 NAs for wshd_stream_density
-
-# Let's check how many missing values we have for slope
-
-summary(filter(nsi_rcm_phys_dat, reach_slope < 0)) # 29 datapoints. 
-
-# Let's check the effect of removing these points in terms of network integrity
-
-nsi_rcm_ntwk_slope_test <- nsi_rcm_phys_dat %>% 
-  filter(reach_slope > 0 & DUP_COMID == 0) %>% 
+test_dat_connectivity <- nsi_rcm_phys_dat %>% 
+  filter(DUP_COMID == 0 & wshd_area_km2 > 0) %>% 
   group_by(basin) %>% 
   mutate(inc_comid = 1,
          tot_comid = sum(inc_comid),
          accm_inc_comid = calculate_arbolate_sum(data.frame(ID = comid,
                                                             toID = tocomid,
                                                             length = inc_comid)),
-         connectivity_index = (max(accm_inc_comid)/tot_comid)*100) %>% 
+         connectivity_index = (max(accm_inc_comid)/tot_comid*100)) %>% 
   summarise(across(c("tot_comid", "accm_inc_comid", "connectivity_index"), max)) %>% 
   ungroup()
-nsi_rcm_ntwk_slope_test 
+test_dat_connectivity
 
-# Removing these data points significantly affects the integrity of the network.
-# Let's take a look at the spatial location of these points
+# As suspected, we can remove these values whitout any lost in network connectivity
 
-# Extract the start and end points from the LINESTRING geometries
-points_data <- nsi_rcm_phys_dat_0 %>%
-  st_cast("POINT")
+########## DATASET MODIFICATION ################################################ 
+# We will drop comid's with wshd_area_km2 == 0 from the dataset
+################################################################################
 
-# Create the leaflet map with polylines and markers
-leaflet() %>% 
-  addPolylines(data = nsi_rcm_phys_dat_0, weight = 2) %>% 
-  addPolylines(data = filter(nsi_rcm_phys_dat_0, reach_slope < 0),
-               color = "magenta",
-               opacity = 1,
-               weight = 9) %>% 
-  addMarkers(data = filter(points_data, reach_slope < 0),
-             label = ~comid) %>% 
-  addProviderTiles("Esri.WorldImagery")
+# Let's now look at the remaining values with catchment areas = 0
+
+summary(filter(nsi_rcm_phys_dat, wshd_area_km2 > 0 & ctch_area_km2 == 0))
+
+# We find 89 additional datapoint with catchment areas = 0. These data points
+# encompass multiple stream orders, have reach lengths between 6 to 11.4 m and 
+# non-zero values for accumulated stream density, so they are actually drained
+# and connected to the network. So, it could be expected that just removing these
+# datapoints, would result in reduction of network connectivity:
 
 
-# Function to interpolate missing values (n<50) (e.g., roughness, reach_slope)
+test_dat_connectivity <- nsi_rcm_phys_dat %>% 
+  filter(DUP_COMID == 0 & wshd_area_km2 > 0) %>%
+  filter(ctch_area_km2 > 0) %>% 
+  group_by(basin) %>% 
+  mutate(inc_comid = 1,
+         tot_comid = sum(inc_comid),
+         accm_inc_comid = calculate_arbolate_sum(data.frame(ID = comid,
+                                                            toID = tocomid,
+                                                            length = inc_comid)),
+         connectivity_index = (max(accm_inc_comid)/tot_comid*100)) %>% 
+  summarise(across(c("tot_comid", "accm_inc_comid", "connectivity_index"), max)) %>% 
+  ungroup()
+test_dat_connectivity
+
+# As expected network connectivity decreases significantly in both basins, but more
+# so in the YRB
+
+# Let's plot catchment area vs reach_length as it is expected that these two variables
+# scale with each other:
+
+# Catchment area ~ Reach length
+
+ctch_rch_plot <- ggplot(data = nsi_rcm_phys_dat %>% 
+                          filter(DUP_COMID == 0 & wshd_area_km2 > 0) %>%
+                          filter(ctch_area_km2 > 0),
+                        aes(x = reach_length_km*1000,
+                            y = ctch_area_km2,
+                            color = as.factor(stream_order)))+
+  geom_point()+
+  geom_smooth(span = 0.10)+
+  scale_x_log10()+
+  scale_y_log10()+
+  facet_wrap(~basin, ncol = 2)
+ctch_rch_plot
+
+# Although the relationship is not ideal, it would be good enough to fill the 
+# small number of gaps
+
+############################# DATASET MODIFICATION #############################
+# Fill gaps for catchment area with loess model:
+# model <- loess(log10(ctch_area_km2) ~ log10(reach_length_km), data = ., span = 0.15)
+################################################################################
+
+
+# Variables with missing data
+
+# Calculate the number of NA values in each column
+na_counts <- colSums(is.na(nsi_rcm_phys_dat))
+
+# Calculate the number of negative values in each column
+negative_counts <- colSums(nsi_rcm_phys_dat < 0, na.rm = TRUE)
+
+# Create a new dataframe to store the report
+report_data <- data.frame(
+  variable = names(nsi_rcm_phys_dat),
+  NA_s = na_counts,
+  Negative_s = negative_counts
+) %>%
+  filter(NA_s > 0 | Negative_s > 0)
+
+# Print the report
+print(report_data, row.names = FALSE)
+
+# Besides the gaps we have in the hyporheic characteristics and D50 values, we 
+# we also have 43 missing values for stream width (logw_m), 34 missing values 
+# in roughness
+
+# We will use a pair of functions to interpolate missing values (n<50) (e.g., roughness, reach_slope)
+get_immediate_neighbors_mean <- function(data, column, comid, tocomid) {
+  if (is.na(comid) || is.na(tocomid) || comid < 0 || tocomid < 0)
+    return(NA)
+  
+  immediate_neighbors <- c(comid, tocomid)
+  values <- data[[column]][data$comid %in% immediate_neighbors & data[[column]] >= 0]
+  mean_value <- mean(values, na.rm = TRUE)
+  return(mean_value)
+}
+
 interpolate_missing_values <- function(data, column) {
+  data <- data %>%
+    mutate({{column}} := ifelse({{column}} < 0 | is.na({{column}}), NA, {{column}}))
+  
   for (i in seq_len(nrow(data))) {
-    # Check if the column value is missing (represented by negative number or NA)
-    if (data[[column]][i] < 0 || is.na(data[[column]][i])) {
+    # Check if the column value is missing (represented by NA)
+    if (is.na(data[[column]][i])) {
       # Get the immediate neighbors' mean value
       immediate_mean <- get_immediate_neighbors_mean(data, column, data$comid[i], data$tocomid.x[i])
       
       # If there are no immediate neighbors, replace with the average value for the same 'stream_order'
       if (is.na(immediate_mean)) {
         same_stream_order <- data$stream_order == data$stream_order[i]
-        same_order_values <- data[[column]][same_stream_order & data[[column]] >= 0]
+        same_order_values <- data[[column]][same_stream_order & !is.na(data[[column]])]
         immediate_mean <- mean(same_order_values, na.rm = TRUE)
       }
       
@@ -195,88 +204,167 @@ interpolate_missing_values <- function(data, column) {
   return(data)
 }
 
-# Replacing missing values in the 'reach_slope' and 'roughness' column
-nsi_rcm_phys_dat <- interpolate_missing_values(nsi_rcm_phys_dat, "reach_slope")
-nsi_rcm_phys_dat <- interpolate_missing_values(nsi_rcm_phys_dat, "roughness")
+
+############################# DATASET MODIFICATION #############################
+# Fill gaps for slope and roughness with: interpolate_missing_values()
+################################################################################
 
 
-# Let's take a look at other missing values to check if we can re-calculate them
-
-filter(nsi_rcm_phys_dat,wshd_stream_dens == 0) #1 case that can be re-calculated
-filter(nsi_rcm_phys_dat, is.na(wshd_stream_dens)== TRUE)# 2 cases that can be 
-# recalculated
-
-# accm_stream_density needs to be recalculated with calculate_arbolate_sum
-# accm_stream_slope needs to be recalculated with...
-
-# We find 261 NAs for catchment stream density: 
-
-missing_ctch_stream_dens <- filter(nsi_rcm_phys_dat, is.na(ctch_stream_dens)== TRUE)
-summary(missing_ctch_stream_dens)
-
-# Although reach_lengths are >0, there are zero values cor ctch_area_km2
-
-filter(missing_ctch_stream_dens, ctch_area_km2 == 0) # 89 cases
-
-# Let's take a look at the catchment areas = 0
-
-leaflet() %>% 
-  addPolylines(data = nsi_rcm_phys_dat_0, weight = 2) %>% 
-  addPolylines(data = filter(nsi_rcm_phys_dat_0, ctch_area_km2 == 0),
-               color = "magenta",
-               opacity = 1,
-               weight = 9) %>% 
-  addMarkers(data = filter(points_data, ctch_area_km2 == 0),
-             label = ~comid) %>% 
-  addProviderTiles("Esri.WorldImagery")
+# In summary: 
+# 1. We drop the DUP_COMIDS == 1 and DUP_ArSqKM from the dataset  
+# 2. For first order streams with both wshd_basin_slope or ctch_basin_slope = 0,
+# we replace these values with the reach slope
+# 2. We drop comid's with wshd_area_km2 == 0 from the dataset
+# 3. We fill gaps for catchment area with loess model:
+# model <- loess(log10(ctch_area_km2) ~ log10(reach_length_km), data = ., span = 0.15)
+# 4. We fill gaps for slope and roughness with: interpolate_missing_values()
 
 
+library(dplyr)
+
+nsi_rcm_phys_qaqc_dat <- nsi_rcm_phys_dat %>% 
+  filter(DUP_COMID == 0) %>% 
+  select(-c(DUP_COMID, DUP_ArSqKM, DUP_Length)) %>% 
+  filter(wshd_area_km2 > 0) %>% 
+  mutate(wshd_basin_slope = if_else(wshd_basin_slope == 0 & stream_order == 1,
+                                    reach_slope,
+                                    wshd_basin_slope),
+         ctch_basin_slope = if_else(ctch_basin_slope == 0 & stream_order == 1,
+                                    reach_slope,
+                                    ctch_basin_slope))
 
 
+###############################################################################
+# Fiting the loess model and estimating catchment area from reach lenght
+
+model <- loess(log10(ctch_area_km2) ~ log10(reach_length_km), 
+               data = nsi_rcm_phys_qaqc_dat %>% 
+                 select(comid,
+                        ctch_area_km2,
+                        reach_length_km) %>% 
+                 filter(ctch_area_km2 >0), 
+               span = 0.15)
+
+# Filter the data to get rows with missing 'ctch_area_km2' values
+missing_data <- nsi_rcm_phys_qaqc_dat %>% 
+  select(comid,
+         ctch_area_km2,
+         reach_length_km) %>% 
+  filter(is.na(ctch_area_km2) | ctch_area_km2 == 0)
+
+# Predict the missing 'ctch_area_km2' values using the loess model
+predicted_values <- 10^predict(model, newdata = missing_data)
+
+# Update the missing 'ctch_area_km2' values with the predicted values
+missing_data$ctch_area_km2 <- predicted_values
+
+# Combine the original data and the data with predicted values
+estimated_ctch_data <- rbind(nsi_rcm_phys_qaqc_dat %>% 
+                          select(comid,
+                                 ctch_area_km2,
+                                 reach_length_km) %>% 
+                          filter(ctch_area_km2>0),
+                          missing_data)
+
+# Replace original values in the dataset for their estimates:
+nsi_rcm_phys_qaqc_dat <- nsi_rcm_phys_qaqc_dat%>% 
+  select(-ctch_area_km2) %>% 
+  merge(.,
+        estimated_ctch_data %>% 
+          select(comid,ctch_area_km2),
+        by = "comid",
+        all.x = TRUE)
+
+# Let's take a look again at the ctch_basin_slope for stream orders > 1
+
+summary(nsi_rcm_phys_qaqc_dat %>% 
+          filter(stream_order>1 & ctch_basin_slope == 0))
+
+# 75 datapoints, now let's check how many of those zeroes correspond to an elevation
+# difference of zero
+
+summary(nsi_rcm_phys_qaqc_dat %>% 
+          filter(stream_order>1 & ctch_basin_slope == 0) %>% 
+          filter(ctch_max_elevation_m - ctch_min_elevation_m!=0)) # we have a total of
+# 61 zero values that are not accounted by lack of elevation changes
+
+missing_data <- nsi_rcm_phys_qaqc_dat %>% 
+  filter(stream_order>1 & ctch_basin_slope == 0) %>% 
+  filter(ctch_max_elevation_m - ctch_min_elevation_m!=0) %>% 
+  select(comid,
+         ctch_basin_slope,
+         ctch_max_elevation_m,
+         ctch_min_elevation_m,
+         basin,
+         ctch_area_km2,
+         reach_length_km,
+         ctch_avg_elevation_m)
 
 
-p <- ggplot(data = nsi_rcm_phys_dat,
-            aes(x = reach_slope,
-                y = roughness,
-                color = as.factor(stream_order))) +
+remaining_data <- nsi_rcm_phys_qaqc_dat %>%
+  anti_join(missing_data, by = "comid") %>% 
+  select(comid,
+         ctch_basin_slope,
+         ctch_max_elevation_m,
+         ctch_min_elevation_m,
+         basin,
+         ctch_area_km2,
+         reach_length_km,
+         ctch_avg_elevation_m)
+
+
+ctch_basin_mod <- lm(log(ctch_basin_slope)~log(ctch_max_elevation_m - ctch_min_elevation_m) + basin +
+                       log(ctch_area_km2) + log(reach_length_km) + log(ctch_avg_elevation_m),
+     data = nsi_rcm_phys_qaqc_dat %>% 
+       filter((ctch_max_elevation_m - ctch_min_elevation_m)>0) %>% 
+       filter(stream_order > 1 & ctch_basin_slope !=0),
+     na.action = na.omit)
+summary(ctch_basin_mod)
+
+# We will fill the in ctch_basin_slope with the model above
+
+# Predict the missing 'ctch_area_km2' values using the loess model
+predicted_values <- exp(predict(ctch_basin_mod, newdata = missing_data))
+
+# Update the missing 'ctch_area_km2' values with the predicted values
+missing_data$ctch_basin_slope <- predicted_values
+
+# Combine the original data and the data with predicted values
+estimated_ctch_data <- rbind(remaining_data,
+                             missing_data)
+
+# Replace original values in the dataset for their estimates:
+nsi_rcm_phys_qaqc_dat <- nsi_rcm_phys_qaqc_dat%>% 
+  select(-ctch_basin_slope) %>% 
+  merge(.,
+        estimated_ctch_data %>% 
+          select(comid,ctch_basin_slope),
+        by = "comid",
+        all.x = TRUE) %>% 
+  mutate(ctch_basin_slope = if_else(ctch_basin_slope < 0.00000001,
+                                    0.00000001,
+                                    ctch_basin_slope))
+
+
+###############################################################################
+# Filling gaps for slope and roughness with: interpolate_missing_values()
+
+# Let's start with reach slope, which we expect should be related to ctch_area_km2
+# and ctch_basin_slope
+
+p <- ggplot(data = nsi_rcm_phys_qaqc_dat %>% 
+              filter(reach_slope>0 & ctch_basin_slope>0),
+            aes(x = wshd_basin_slope,
+                y = reach_slope,
+                color = as.factor(stream_order)))+
   geom_point()+
   scale_x_log10()+
-  facet_wrap(~basin, ncol = 2)
+  scale_y_log10()+
+  # geom_smooth(method = 'lm')+
+  facet_wrap(~basin, ncol = 2)+
+  theme(legend.position = "none")
 p
 
-# Now, the missing 'reach_slope' values represented by negative numbers are replaced with the appropriate averages in the 'nsi_rcm_phys_dat' dataset.
-
-
-# Now, the missing 'reach_slope' values represented by negative numbers are replaced with the appropriate averages in the 'nsi_rcm_phys_dat' dataset.
-
-
-# Now, the missing 'reach_slope' values represented by negative numbers are replaced with the appropriate averages.
-
-
-
-# Assuming you have the necessary libraries loaded
-library(leaflet)
-library(dplyr)
-library(sf)
-
-# Extract the start and end points from the LINESTRING geometries
-points_data <- nsi_rcm_phys_dat_0 %>%
-  st_cast("POINT")
-
-# Create the leaflet map with polylines and markers
-leaflet() %>% 
-  addPolylines(data = nsi_rcm_phys_dat_0, weight = 2) %>% 
-  addPolylines(data = filter(nsi_rcm_phys_dat_0, reach_slope < 0),
-               color = "magenta",
-               opacity = 1,
-               weight = 9) %>% 
-  addPolylines(data = filter(nsi_rcm_phys_dat_0, comid == 23772710),
-               color ="green",
-               opacity = 1,
-               weight = 9) %>% 
-  addMarkers(data = filter(points_data, reach_slope < 0),
-             label = ~comid) %>% 
-  addProviderTiles("Esri.WorldImagery")
 
 
 
@@ -297,93 +385,3 @@ leaflet() %>%
 
 
 
-
-
-
-
-
-slope_plot <- ggplot(data = nsi_rcm_phys_dat,
-                     aes(x = as.factor(stream_order),
-                         y = reach_slope,
-                         color = as.factor(stream_order)))+
-  geom_boxplot(alpha = 0.5)+
-  scale_y_log10()+
-  facet_wrap(~basin, ncol = 2)
-slope_plot
-
-nsi_rcm_phys_dat <- nsi_rcm_phys_dat %>% 
-  mutate(n_reach_slope = if_else(reach_slope>0,
-                                 reach_slope,
-                                 (ctch_max_elevation_m - ctch_min_elevation_m)/(reach_slope_length_km*1000)),
-         c_reach_slope = if_else(n_reach_slope < 0.00001,
-                                 0.00001,
-                                 n_reach_slope))
-
-slope_plot <- ggplot(data = nsi_rcm_phys_dat,
-                     aes(x = as.factor(stream_order),
-                         y = c_reach_slope,
-                         color = as.factor(stream_order)))+
-  geom_boxplot(alpha = 0.5)+
-  # scale_y_log10()+
-  facet_wrap(~basin, ncol = 2)
-slope_plot
-
-
-slope_area_plot <- ggplot(data=(filter(nsi_rcm_phys_dat, reach_slope > 0)),
-                          aes(x = stream_sa_m2,
-                              y = reach_slope))+
-  geom_point()+
-  scale_x_log10()+
-  scale_y_log10()+
-  facet_wrap(~basin, ncol = 2)
-slope_area_plot
-
-slope_mod <- lm(log10(reach_slope)~log10(reach_slope_length_km) + stream_order + basin +
-                  # log10(ctch_basin_slope) + log10(ctch_avg_elevation_m) + log10(wshd_avg_elevation_m)+
-                  log10(stream_sa_m2) + log10(wshd_area_km2) + log10(roughness),
-                data = filter(nsi_rcm_phys_dat, reach_slope >0 & wshd_area_km2 > 0),
-                na.action = na.omit)
-summary(slope_mod)
-
-slope_mod <- lm(log10(reach_slope) ~ log(reach_slope_length_km),
-                data = filter(nsi_rcm_phys_dat, reach_slope >0),
-                na.action = na.omit)
-summary(slope_mod)
-
-
-qaqc_nsi_rcm_phys_dat <- nsi_rcm_phys_dat %>% 
-  group_by(basin) %>% 
-  mutate(q_reach_slope = if_else(reach_slope < 0,
-  ))
-
-
-
-#Saving processed data
-write.csv(nsi_rcm_phys_dat,paste(processed_data,"nsi_rcm_phys_dat.csv", sep = '/'),
-          row.names = FALSE) 
-
-hyporheic_predictors <- nsi_rcm_phys_dat %>% 
-  mutate(log_wshd_area_km2 = log10(wshd_area_km2),
-         log_reach_length_km = log10(reach_length_km),
-         log_reach_slope = log10(reach_slope),
-         log_mean_ann_flow_m3s = log10(mean_ann_flow_m3s),
-         log_mean_ann_vel_ms = log10(mean_ann_vel_ms),
-         log_d50_mm = log10(d50_mm)) %>% 
-  select(log_wshd_area_km2,
-         log_reach_length_km,
-         log_reach_slope,
-         log_mean_ann_flow_m3s,
-         log_mean_ann_vel_ms,
-         log_d50_mm,
-         sinuosity,
-         roughness,
-         stream_order,
-         logRT_vertical_hz_s,
-         logRT_lateral_hz_s,
-         logq_hz_vertical_m_div_s,
-         logq_hz_lateral_m_div_s)
-
-ggpairs(hyporheic_predictors)
-
-
-summary(filter(nsi_rcm_phys_dat, reach_slope < 0))
