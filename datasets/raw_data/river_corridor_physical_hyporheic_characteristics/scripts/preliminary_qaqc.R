@@ -15,8 +15,7 @@ librarian::shelf(tidyverse,
                  GGally,
                  htmltools,
                  foreign,
-                 data.table,
-                 DMwR2)
+                 data.table)
 
 # Local Import-Export
 source_data <- "../../raw_data"
@@ -520,6 +519,7 @@ summary(d50_mod2)
 
 nsi_rcm_phys_qaqc_dat <- nsi_rcm_phys_qaqc_dat %>% 
   mutate(pred_d50_m = exp(predict.lm(d50_mod2,.)),
+<<<<<<< Updated upstream
          pred_d50_m = if_else(pred_d50_m<0.00001,
                               0.00001,
                               pred_d50_m),
@@ -527,6 +527,23 @@ nsi_rcm_phys_qaqc_dat <- nsi_rcm_phys_qaqc_dat %>%
                               4.0,
                               pred_d50_m),
          pred_d50m_lj = bnkfll_width_m^500 * mean_ann_flow_m3s^213 * reach_slope^76.5)
+=======
+         pred_d50_m = if_else(pred_d50_m < 0.000001,
+                            0,00001,
+                            pred_d50_m))
+
+summary(nsi_rcm_phys_qaqc_dat)
+
+p <- ggplot(data = nsi_rcm_phys_qaqc_dat %>% 
+              filter(is.na(d50_m)==FALSE),
+            aes(x = as.factor(stream_order),
+                y = pred_d50_m,
+                color = as.factor(stream_order)))+
+  geom_boxplot()+
+  scale_y_log10()+
+  facet_wrap(~basin, ncol = 2)
+p
+>>>>>>> Stashed changes
 
 summary(nsi_rcm_phys_qaqc_dat)
 
