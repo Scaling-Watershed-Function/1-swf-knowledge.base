@@ -509,6 +509,26 @@ write.csv(nsi_rcm_phys_qaqc_dat,paste(local_data,"wyrb_hydrophysical_data.csv",s
 ################################################################################
 
 # Adding percentage forest to the model
+nsi_rcm_phys_qaqc_dat <- nsi_rcm_phys_qaqc_dat %>%
+  mutate(pred_d50_m = exp(predict.lm(d50_mod4,.)),
+         pred_d50_m = if_else(pred_d50_m < 0.00001,
+                              0.00001,if_else(pred_d50_m>4.000,
+                                              4.000,pred_d50_m)))
+
+summary(nsi_rcm_phys_qaqc_dat)
+
+p <- ggplot(data = nsi_rcm_phys_qaqc_dat %>%
+              filter(is.na(d50_m)== FALSE),
+            aes(x = d50_m,
+                y = pred_d50_m,
+                color = log(reach_slope)))+
+  geom_point()+
+  scale_x_log10()+
+  scale_y_log10()+
+  geom_abline()+
+  facet_wrap(~basin, ncol = 2)
+p
+  
 
 nsi_rcm_phys_qaqc_dat <- nsi_rcm_phys_qaqc_dat %>%
   merge(.,
@@ -527,7 +547,8 @@ d50_mod2 <- lm(log(d50_m)~(log(bnkfll_width_m)+log(reach_slope)+log(mean_ann_flo
 summary(d50_mod2)
 
 nsi_rcm_phys_qaqc_dat <- nsi_rcm_phys_qaqc_dat %>% 
-  mutate(pred_d50_m = exp(predict.lm(d50_mod2,.)))
+  mutate(pred_d50_m = exp(predict.lm(d50_mod2,.)),
+         pred_d50_m_lj = exp(predict.lm()))
 
 summary(nsi_rcm_phys_qaqc_dat)
 
@@ -563,7 +584,7 @@ p
 
 bnkfll_dat <- nsi_rcm_phys_qaqc_dat %>% 
   filter(is.na(d50_m)==FALSE) %>% 
-  mutate(bnkfll_lj = 3.004*mean_ann_flow_m3s^0.426*reach_slope^-0.153*d50_m^-0.002)
+  mutate(bnkfll_lj = 3.004+mean_ann_flow_m3s^0.426*reach_slope^-0.153*d50_m^-0.002)
 summary(bnkfll_dat)
 
 
@@ -575,5 +596,25 @@ p <- ggplot(data = bnkfll_dat,
   geom_abline()+
   scale_x_log10()+
   scale_y_log10()+
-  facet_wrap(~basin, ncol = 2)
+  facet_wrap(~basin, ncol = 2)+
+  theme_minimal()
 p
+
+p <- ggplot(data = bnkfll_dat,
+            aes (x = bnkfll_lj,
+                 y = d50_m))+
+  geom_point()+
+  scale_x_log10()+
+  scale_y_log10()
+p
+
+d50_mod3 <- lm(log(d50_m) ~ log(mean_ann_flow_m3s) + log(bnkfll_lj) + log(reach_slope),
+               data = bnkfll_dat,
+               na.action = na.omit)
+summary(d50_mod3)
+
+
+d50_mod4 <- lm(log(d50_m) ~ log(mean_ann_flow_m3s) + log(bnkfll_width_m) + log(reach_slope),
+               data = bnkfll_dat,
+               na.action = na.omit)
+summary(d50_mod4)
