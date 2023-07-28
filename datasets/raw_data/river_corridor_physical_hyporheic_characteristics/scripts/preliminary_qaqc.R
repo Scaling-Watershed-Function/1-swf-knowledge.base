@@ -498,6 +498,15 @@ nsi_rcm_phys_qaqc_dat <- nsi_rcm_phys_qaqc_dat %>%
         by = "comid",
         all.x = TRUE)
 
+summary(nsi_rcm_phys_qaqc_dat)
+
+
+write.csv(nsi_rcm_phys_qaqc_dat,paste(local_data,"wyrb_hydrophysical_data.csv",sep = '/'),
+          row.names = FALSE)
+
+
+
+################################################################################
 
 # Adding percentage forest to the model
 
@@ -511,24 +520,14 @@ nsi_rcm_phys_qaqc_dat <- nsi_rcm_phys_qaqc_dat %>%
         all.x = TRUE) %>% 
   mutate(pct_forest_1 = pct_forest + 1)
 
-d50_mod2 <- lm(log(d50_m)~(log(bnkfll_width_m)+log(reach_slope)+log(mean_ann_flow_m3s)+log(wshd_area_km2)+log(pct_forest_1))*basin+stream_order,
+d50_mod2 <- lm(log(d50_m)~(log(bnkfll_width_m)+log(reach_slope)+log(mean_ann_flow_m3s)+log(wshd_area_km2))*basin+stream_order,
                data = nsi_rcm_phys_qaqc_dat,
                na.action = na.omit)
 
 summary(d50_mod2)
 
 nsi_rcm_phys_qaqc_dat <- nsi_rcm_phys_qaqc_dat %>% 
-  mutate(pred_d50_m = exp(predict.lm(d50_mod2,.)),
-         pred_d50_m = if_else(pred_d50_m<0.00001,
-                              0.00001,
-                              pred_d50_m),
-         pred_d50_m = if_else(pred_d50_m > 4.0,
-                              4.0,
-                              pred_d50_m),
-
-         pred_d50_m = if_else(pred_d50_m < 0.000001,
-                            0,00001,
-                            pred_d50_m))
+  mutate(pred_d50_m = exp(predict.lm(d50_mod2,.)))
 
 summary(nsi_rcm_phys_qaqc_dat)
 
@@ -564,7 +563,7 @@ p
 
 bnkfll_dat <- nsi_rcm_phys_qaqc_dat %>% 
   filter(is.na(d50_m)==FALSE) %>% 
-  mutate(bnkfll_lj = 1.334*mean_ann_flow_m3s^0.44*reach_slope^-0.22*d50_m^-0.11)
+  mutate(bnkfll_lj = 3.004*mean_ann_flow_m3s^0.426*reach_slope^-0.153*d50_m^-0.002)
 summary(bnkfll_dat)
 
 
