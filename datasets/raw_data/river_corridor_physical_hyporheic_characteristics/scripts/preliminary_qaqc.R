@@ -504,117 +504,199 @@ summary(nsi_rcm_phys_qaqc_dat)
 write.csv(nsi_rcm_phys_qaqc_dat,paste(local_data,"wyrb_hydrophysical_data.csv",sep = '/'),
           row.names = FALSE)
 
-
-
 ################################################################################
 
-# Adding percentage forest to the model
-nsi_rcm_phys_qaqc_dat <- nsi_rcm_phys_qaqc_dat %>%
-  mutate(pred_d50_m = exp(predict.lm(d50_mod4,.)),
-         pred_d50_m = if_else(pred_d50_m < 0.00001,
-                              0.00001,if_else(pred_d50_m>4.000,
-                                              4.000,pred_d50_m)))
+# Recalculating wshd stream density, and cumulative variables
+library(dplyr)
 
-summary(nsi_rcm_phys_qaqc_dat)
-
-p <- ggplot(data = nsi_rcm_phys_qaqc_dat %>%
-              filter(is.na(d50_m)== FALSE),
-            aes(x = d50_m,
-                y = pred_d50_m,
-                color = log(reach_slope)))+
-  geom_point()+
-  scale_x_log10()+
-  scale_y_log10()+
-  geom_abline()+
-  facet_wrap(~basin, ncol = 2)
-p
+nsi_rcm_phys_qaqc_dat_accm <-  nsi_rcm_phys_qaqc_dat %>% 
+  mutate(wshd_stream_dens = tot_stream_length_km/wshd_area_km2,
+         ctch_stream_dens = reach_length_km/ctch_area_km2) %>% 
+  select(-c(accm_basin_area_km2,
+            accm_basin_slope,
+            accm_stream_slope,
+            accm_stream_dens)) %>% 
+  mutate(stream_area_m2 = (reach_length_km*bnkfll_width_m)*1000) %>% 
+  group_by(basin) %>% 
+  mutate(across(c(wshd_stream_dens,
+                  tot_stream_length_km,
+                  wshd_area_km2,
+                  ctch_area_km2,
+                  ctch_stream_dens,
+                  ctch_basin_slope,
+                  stream_area_m2), ~ calculate_arbolate_sum(data.frame(ID = comid,
+                                                                                     toID = tocomid,
+                                                                                     length = .x))) %>% 
+           set_names(paste0("accm_", names(select(., wshd_stream_dens:stream_area_m2))))) %>% 
+  ungroup()
   
 
-nsi_rcm_phys_qaqc_dat <- nsi_rcm_phys_qaqc_dat %>%
-  merge(.,
-        nlcd_2001_dat %>% 
-          select(comid,
-                 TOT_NLCD01_42) %>% 
-          rename(pct_forest = TOT_NLCD01_42),
-        by = "comid",
-        all.x = TRUE) %>% 
-  mutate(pct_forest_1 = pct_forest + 1)
+# Checking relationship between watershed area and cumulative stream area
 
-d50_mod2 <- lm(log(d50_m)~(log(bnkfll_width_m)+log(reach_slope)+log(mean_ann_flow_m3s)+log(wshd_area_km2))*basin+stream_order,
-               data = nsi_rcm_phys_qaqc_dat,
-               na.action = na.omit)
-
-summary(d50_mod2)
-
-nsi_rcm_phys_qaqc_dat <- nsi_rcm_phys_qaqc_dat %>% 
-  mutate(pred_d50_m = exp(predict.lm(d50_mod2,.)),
-         pred_d50_m_lj = exp(predict.lm()))
-
-summary(nsi_rcm_phys_qaqc_dat)
-
-p <- ggplot(data = nsi_rcm_phys_qaqc_dat %>% 
-              filter(is.na(d50_m)==FALSE),
-            aes(x = as.factor(stream_order),
-                y = pred_d50_m,
-                color = as.factor(stream_order)))+
-  geom_boxplot()+
-  scale_y_log10()+
-  facet_wrap(~basin, ncol = 2)
-p
-
-
-summary(nsi_rcm_phys_qaqc_dat)
-
-p <- ggplot(data = nsi_rcm_phys_qaqc_dat %>% 
-              filter(is.na(d50_m)==FALSE),
-            aes(x = d50_m,
-                y = pred_d50_m))+
-  geom_point(alpha = 0.35)+
-  geom_abline(slope = 1, 
-              color = "darkred", 
-              linetype = "dashed")+
+p <- ggplot(data = nsi_rcm_phys_qaqc_dat_accm,
+            aes(x = wshd_area_km2,
+                y = accm_stream_area_m2))+
+  geom_point(alpha = 0.5)+
   scale_x_log10()+
   scale_y_log10()+
-  labs(x = "Existing D50(m) values",
-       y = "Predicted D50(m) values")+
-  facet_wrap(~basin, ncol = 2)+
-  theme_minimal()+
-  theme(legend.position = "none")
-p
-
-bnkfll_dat <- nsi_rcm_phys_qaqc_dat %>% 
-  filter(is.na(d50_m)==FALSE) %>% 
-  mutate(bnkfll_lj = 3.004+mean_ann_flow_m3s^0.426*reach_slope^-0.153*d50_m^-0.002)
-summary(bnkfll_dat)
-
-
-p <- ggplot(data = bnkfll_dat,
-            aes(x = bnkfll_width_m,
-                y = bnkfll_lj,
-                color = log(reach_slope)))+
-  geom_point()+
-  geom_abline()+
-  scale_x_log10()+
-  scale_y_log10()+
+  geom_abline(color = "darkred",
+              linetype = "dashed",
+              linewidth = 1)+
   facet_wrap(~basin, ncol = 2)+
   theme_minimal()
 p
 
-p <- ggplot(data = bnkfll_dat,
-            aes (x = bnkfll_lj,
-                 y = d50_m))+
-  geom_point()+
+test_dat_connectivity <- nsi_rcm_phys_qaqc_dat_accm %>% 
+  group_by(basin) %>% 
+  mutate(inc_comid = 1,
+         tot_comid = sum(inc_comid),
+         accm_inc_comid = calculate_arbolate_sum(data.frame(ID = comid,
+                                                            toID = tocomid,
+                                                            length = inc_comid)),
+         connectivity_index = (max(accm_inc_comid)/tot_comid*100)) %>% 
+  summarise(across(c("tot_comid", "accm_inc_comid", "connectivity_index"), max)) %>% 
+  ungroup()
+test_dat_connectivity
+
+# I suspect that since bankfull widths do not necessarily follow hydraulic geometry, 
+# but instead is derived from empirical relationships, that shows that bankfull 
+# width scales linearly or even sublinearly with drainage area. 
+
+# We could instead calculate stream width following theoretical strictly theoretical
+# considerations as defined by Julien and Wargadlam (1995):
+
+# W(m) = 1.33*Q^0.44 * D50-0.11 * S^-0.22, which
+
+
+# To solve for D50, we use an empirical regression with the same variables:
+
+d50_mod <- lm(log(d50_m)~(log(bnkfll_width_m)+log(reach_slope)+log(mean_ann_flow_m3s)+log(wshd_area_km2))*basin+stream_order,
+               data = nsi_rcm_phys_qaqc_dat_accm,
+               na.action = na.omit)
+
+summary(d50_mod)
+
+
+# And fill d50 gaps across our dataset
+
+nsi_rcm_phys_qaqc_dat_accm <-  nsi_rcm_phys_qaqc_dat_accm %>% 
+  mutate(d50_m = if_else(is.na(d50_m)==TRUE,
+                         predict.lm(d50_mod,.),
+                         d50_m),
+         d50_m = if_else(d50_m < 0.00001,
+                         0.00001,
+                         d50_m),
+         d50_m = if_else(d50_m > 4.000,
+                         4.000,
+                         d50_m),
+         d50_mm = d50_m * 1000)
+
+summary(nsi_rcm_phys_qaqc_dat_accm)
+
+
+# Now let's calculate the expected value for stream width according to downstream
+# hydraulic geometry
+
+nsi_rcm_phys_qaqc_dat_accm <-  nsi_rcm_phys_qaqc_dat_accm %>% 
+  mutate(theor_stream_width_m = 1.33*(mean_ann_flow_m3s)^0.44 * (d50_m)^-0.11 * (reach_slope)^-0.22,
+         theor_stream_area_m2 = reach_length_km*1000*theor_stream_width_m,
+         accm_theor_stream_area_m2 = calculate_arbolate_sum(data.frame(ID = comid,
+                                                                       toID = tocomid,
+                                                                       length = theor_stream_area_m2))) 
+
+
+# Checking relationship between watershed area and cumulative stream area
+
+p <- ggplot(data = nsi_rcm_phys_qaqc_dat_accm,
+            aes(x = wshd_area_km2,
+                y = accm_theor_stream_area_m2))+
+  geom_point(alpha = 0.5)+
   scale_x_log10()+
-  scale_y_log10()
+  scale_y_log10()+
+  geom_abline(color = "darkred",
+              linetype = "dashed",
+              linewidth = 1)+
+  facet_wrap(~basin, ncol = 2)+
+  theme_minimal()
 p
 
-d50_mod3 <- lm(log(d50_m) ~ log(mean_ann_flow_m3s) + log(bnkfll_lj) + log(reach_slope),
-               data = bnkfll_dat,
-               na.action = na.omit)
-summary(d50_mod3)
+# Finally, let's take a quick look at cumulative respiration
+
+resp_dat_wrb <- rbind(son_etal_22_RF_filled_resp_wrb) %>% 
+  rename(comid = COMID) %>% 
+  merge(nsi_rcm_phys_qaqc_dat_accm %>% 
+          select(comid,
+                 stream_area_m2),
+        by = "comid",
+        all.x = TRUE) %>% 
+  mutate(totco2g_m2_day_fill = totco2g_day_fill / stream_area_m2) %>% 
+  distinct() %>% 
+  select(-stream_area_m2)
+
+summary(resp_dat_wrb)
 
 
-d50_mod4 <- lm(log(d50_m) ~ log(mean_ann_flow_m3s) + log(bnkfll_width_m) + log(reach_slope),
-               data = bnkfll_dat,
-               na.action = na.omit)
-summary(d50_mod4)
+resp_dat_yrb <- rbind(son_etal_22_RF_filled_resp_yrb) %>% 
+  rename(comid = COMID) %>% 
+  merge(nsi_rcm_phys_qaqc_dat_accm %>% 
+          select(comid,
+                 stream_area_m2),
+        by = "comid",
+        all.x = TRUE) %>% 
+  mutate(totco2g_day_fill = totco2g_m2_day_fill * stream_area_m2) %>% 
+  distinct() %>% 
+  select(-stream_area_m2)
+
+summary(resp_dat_yrb)
+
+resp_dat_ywrb <- rbind(resp_dat_yrb,
+                       resp_dat_wrb)
+
+summary(resp_dat_ywrb)
+
+resp_dat_test <- nsi_rcm_phys_qaqc_dat_accm %>% 
+  merge(.,
+        resp_dat_ywrb,
+        by = "comid",
+        all.x = TRUE) 
+
+summary(resp_dat_test)
+
+
+test_dat_connectivity <- resp_dat_test %>% 
+  group_by(basin) %>% 
+  filter(is.na(totco2g_day_fill)==FALSE) %>%
+  mutate(inc_comid = 1,
+         tot_comid = sum(inc_comid),
+         accm_inc_comid = calculate_arbolate_sum(data.frame(ID = comid,
+                                                            toID = tocomid,
+                                                            length = inc_comid)),
+         connectivity_index = (max(accm_inc_comid)/tot_comid*100)) %>% 
+  summarise(across(c("tot_comid", "accm_inc_comid", "connectivity_index"), max)) %>% 
+  ungroup()
+test_dat_connectivity
+
+wshd_scaling <- resp_dat_test %>% 
+  group_by(basin) %>% 
+  mutate(totco2g_day_fill = if_else(is.na(totco2g_day_fill)==TRUE,
+                                    0,
+                                    totco2g_day_fill),
+         totco2g_day_km2 = totco2g_day_fill/wshd_area_km2,
+         accm_totco2g_day_km2 = calculate_arbolate_sum(data.frame(ID = comid,
+                                                                  toID = tocomid,
+                                                                  length =totco2g_day_km2)))
+
+summary(wshd_scaling)
+
+p <- ggplot(data = filter(wshd_scaling,
+                          accm_totco2g_day_km2>0 &
+                            wshd_area_km2 > 0.1),
+            aes(x = wshd_area_km2,
+                y = accm_totco2g_day_km2, 
+                color = logRT_lateral_hz_s))+
+  geom_abline()+
+  geom_point()+
+  scale_x_log10()+
+  scale_y_log10()+
+  facet_wrap(~basin, ncol = 2)
+p
