@@ -419,7 +419,59 @@ test_dat_connectivity
 
 # Connectivity in both datasets is 95%
 
-nsi_rcm_phys_qaqc_dat <- nsi_rcm_phys_dat_m7
+nsi_rcm_phys_qaqc_dat0 <- nsi_rcm_phys_dat_m7
+
+################################################################################
+
+# Sorting and re-ordering columns 
+
+nsi_rcm_phys_qaqc_dat <- nsi_rcm_phys_qaqc_dat0 %>% 
+  select(-c(logRT_vertical_hz_s,
+            logRT_lateral_hz_s,
+            logq_hz_vertical_m_div_s,
+            logq_hz_lateral_m_div_s,
+            logw_m,
+            length_m,
+            huc_2_region_id,
+            huc_region_raster_id,
+            huc_4_subregion_id,
+            logK_m_div_s)) %>% 
+  select(comid,
+         tocomid,
+         reachcode,
+         hydroseq,
+         from_node,
+         to_node,
+         basin,
+         wshd_area_km2,
+         wshd_stream_dens,
+         wshd_basin_slope,
+         wshd_min_elevation_m,
+         wshd_max_elevation_m,
+         wshd_avg_elevation_m,
+         ctch_area_km2,
+         ctch_stream_dens,
+         ctch_basin_slope,
+         ctch_min_elevation_m,
+         ctch_max_elevation_m,
+         ctch_avg_elevation_m,
+         mean_ann_pcpt_mm,
+         mean_ann_temp_dc,
+         mean_ann_runf_mm,
+         stream_order,
+         reach_type,
+         reach_length_km,
+         reach_slope,
+         tot_stream_length_km,
+         sinuosity,
+         bnkfll_width_m,
+         bnkfll_depth_m,
+         bnkfll_xsec_area_m2,
+         mean_ann_flow_m3s,
+         mean_ann_vel_ms,
+         roughness,
+         d50_m,
+         stream_area_m2)
 
 write.csv(nsi_rcm_phys_qaqc_dat,
           paste(local_data,"qaqc_river_corridors_physical_hyporheic_char.csv", sep = '/'),
