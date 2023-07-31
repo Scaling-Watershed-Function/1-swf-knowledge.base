@@ -40,6 +40,19 @@ rcm_resp_dat <- resp_gap_filled_dat %>%
         by = "comid",
         all.x = TRUE)
 
+rcm_resp_dat <- rcm_resp_dat %>% 
+  mutate(totco2_o2g_day = 10^(logtotco2_o2g_m2_day)*10^(logw_m)*length_m,
+         totco2_ang_day = 10^(logtotco2_ang_m2_day)*10^(logw_m)*length_m,
+         totco2g_day = totco2g_day_fill,
+         tot_rthz_s = 10^(logrt_total_hz_s),
+         tot_qhz_ms = 10^(logq_hz_total_m_s)) %>% 
+  select(comid,
+         pred_annual_doc,
+         pred_annual_do,
+         no3_conc_mg_l,
+         tot_rthz_s,
+         tot_qhz_ms)
+
 
 write.csv(rcm_resp_dat,paste(local_data,"RF_filled_rcm_2022_model_data.csv", sep ='/'),
           row.names = FALSE)
