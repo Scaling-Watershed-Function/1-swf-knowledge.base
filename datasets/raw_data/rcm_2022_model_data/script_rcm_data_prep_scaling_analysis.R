@@ -56,6 +56,7 @@ rcm_resp_dat <- rcm_resp_dat %>%
          totco2_o2g_day,
          totco2_ang_day)
 
+summary(rcm_resp_dat)
 
 write.csv(rcm_resp_dat,paste(local_data,"RF_filled_rcm_2022_model_data.csv", sep ='/'),
           row.names = FALSE)
