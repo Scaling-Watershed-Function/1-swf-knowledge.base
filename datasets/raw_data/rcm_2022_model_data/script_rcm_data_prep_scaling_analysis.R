@@ -51,7 +51,10 @@ rcm_resp_dat <- rcm_resp_dat %>%
          pred_annual_do,
          no3_conc_mg_l,
          tot_rthz_s,
-         tot_qhz_ms)
+         tot_qhz_ms,
+         totco2g_day,
+         totco2_o2g_day,
+         totco2_ang_day)
 
 
 write.csv(rcm_resp_dat,paste(local_data,"RF_filled_rcm_2022_model_data.csv", sep ='/'),
