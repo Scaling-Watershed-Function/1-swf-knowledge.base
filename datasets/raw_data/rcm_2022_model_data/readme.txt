@@ -13,3 +13,5 @@ respectively.
 
 Our version of this dataset contains only selected .csv files corresponding to substrate concentrations (e.g., DO, DOC, and NO3), stream orders, and NEXSS inputs to the RCM model including
 Residence time, D50, and exchange fluxes. 
+
+Additional data corresponding to Random Forest Predictions for missing values for respiration were added as son_etal_22_**_RF_resp_data. ** corresponds to the watershed (Willamette or Yakima)
