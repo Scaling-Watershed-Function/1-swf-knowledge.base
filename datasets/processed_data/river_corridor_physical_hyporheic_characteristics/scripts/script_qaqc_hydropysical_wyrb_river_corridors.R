@@ -328,6 +328,8 @@ roughness_int <- interpolate_missing_values(data = nsi_rcm_phys_dat_m5 %>%
                                               select(comid,
                                                      tocomid,
                                                      stream_order,
+                                                     mean_ann_pcpt_mm,
+                                                     wshd_area_km2,
                                                      roughness),
                                             "roughness")
 
@@ -335,6 +337,8 @@ reach_slope_int <- interpolate_missing_values(data = nsi_rcm_phys_dat_m5 %>%
                                               select(comid,
                                                      tocomid,
                                                      stream_order,
+                                                     mean_ann_pcpt_mm,
+                                                     wshd_area_km2,
                                                      reach_slope),
                                             "reach_slope")
 
