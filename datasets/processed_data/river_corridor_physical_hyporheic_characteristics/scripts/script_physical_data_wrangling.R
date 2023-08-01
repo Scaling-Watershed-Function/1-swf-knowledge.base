@@ -32,7 +32,7 @@ bsn_chr_nhdplus21_dat <- read_csv(paste(source_data,"select_basin_charact_nhdplu
 anc_attb_nhdplus21_dat <- read_csv(paste(source_data,"ancillary_hydro_attributes_nhdplus_21","data","ancillary_hydro_attributes_nhdplus_21.csv", sep = '/'),
                                    show_col_types = FALSE)
 
-rcm_22_model_dat <- read_csv(paste(source_data,"rcm_2022_model_data","data","merged_nexss_inputs.csv", sep = '/'),
+rcm_22_model_dat <- read_csv(paste(source_data,"rcm_2022_model_data","data","RF_filled_rcm_2022_model_data.csv", sep = '/'),
                              show_col_types = FALSE)
 
 nsi_ssn_ntwk_dat <- st_transform(st_read(paste(source_data,"nsi_ssn_network","data","nsi_network_ywrb.shp",sep = "/")),4326)
@@ -43,12 +43,14 @@ med_bed_part_dat <- read_csv(paste(source_data,"rcm_2022_hyporheic_provisional",
 # Checking stream network connectivity for RCM model data
 
 rcm_22_connectivity <- rcm_22_model_dat %>% 
-  select(comid,
-         tocomid) %>% 
+  filter(is.na(totco2g_day) == FALSE) %>% 
+  select(comid) %>% 
   merge(.,
         enh_nhdplus21_dat %>% 
           select(comid,
+                 tocomid,
                  huc_4),
+        by = "comid",
         all.x = TRUE) %>%
   mutate(basin = if_else(huc_4 == "1703",
                          "yakima",
@@ -63,8 +65,11 @@ rcm_22_connectivity <- rcm_22_model_dat %>%
   summarise(across(c("tot_comid", "accm_inc_comid", "connectivity_index"), max)) %>% 
   ungroup()
 rcm_22_connectivity  
-# Connectivity index for Yakima River Basin is 95.02%
-# Connectivity index for Willamette River Basin is 97.50%
+
+# Connectivity index for Yakima River Basin is 85.02% Due to missing values in the
+# RF-gap filled values for totco2g_day
+
+# Connectivity index for Willamette River Basin is 97.40%
 
 
 # We are going to merge the RCM 2022 model data with the curated National Stream
@@ -73,15 +78,20 @@ rcm_22_connectivity
 nsi_rcm_ntwk_dat <- nsi_ssn_ntwk_dat %>% 
   rename(comid = COMID) %>% 
   merge(.,
+        enh_nhdplus21_dat %>% 
+          select(comid,
+                 tocomid),
+        by = "comid",
+        all.x = TRUE) %>% 
+  merge(.,
         rcm_22_model_dat,
         by = "comid",
-        all.x = TRUE)
-
-# The resulting dataset has 31 extra rows compared with rcm_22_model_dat
+        all.x = TRUE) %>% 
+  filter(is.na(totco2g_day) == FALSE)
 
 summary(filter(nsi_rcm_ntwk_dat,DUP_COMID==1))
 
-# These extra rows correspond to the duplicated COMIDs that the nsi adds to the
+# The DUP_COMID == 1 rows correspond to the duplicated COMIDs that the nsi adds to the
 # original NHDPlus 2.1 dataset to meet the requirements for spatial statistical
 # analysis with the SSN package. The SSN package allows for spatial hypothesis
 # testing (i.e. models) that incorporate spatial autocorrelation measured based 
@@ -92,7 +102,7 @@ summary(filter(nsi_rcm_ntwk_dat,DUP_COMID==1))
 # Fluvial network
 leaflet(nsi_rcm_ntwk_dat) %>% 
   addPolylines(weight = 2) %>% 
-  addPolylines(data = filter(nsi_rcm_ntwk_dat,is.na(logRT_lateral_hz_s) == TRUE),
+  addPolylines(data = filter(nsi_rcm_ntwk_dat,is.na(tot_qhz_ms) == TRUE),
                color = "magenta",
                opacity = 1,
                weight = 9) %>% 
@@ -107,7 +117,7 @@ leaflet(nsi_rcm_ntwk_dat) %>%
 
 summary(filter(nsi_rcm_ntwk_dat,TotDASqKM ==0))
 
-# We find 43 comids with TotDASqKM = 0. However, these comids have duplicated 
+# We find 9 comids with TotDASqKM = 0. However, these comids have duplicated 
 # length values corresponding to original stream lengths. This could be an 
 # indication that these comids may correspond to connecting lines that maintain
 # network integrity
@@ -145,8 +155,6 @@ nsi_rcm_ntwk_connectivity
 # Connectivity indexes remain the same for both Willamette and Yakima River Basins
 
 # Physical Characteristics and Hydrology
-
-# We use the enhanced NHDPlus V.2. as the reference dataset for COMIDs (Blodgett_23_Network_Attributes)
 
 # Merging data 
 
@@ -319,18 +327,17 @@ phys_dat_ro <- phys_dat %>%
 # Merging with RCM input variables from NEXSS model (version 2020)
 
 nsi_rcm_phys_dat_0 <- nsi_rcm_ntwk_dat %>% 
+  filter(DUP_COMID == 0) %>% 
   select(comid,
-         DUP_COMID,
-         DUP_ArSqKM,
-         DUP_Length,
-         logRT_vertical_hz_s,
-         logRT_lateral_hz_s,
-         logq_hz_vertical_m_div_s,
-         logq_hz_vertical_m_div_s,
-         logq_hz_lateral_m_div_s,
-         logq_hz_lateral_m_div_s,
-         logw_m,
-         length_m) %>% 
+         tocomid,
+         pred_annual_doc,
+         pred_annual_do,
+         no3_conc_mg_l,
+         tot_rthz_s,
+         tot_qhz_ms,
+         totco2g_day,
+         totco2_o2g_day,
+         totco2_ang_day) %>% 
   merge(.,
         phys_dat_ro,
         by = "comid",
@@ -338,13 +345,13 @@ nsi_rcm_phys_dat_0 <- nsi_rcm_ntwk_dat %>%
   merge(.,
         med_bed_part_dat %>% 
           rename(d50_m = D50_m) %>% 
-          mutate(d50_mm = d50_m * 1000) %>% 
           select(comid,
                  logK_m_div_s,
-                 d50_mm,
                  d50_m),
         by = "comid",
-        all.x = TRUE)
+        all.x = TRUE) %>% 
+  rename(tocomid = tocomid.x) %>% 
+  select(-tocomid.y)
 
 # Saving data files as data and as shapefile (to include geometry)
 
@@ -360,23 +367,7 @@ write.csv(nsi_rcm_phys_dat,paste(local_data,"river_corridors_physical_hyporheic_
 
 # This file will be a simplified version  of the dataset above to meet ESRI standards
 
-nsi_rcm_phys_sto <- nsi_rcm_phys_dat_0 %>% 
-  rename(log_rt_v_s = logRT_vertical_hz_s,
-         log_rt_l_s = logRT_lateral_hz_s,
-         log_qz_v_ms = logq_hz_vertical_m_div_s,
-         log_qz_l_ms = logq_hz_lateral_m_div_s) %>% 
-  select(comid,
-         tocomid,
-         DUP_ArSqKM,
-         DUP_COMID,
-         DUP_Length,
-         basin,
-         log_rt_v_s,
-         log_rt_l_s,
-         log_qz_v_ms,
-         log_qz_l_ms,
-         d50_m,
-         geometry)
+nsi_rcm_phys_sto <- nsi_rcm_ntwk_dat 
 
 # Determine the maximum width required for the 'tocomid' field
 max_tocomid_width <- max(nchar(as.character(nsi_rcm_phys_sto$tocomid)))
@@ -394,111 +385,5 @@ st_write(nsi_rcm_phys_sto,
          overwrite_layer = TRUE, 
          delete_layer = TRUE)
 
-data <- read_csv(paste(local_data,"river_corridors_physical_hyporheic_char.csv", sep = '/'),
-                 show_col_types = FALSE)
 
 
-p <- ggplot(data = data,
-            aes(x = reach_slope,
-                y = d50_m,
-                color = as.factor(stream_order)))+
-  geom_point()+
-  scale_x_log10()+
-  scale_y_log10()+
-  facet_wrap(basin~as.factor(stream_order), ncol = 8, nrow = 2)
-p
-
-d50_mod <- lm(log10(d50_m)~(log10(reach_slope)+log10(wshd_area_km2))*basin + stream_order,
-              data = filter(data, wshd_area_km2 > 0 & reach_slope > 0),
-              na.action = na.omit)
-
-summary(d50_mod)
-
-p <- ggplot(data = data,
-            aes(x = roughness,
-                y = d50_m,
-                color = as.factor(stream_order)))+
-  geom_point()+
-  scale_x_log10()+
-  scale_y_log10()+
-  facet_wrap(basin~as.factor(stream_order), ncol = 8, nrow = 2)
-p
-
-reg_data <- data %>% 
-  filter(wshd_area_km2 > 0 & reach_slope > 0) %>% 
-  filter(bnkfll_width_m > 0 & mean_ann_flow_m3s > 0)
-
-d50_mod_jl <- lm(log10(d50_m)~(log10(reach_slope)+log10(bnkfll_width_m)+log10(mean_ann_flow_m3s))*basin + stream_order,
-              data = reg_data,
-              na.action = na.omit)
-
-summary(d50_mod_jl)
-
-reg_data <- reg_data %>% 
-  mutate(q = 3.004*mean_ann_flow_m3s^0.426,
-         w = bnkfll_width_m,
-         s = 100*reach_slope^-0.153,
-         qs = q*s,
-         ln = log(w/qs),
-         p = ln/-0.002,
-         d50_lj = exp(p),
-         d50_lj2 = (bnkfll_width_m/ (3.004 * mean_ann_flow_m3s^0.426 * reach_slope^-0.153)) ^ (1 / -0.002))
-         
-summary(reg_data)
-
-
-d50_dat <- reg_data %>% 
-  filter(is.na(d50_m)==FALSE) %>% 
-  mutate(bnkfll_lj = 3.004*mean_ann_flow_m3s^0.426*reach_slope^-0.153*d50_m^-0.002)
-summary(d50_dat)
-
-
-p <- ggplot(data = d50_dat,
-            aes(x = bnkfll_width_m,
-                y = bnkfll_lj,
-                color = log(reach_slope)))+
-  geom_point()+
-  geom_abline()+
-  scale_x_log10()+
-  scale_y_log10()+
-  facet_wrap(~basin, ncol = 2)
-p
-
-d50_mod2 <- lm(log(d50_m)~(log(bnkfll_width_m)+log(reach_slope)+log(mean_ann_flow_m3s)+log(wshd_area_km2))*basin+stream_order,
-               data = d50_dat,
-               na.action = na.omit)
-
-summary(d50_mod2)
-  
-
-d50_dat <- d50_dat %>% 
-  mutate(p_d50_m = exp(predict.lm(d50_mod2,.)))
-summary(d50_dat)
-
-p <- ggplot(data = d50_dat,
-            aes(x = d50_m,
-                y = p_d50_m))+
-  geom_point()+
-  geom_abline()+
-  scale_x_log10()+
-  scale_y_log10()+
-  facet_wrap(~basin, ncol = 2)
-p
-
-reg_data <- reg_data %>% 
-  mutate(d50_lj = bnkfll_depth_m^-.05*reach_slope^0.765*mean_ann_flow_m3s^0.213,
-         d50_m_lj2 = bnkfll_depth_m^-500*reach_slope^76.5*mean_ann_flow_m3s^-213)
-
-
-summary(reg_data)
-
-p <- ggplot(data = reg_data,
-            aes(x = d50_m,
-                y = d50_lj,
-                color =as.factor(stream_order)))+
-  geom_point()+
-  geom_abline()+
-  scale_x_log10()+
-  scale_y_log10()+
-  facet_wrap(~basin, ncol = 2)
-p

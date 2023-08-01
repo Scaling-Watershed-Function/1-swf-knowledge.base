@@ -16,7 +16,8 @@ librarian::shelf(tidyverse,
                  htmltools,
                  foreign,
                  data.table,
-                 betareg)
+                 betareg,
+                 Hmisc)
 
 # Local Import-Export
 source_data <- "../../raw_data"
@@ -48,7 +49,6 @@ print(zero_report, row.names = FALSE)
 # Testing initial network connectivity
 
 test_dat_connectivity <- nsi_rcm_phys_dat %>% 
-  filter(DUP_COMID == 0) %>% 
   group_by(basin) %>% 
   mutate(inc_comid = 1,
          tot_comid = sum(inc_comid),
@@ -60,28 +60,19 @@ test_dat_connectivity <- nsi_rcm_phys_dat %>%
   ungroup()
 test_dat_connectivity
 
-########## DATASET MODIFICATION ################################################ 
-# We drop the DUP_COMIDS == 1 and DUP_ArSqKM from the dataset  
-################################################################################
-
-nsi_rcm_phys_dat_m1 <-  nsi_rcm_phys_dat %>% 
-  filter(DUP_COMID == 0) %>% 
-  select(-c(DUP_ArSqKM, DUP_Length, DUP_COMID))
-
 ################################################################################
 
 # Let's now take a look at those comid's with zero values for watershed areas. 
 # According to Blodgett (2023, pers. coms.) these zero values may correspond to 
 # flowlines that are not connected to the network but were found and digitized
 
-summary(filter(nsi_rcm_phys_dat_m1, wshd_area_km2 == 0))
+summary(filter(nsi_rcm_phys_dat, wshd_area_km2 == 0))
 
 # All the flowlines with zero values in wshd area are first order streams, so let's
 # run a connectivity test that ignores these values: 
 
 test_dat_connectivity <- nsi_rcm_phys_dat %>% 
-  filter(DUP_COMID == 0 & wshd_area_km2 > 0) %>% 
-  filter(stream_order<9) %>% 
+  filter(wshd_area_km2 > 0) %>% 
   group_by(basin) %>% 
   mutate(inc_comid = 1,
          tot_comid = sum(inc_comid),
@@ -100,24 +91,23 @@ test_dat_connectivity
 # stream order > 8, since these correspond to the Columbia River
 ################################################################################
 
-nsi_rcm_phys_dat_m2 <-  nsi_rcm_phys_dat_m1 %>% 
-  filter(wshd_area_km2 > 0) %>% 
-  filter(stream_order < 9)
+nsi_rcm_phys_dat_m1 <-  nsi_rcm_phys_dat %>% 
+  filter(wshd_area_km2 > 0) 
 
 ################################################################################
 
 # Let's now look at the remaining values with catchment areas = 0
 
-summary(filter(nsi_rcm_phys_dat_m2, wshd_area_km2 > 0 & ctch_area_km2 == 0))
+summary(filter(nsi_rcm_phys_dat_m1, ctch_area_km2 == 0))
 
-# We find 89 additional datapoints with catchment areas = 0. These data points
+# We find 88 additional datapoints with catchment areas = 0. These data points
 # encompass multiple stream orders, have reach lengths between 6 to 11.4 m and 
 # non-zero values for accumulated stream density, so they are actually drained
 # and connected to the network. So, it could be expected that just removing these
 # datapoints, would result in reduction of network connectivity:
 
 
-test_dat_connectivity <- nsi_rcm_phys_dat_m2 %>% 
+test_dat_connectivity <- nsi_rcm_phys_dat_m1 %>% 
   filter(ctch_area_km2 > 0) %>% 
   group_by(basin) %>% 
   mutate(inc_comid = 1,
@@ -138,7 +128,7 @@ test_dat_connectivity
 
 # Catchment area ~ Reach length
 
-ctch_rch_plot <- ggplot(data = nsi_rcm_phys_dat_m2 %>% 
+ctch_rch_plot <- ggplot(data = nsi_rcm_phys_dat_m1 %>% 
                           filter(ctch_area_km2 > 0),
                         aes(x = reach_length_km*1000,
                             y = ctch_area_km2,
@@ -161,7 +151,7 @@ ctch_rch_plot
 # Fiting the loess model and estimating catchment area from reach length
 
 model <- loess(log10(ctch_area_km2) ~ log10(reach_length_km), 
-               data = nsi_rcm_phys_dat_m2 %>% 
+               data = nsi_rcm_phys_dat_m1 %>% 
                  select(comid,
                         ctch_area_km2,
                         reach_length_km) %>% 
@@ -169,7 +159,7 @@ model <- loess(log10(ctch_area_km2) ~ log10(reach_length_km),
                span = 0.15)
 
 # Filter the data to get rows with missing 'ctch_area_km2' values
-missing_data <- nsi_rcm_phys_dat_m2 %>% 
+missing_data <- nsi_rcm_phys_dat_m1 %>% 
   select(comid,
          ctch_area_km2,
          reach_length_km) %>% 
@@ -183,7 +173,7 @@ predicted_values <- 10^predict(model, newdata = missing_data)
 missing_data$ctch_area_km2 <- predicted_values
 
 # Combine the original data and the data with predicted values
-estimated_ctch_data <- rbind(nsi_rcm_phys_dat_m2 %>% 
+estimated_ctch_data <- rbind(nsi_rcm_phys_dat_m1 %>% 
                                select(comid,
                                       ctch_area_km2,
                                       reach_length_km) %>% 
@@ -191,7 +181,7 @@ estimated_ctch_data <- rbind(nsi_rcm_phys_dat_m2 %>%
                              missing_data)
 
 # Replace original values in the dataset for their estimates:
-nsi_rcm_phys_dat_m3 <- nsi_rcm_phys_dat_m2%>% 
+nsi_rcm_phys_dat_m2 <- nsi_rcm_phys_dat_m1%>% 
   select(-ctch_area_km2) %>% 
   merge(.,
         estimated_ctch_data %>% 
@@ -199,14 +189,14 @@ nsi_rcm_phys_dat_m3 <- nsi_rcm_phys_dat_m2%>%
         by = "comid",
         all.x = TRUE)
 
-summary(nsi_rcm_phys_dat_m3)
+summary(nsi_rcm_phys_dat_m2)
 ################################################################################
 
 # We also find ~ 8 zero values for hydraulic geometry variables including 
 # bankfull width, depth, and cross sectional area, as well as mean annual flow. We will 
 # check on this values once we have removed first order streams with watershed area = 0.
 
-filter(nsi_rcm_phys_dat_m3, bnkfll_width_m == 0) 
+filter(nsi_rcm_phys_dat_m2, bnkfll_width_m == 0) 
 
 # These values correspond to first order streams, so we remove them from the dataset
 
@@ -215,7 +205,7 @@ filter(nsi_rcm_phys_dat_m3, bnkfll_width_m == 0)
 # Remove flowlines with bnkfll_width_m = 0
 ################################################################################
 
-nsi_rcm_phys_dat_m4 <- nsi_rcm_phys_dat_m3 %>% 
+nsi_rcm_phys_dat_m3 <- nsi_rcm_phys_dat_m2 %>% 
   filter(bnkfll_width_m > 0) %>% 
   mutate(bnkfll_xsec_area_m2 = if_else(bnkfll_xsec_area_m2 == 0,
                                        bnkfll_depth_m * bnkfll_width_m,
@@ -225,14 +215,14 @@ nsi_rcm_phys_dat_m4 <- nsi_rcm_phys_dat_m3 %>%
 # Variables with missing data
 
 # Calculate the number of NA values in each column
-na_counts <- colSums(is.na(nsi_rcm_phys_dat_m4))
+na_counts <- colSums(is.na(nsi_rcm_phys_dat_m3))
 
 # Calculate the number of negative values in each column
-negative_counts <- colSums(nsi_rcm_phys_dat_m4 < 0, na.rm = TRUE)
+negative_counts <- colSums(nsi_rcm_phys_dat_m3 < 0, na.rm = TRUE)
 
 # Create a new dataframe to store the report
 report_data <- data.frame(
-  variable = names(nsi_rcm_phys_dat_m4),
+  variable = names(nsi_rcm_phys_dat_m3),
   NA_s = na_counts,
   Negative_s = negative_counts
 ) %>%
@@ -252,12 +242,12 @@ print(report_data, row.names = FALSE)
 # Recalculating catchment stream density
 ################################################################################
 
-nsi_rcm_phys_dat_m5 <- nsi_rcm_phys_dat_m4 %>% 
+nsi_rcm_phys_dat_m4 <- nsi_rcm_phys_dat_m3 %>% 
   mutate(ctch_stream_dens = if_else(is.na(ctch_stream_dens)== TRUE,
                                     reach_length_km/ctch_area_km2,
                                     ctch_stream_dens))
 
-summary(nsi_rcm_phys_dat_m5)
+summary(nsi_rcm_phys_dat_m4)
 ###############################################################################
 
 # Filling gaps for slope and roughness with: interpolate_missing_values()
@@ -266,6 +256,7 @@ summary(nsi_rcm_phys_dat_m5)
 # and ctch_basin_slope
 
 # We will use a pair of functions to interpolate missing values (n<50) (e.g., roughness, reach_slope)
+# Helper function to get immediate neighbors' median value
 get_immediate_neighbors_median <- function(data, column, comid, tocomid) {
   immediate_neighbors <- c(comid, tocomid)
   values <- data[[column]][data$comid %in% immediate_neighbors & data[[column]] >= 0]
@@ -273,69 +264,82 @@ get_immediate_neighbors_median <- function(data, column, comid, tocomid) {
   return(median_value)
 }
 
+# Helper function to calculate subsample based on specific conditions
+calculate_subsample <- function(data, column, i) {
+  same_basin <- data$basin == data$basin[i]
+  pcpt_range <- range(data$mean_ann_pcpt_mm[same_basin])
+  area_range <- range(data$wshd_area_km2[same_basin])
+  pcpt_bin <- cut(data$mean_ann_pcpt_mm, breaks = seq(pcpt_range[1], pcpt_range[2], length.out = 10))
+  area_bin <- cut(data$wshd_area_km2, breaks = seq(area_range[1], area_range[2], length.out = 10))
+  subsample <- data[[column]][same_basin & (data$stream_order == data$stream_order[i]) &
+                                (pcpt_bin == pcpt_bin[i]) & (area_bin == area_bin[i])]
+  return(subsample)
+}
+
+# Main function to interpolate missing values
 interpolate_missing_values <- function(data, column) {
-  column = sym(column)
+  
+  column <- rlang::sym(column)
   
   data <- data %>%
     mutate(!!column := ifelse(!!column < 0 | is.na(!!column), NA, !!column))
   
-  # Replace NA values in 'mean_ann_pcpt_mm' and 'wshd_area_km2' with median
-  data$mean_ann_pcpt_mm[is.na(data$mean_ann_pcpt_mm)] <- median(data$mean_ann_pcpt_mm, na.rm = TRUE)
-  data$wshd_area_km2[is.na(data$wshd_area_km2)] <- median(data$wshd_area_km2, na.rm = TRUE)
-  
-  # Create the bins for 'mean_ann_pcpt_mm' and 'wshd_area_km2' if there is more than one unique value
-  if(length(unique(data$mean_ann_pcpt_mm)) > 1){
-    data$precipitation_bin <- cut2(data$mean_ann_pcpt_mm, g = 10)
-  } else {
-    data$precipitation_bin <- 1
-  }
-  
-  if(length(unique(data$wshd_area_km2)) > 1){
-    data$watershed_area_bin <- cut2(data$wshd_area_km2, g = 10)
-  } else {
-    data$watershed_area_bin <- 1
-  }
-  
   for (i in seq_len(nrow(data))) {
+    
     # Check if the column value is missing (represented by NA)
-    if (is.na(data[[column]][i])) {
-      # Get the immediate neighbors' median value
-      immediate_median <- get_immediate_neighbors_median(data, column, data$comid[i], data$tocomid.x[i])
+    if (is.na(data[[rlang::as_string(column)]][i])) {
+      immediate_median <- get_immediate_neighbors_median(data, rlang::as_string(column), data$comid[i], data$tocomid[i])
       
-      # If there are no immediate neighbors, replace with the median value for the same 'stream_order'
-      # and similar 'mean_ann_pcpt_mm' and 'wshd_area_km2'
+      # If there are no immediate neighbors, replace with the median value from the defined subsample
       if (is.na(immediate_median)) {
-        same_bin <- data$stream_order == data$stream_order[i] & 
-          data$precipitation_bin == data$precipitation_bin[i] & 
-          data$watershed_area_bin == data$watershed_area_bin[i]
-        
-        same_bin_values <- data[[column]][same_bin & !is.na(data[[column]])]
-        
-        # Sample a subsample from the set if its size is larger than a specified limit (100 for instance)
-        sample_size <- min(length(same_bin_values), 100)
-        subsample_values <- sample(same_bin_values, size = sample_size)
-        immediate_median <- median(subsample_values, na.rm = TRUE)
+        # Calculate the subsample based on 'stream_order', 'mean_ann_pcpt_mm', 'wshd_area_km2', and 'basin'
+        subsample <- calculate_subsample(data, rlang::as_string(column), i)
+        immediate_median <- median(subsample, na.rm = TRUE)
+      }
+      
+      # If the value is still NA, replace with the predicted value from the log-linear model
+      if (is.na(immediate_median)) {
+        # Make sure we only use rows with non-NA and positive values for 'mean_ann_pcpt_mm' and 'wshd_area_km2' 
+        # to fit the model
+        valid_rows <- !is.na(data[[rlang::as_string(column)]]) & data$mean_ann_pcpt_mm > 0 & data$wshd_area_km2 > 0
+        # Create the formula dynamically
+        formula <- as.formula(paste(rlang::as_string(column), "~ log(stream_order) + log(mean_ann_pcpt_mm) + log(wshd_area_km2)"))
+        model <- lm(formula, data = data[valid_rows, ])
+        # Predict the value for the current row
+        immediate_median <- as.numeric(predict(model, newdata = data[i, ])[1])
+      }
+      
+      # If the predicted value is less than 0, replace with the minimum positive value in the column
+      if (immediate_median < 0) {
+        immediate_median <- min(data[[rlang::as_string(column)]][data[[rlang::as_string(column)]] > 0], na.rm = TRUE)
       }
       
       # Assign the calculated value to the missing value
-      data[[column]][i] <- immediate_median
+      data[[rlang::as_string(column)]][i] <- immediate_median
     }
   }
+  
   return(data)
 }
 
-roughness_int <- interpolate_missing_values(data = nsi_rcm_phys_dat_m5 %>% 
+# Use the function
+roughness_int <- interpolate_missing_values(data = nsi_rcm_phys_dat_m4 %>% 
                                               select(comid,
                                                      tocomid,
+                                                     basin,
                                                      stream_order,
                                                      mean_ann_pcpt_mm,
                                                      wshd_area_km2,
                                                      roughness),
-                                            "roughness")
+                                            column = "roughness")
 
-reach_slope_int <- interpolate_missing_values(data = nsi_rcm_phys_dat_m5 %>% 
+reach_slope_int <- interpolate_missing_values(data = nsi_rcm_phys_dat_m4 %>% 
+                                              mutate(reach_slope = ifelse(reach_slope == 0.00000001,
+                                                                          NA,
+                                                                          reach_slope)) %>% 
                                               select(comid,
                                                      tocomid,
+                                                     basin,
                                                      stream_order,
                                                      mean_ann_pcpt_mm,
                                                      wshd_area_km2,
@@ -345,7 +349,18 @@ reach_slope_int <- interpolate_missing_values(data = nsi_rcm_phys_dat_m5 %>%
 summary(roughness_int)
 summary(reach_slope_int)
 
-nsi_rcm_phys_dat_m6 <- nsi_rcm_phys_dat_m5 %>%
+p <- ggplot(data = reach_slope_int,
+            aes(x = wshd_area_km2,
+                y = reach_slope,
+                color = as.factor(stream_order)))+
+  geom_point()+
+  scale_x_log10()+
+  scale_y_log10()+
+  facet_wrap(~basin, ncol = 2)
+p
+
+
+nsi_rcm_phys_dat_m5 <- nsi_rcm_phys_dat_m4 %>%
   select(-c(reach_slope,roughness)) %>% 
   merge(.,
         roughness_int %>% 
@@ -360,32 +375,19 @@ nsi_rcm_phys_dat_m6 <- nsi_rcm_phys_dat_m5 %>%
         by = "comid",
         all.x = TRUE)
 
-summary(nsi_rcm_phys_dat_m6)
-
-p <- ggplot(data = nsi_rcm_phys_dat_m6,
-            aes(x = wshd_area_km2,
-                y = reach_slope,
-                color = as.factor(stream_order)))+
-  # geom_boxplot()+
-  geom_point()+
-  scale_x_log10()+
-  scale_y_log10(limits = c(0.00000001, 0.001))+
-  # geom_smooth(method = 'lm')+
-  facet_wrap(basin~stream_order, nrow = 2)+
-  theme(legend.position = "none")
-p
+summary(nsi_rcm_phys_dat_m5)
 
 # We observe a number of datapoints with reach_slope = 0.00000001. These correspond
 # to default values assigned at NHDPlus when no other values were available.  Let's
 # take a look
 
-summary(filter(nsi_rcm_phys_dat_m6, reach_slope == 0.00000001))
+summary(filter(nsi_rcm_phys_dat_m5, reach_slope < 0.0000001))
 
-# We find 1383 of these values in this dataset (~ 8%) which tracks with the updated
-# version of NHDPlus 2.1.
+# We find 228 of these values in this dataset (~ 1%) which seems better than the updated
+# version of NHDPlus 2.1. (~6%)
 
 # Recalculating wshd stream density, and cumulative variables
-nsi_rcm_phys_dat_m7 <-  nsi_rcm_phys_dat_m6 %>% 
+nsi_rcm_phys_dat_m6 <-  nsi_rcm_phys_dat_m5 %>% 
   mutate(wshd_stream_dens = tot_stream_length_km/wshd_area_km2,
          ctch_stream_dens = reach_length_km/ctch_area_km2) %>% 
   select(-c(accm_basin_area_km2,
@@ -407,9 +409,9 @@ nsi_rcm_phys_dat_m7 <-  nsi_rcm_phys_dat_m6 %>%
            set_names(paste0("accm_", names(select(., wshd_stream_dens:stream_area_m2))))) %>% 
   ungroup()
 
-summary(nsi_rcm_phys_dat_m7)
+summary(nsi_rcm_phys_dat_m6)
 
-test_dat_connectivity <- nsi_rcm_phys_dat_m7 %>% 
+test_dat_connectivity <- nsi_rcm_phys_dat_m6 %>% 
   group_by(basin) %>% 
   mutate(inc_comid = 1,
          tot_comid = sum(inc_comid),
@@ -421,22 +423,14 @@ test_dat_connectivity <- nsi_rcm_phys_dat_m7 %>%
   ungroup()
 test_dat_connectivity
 
-# Connectivity in both datasets is 95%
-
-nsi_rcm_phys_qaqc_dat0 <- nsi_rcm_phys_dat_m7
+# Connectivity is maintained
 
 ################################################################################
 
 # Sorting and re-ordering columns 
 
-nsi_rcm_phys_qaqc_dat <- nsi_rcm_phys_qaqc_dat0 %>% 
-  select(-c(logRT_vertical_hz_s,
-            logRT_lateral_hz_s,
-            logq_hz_vertical_m_div_s,
-            logq_hz_lateral_m_div_s,
-            logw_m,
-            length_m,
-            huc_2_region_id,
+nsi_rcm_phys_qaqc_dat <- nsi_rcm_phys_dat_m6 %>% 
+  select(-c(huc_2_region_id,
             huc_region_raster_id,
             huc_4_subregion_id,
             logK_m_div_s)) %>% 
@@ -475,7 +469,15 @@ nsi_rcm_phys_qaqc_dat <- nsi_rcm_phys_qaqc_dat0 %>%
          mean_ann_vel_ms,
          roughness,
          d50_m,
-         stream_area_m2)
+         stream_area_m2,
+         pred_annual_doc,
+         pred_annual_do,
+         no3_conc_mg_l,
+         tot_rthz_s,
+         tot_qhz_ms,
+         totco2g_day,
+         totco2_o2g_day,
+         totco2_ang_day)
 
 write.csv(nsi_rcm_phys_qaqc_dat,
           paste(local_data,"qaqc_river_corridors_physical_hyporheic_char.csv", sep = '/'),
