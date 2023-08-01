@@ -275,31 +275,6 @@ get_immediate_neighbors_median <- function(data, column, comid, tocomid) {
   median_value <- median(values, na.rm = TRUE)
   return(median_value)
 }
-# interpolate_missing_values <- function(data, column) {
-#   column = sym(column)
-#   
-#   data <- data %>%
-#     mutate(!!column := ifelse(!!column < 0 | is.na(!!column), NA, !!column))
-#   
-#   for (i in seq_len(nrow(data))) {
-#     # Check if the column value is missing (represented by NA)
-#     if (is.na(data[[column]][i])) {
-#       # Get the immediate neighbors' mean value
-#       immediate_median <- get_immediate_neighbors_median(data, column, data$comid[i], data$tocomid.x[i])
-#       
-#       # If there are no immediate neighbors, replace with the average value for the same 'stream_order'
-#       if (is.na(immediate_median)) {
-#         same_stream_order <- data$stream_order == data$stream_order[i]
-#         same_order_values <- data[[column]][same_stream_order & !is.na(data[[column]])]
-#         immediate_median <- median(same_order_values, na.rm = TRUE)
-#       }
-#       
-#       # Assign the calculated value to the missing value
-#       data[[column]][i] <- immediate_median
-#     }
-#   }
-#   return(data)
-# }
 
 interpolate_missing_values <- function(data, column) {
   column = sym(column)
@@ -394,7 +369,6 @@ p <- ggplot(data = nsi_rcm_phys_dat_m6,
   geom_point()+
   scale_x_log10()+
   scale_y_log10(limits = c(0.00000001, 0.001))+
-  # geom_smooth(method = 'lm')+
   facet_wrap(basin~stream_order, nrow = 2)+
   theme(legend.position = "none")
 p
