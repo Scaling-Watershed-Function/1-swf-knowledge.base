@@ -35,7 +35,7 @@ anc_attb_nhdplus21_dat <- read_csv(paste(source_data,"ancillary_hydro_attributes
 rcm_22_model_dat <- read_csv(paste(source_data,"rcm_2022_model_data","data","RF_filled_rcm_2022_model_data.csv", sep = '/'),
                              show_col_types = FALSE)
 
-nsi_ssn_ntwk_dat <- st_transform(st_read(paste(source_data,"nsi_ssn_network","data","nsi_network_ywrb.shp",sep = "/")),4326)
+nsi_rcm_ntwk_dat <- st_transform(st_read(paste(source_data,"rcm_2022_model_data","data","shapefiles","river_corridors_respiration_geom.shp",sep = "/")),4326)
 
 med_bed_part_dat <- read_csv(paste(source_data,"rcm_2022_hyporheic_provisional","data","current20_hyporheic_pnw_data.csv", sep = '/'),
                              show_col_types = FALSE)
@@ -43,22 +43,10 @@ med_bed_part_dat <- read_csv(paste(source_data,"rcm_2022_hyporheic_provisional",
 # Checking stream network connectivity for RCM model data
 
 rcm_22_connectivity <- rcm_22_model_dat %>% 
-  filter(is.na(totco2g_day) == FALSE) %>%
-  select(comid) %>% 
-  merge(.,
-        enh_nhdplus21_dat %>% 
-          select(comid,
-                 tocomid,
-                 huc_4),
-        by = "comid",
-        all.x = TRUE) %>%
-  mutate(basin = if_else(huc_4 == "1703",
-                         "yakima",
-                         "willamette")) %>% 
   group_by(basin) %>% 
   mutate(inc_comid = 1,
          tot_comid = sum(inc_comid),
-         accm_inc_comid = calculate_arbolate_sum(data.frame(ID = comid,
+         accm_inc_comid = nhdplusTools::calculate_arbolate_sum(data.frame(ID = comid,
                                                             toID = tocomid,
                                                             length = inc_comid)),
          connectivity_index = (max(accm_inc_comid)/tot_comid*100)) %>% 
@@ -67,43 +55,14 @@ rcm_22_connectivity <- rcm_22_model_dat %>%
 rcm_22_connectivity  
 
 
-# Connectivity index for Yakima River Basin is 87.02% Due to missing values in the
-# RF-gap filled values for totco2g_day
-
+# Connectivity index for Yakima River Basin is 97.1%
 # Connectivity index for Willamette River Basin is 97.40%
 
-
-# We are going to merge the RCM 2022 model data with the curated National Stream
-# Internet database 
-
-nsi_rcm_ntwk_dat <- nsi_ssn_ntwk_dat %>% 
-  rename(comid = COMID) %>% 
-  merge(.,
-        enh_nhdplus21_dat %>% 
-          select(comid,
-                 tocomid),
-        by = "comid",
-        all.x = TRUE) %>% 
-  merge(.,
-        rcm_22_model_dat,
-        by = "comid",
-        all.x = TRUE) %>% 
-  filter(is.na(totco2g_day) == FALSE)
-
-summary(filter(nsi_rcm_ntwk_dat,DUP_COMID==1))
-
-# The DUP_COMID == 1 rows correspond to the duplicated COMIDs that the nsi adds to the
-# original NHDPlus 2.1 dataset to meet the requirements for spatial statistical
-# analysis with the SSN package. The SSN package allows for spatial hypothesis
-# testing (i.e. models) that incorporate spatial autocorrelation measured based 
-# on distances along the stream network (instead of only euclidian distances)
-
-# Let's take a look at the missing values for some of the hyporheic flow data
 
 # Fluvial network
 leaflet(nsi_rcm_ntwk_dat) %>% 
   addPolylines(weight = 2) %>% 
-  addPolylines(data = filter(nsi_rcm_ntwk_dat,is.na(tot_qhz_ms) == TRUE),
+  addPolylines(data = filter(nsi_rcm_ntwk_dat,is.na(t_co2_gday) == TRUE),
                color = "magenta",
                opacity = 1,
                weight = 9) %>% 
@@ -118,7 +77,7 @@ leaflet(nsi_rcm_ntwk_dat) %>%
 
 summary(filter(nsi_rcm_ntwk_dat,TotDASqKM ==0))
 
-# We find 9 comids with TotDASqKM = 0. However, these comids have duplicated 
+# We find 43 comids with TotDASqKM = 0. However, these comids have duplicated 
 # length values corresponding to original stream lengths. This could be an 
 # indication that these comids may correspond to connecting lines that maintain
 # network integrity
@@ -139,9 +98,6 @@ nsi_rcm_ntwk_connectivity <- as.data.frame(nsi_rcm_ntwk_dat %>%
   select(-geometry))%>% 
   filter(TotDASqKM > 0) %>%
   filter(DUP_COMID == 0) %>% # We need to remove duplicate COMIDs for calculate_arbolate_sum to work correctly
-  mutate(basin = if_else(HUC4 == "1703",
-                         "yakima",
-                         "willamette")) %>% 
   group_by(basin) %>% 
   mutate(inc_comid = 1,
          tot_comid = sum(inc_comid),
@@ -329,62 +285,59 @@ phys_dat_ro <- phys_dat %>%
 
 nsi_rcm_phys_dat_0 <- nsi_rcm_ntwk_dat %>% 
   filter(DUP_COMID == 0) %>% 
+  rename(no3_mg_l = no3_mgl,
+         t_co2g_day = t_co2_gday,
+         anco2g_day = anco2_gday,
+         abco2g_day = abco2_gday) %>% 
   select(comid,
          tocomid,
-         pred_annual_doc,
-         pred_annual_do,
-         no3_conc_mg_l,
-         tot_rthz_s,
-         tot_qhz_ms,
-         totco2g_day,
-         totco2_o2g_day,
-         totco2_ang_day) %>% 
+         pd_ann_doc,
+         pd_ann_do,
+         no3_mg_l,
+         t_rthz_s,
+         t_qhz_ms,
+         t_co2g_day,
+         abco2g_day,
+         anco2g_day) %>% 
   merge(.,
-        phys_dat_ro,
+        phys_dat_ro %>% 
+          select(-tocomid),
         by = "comid",
         all.x = TRUE) %>% 
   merge(.,
         med_bed_part_dat %>% 
           rename(d50_m = D50_m) %>% 
-          select(comid,
+          select(-tocomid,
+                 comid,
                  logK_m_div_s,
                  d50_m),
         by = "comid",
-        all.x = TRUE) %>% 
-  rename(tocomid = tocomid.x) %>% 
-  select(-tocomid.y)
+        all.x = TRUE) 
 
-# Saving data files as data and as shapefile (to include geometry)
+# Saving data files as dataframe
 
 nsi_rcm_phys_dat <- nsi_rcm_phys_dat_0 %>% 
   sf::st_drop_geometry() %>% 
   as.data.frame()
 
+#checking connectivity
+
+connectivity_test <- nsi_rcm_phys_dat %>% 
+  group_by(basin) %>% 
+  mutate(inc_comid = 1,
+         tot_comid = sum(inc_comid),
+         accm_inc_comid = nhdplusTools::calculate_arbolate_sum(data.frame(ID = comid,
+                                                                          toID = tocomid,
+                                                                          length = inc_comid)),
+         connectivity_index = (max(accm_inc_comid)/tot_comid*100)) %>% 
+  summarise(across(c("tot_comid", "accm_inc_comid", "connectivity_index"), max)) %>% 
+  ungroup()
+connectivity_test 
+
 # Saving as CSV file
 write.csv(nsi_rcm_phys_dat,paste(local_data,"river_corridors_physical_hyporheic_char.csv", sep = '/'),
           row.names = FALSE)
 
-# Saving as an st object
-
-# This file will be a simplified version  of the dataset above to meet ESRI standards
-
-nsi_rcm_phys_sto <- nsi_rcm_ntwk_dat 
-
-# Determine the maximum width required for the 'tocomid' field
-max_tocomid_width <- max(nchar(as.character(nsi_rcm_phys_sto$tocomid)))
-
-# Update the field width for 'tocomid' in 'nsi_rcm_phys_sto'
-nsi_rcm_phys_sto$tocomid <- format(nsi_rcm_phys_sto$tocomid, width = max_tocomid_width)
-
-# Specify the file path for saving the shapefile
-output_file <- paste(local_data,"river_corridors_physical_hyporheic_geom.shp", sep = '/')
-
-# Write the 'nsi_rcm_phys_sto' data frame to a shapefile
-st_write(nsi_rcm_phys_sto, 
-         dsn = output_file, 
-         delete_dsn = TRUE, 
-         overwrite_layer = TRUE, 
-         delete_layer = TRUE)
 
 
 

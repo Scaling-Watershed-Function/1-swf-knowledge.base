@@ -192,7 +192,7 @@ nsi_rcm_phys_dat_m2 <- nsi_rcm_phys_dat_m1%>%
 summary(nsi_rcm_phys_dat_m2)
 ################################################################################
 
-# We also find ~ 8 zero values for hydraulic geometry variables including 
+# We also find 7 zero values for hydraulic geometry variables including 
 # bankfull width, depth, and cross sectional area, as well as mean annual flow. We will 
 # check on this values once we have removed first order streams with watershed area = 0.
 
@@ -200,13 +200,16 @@ filter(nsi_rcm_phys_dat_m2, bnkfll_width_m == 0)
 
 # These values correspond to first order streams, so we remove them from the dataset
 
+# We also have 8 zero values for mean annual flow in first order streams, so we remove 
+# them from the dataset
+
 
 ############################# DATASET MODIFICATION #############################
 # Remove flowlines with bnkfll_width_m = 0
 ################################################################################
 
 nsi_rcm_phys_dat_m3 <- nsi_rcm_phys_dat_m2 %>% 
-  filter(bnkfll_width_m > 0) %>% 
+  filter(bnkfll_width_m > 0 & mean_ann_flow_m3s > 0) %>% 
   mutate(bnkfll_xsec_area_m2 = if_else(bnkfll_xsec_area_m2 == 0,
                                        bnkfll_depth_m * bnkfll_width_m,
                                        bnkfll_xsec_area_m2))
@@ -348,8 +351,21 @@ reach_slope_int <- interpolate_missing_values(data = nsi_rcm_phys_dat_m4 %>%
                                             "reach_slope",
                                             regression = TRUE)
 
+totco2_int <- interpolate_missing_values(data = nsi_rcm_phys_dat_m4 %>% 
+                                           select(comid,
+                                                  tocomid,
+                                                  basin,
+                                                  stream_order,
+                                                  mean_ann_pcpt_mm,
+                                                  wshd_area_km2,
+                                                  t_co2g_day),
+                                         "t_co2g_day",
+                                         regression = TRUE)
+
 summary(roughness_int)
 summary(reach_slope_int)
+summary(totco2_int)
+
 
 p <- ggplot(data = reach_slope_int,
             aes(x = wshd_area_km2,
@@ -361,9 +377,25 @@ p <- ggplot(data = reach_slope_int,
   facet_wrap(~basin, ncol = 2)
 p
 
+p <- ggplot(data = totco2_int %>% 
+              filter(t_co2g_day>0),
+            aes(x = wshd_area_km2,
+                y = t_co2g_day,
+                color = as.factor(stream_order)))+
+  geom_point()+
+  scale_x_log10()+
+  scale_y_log10()+
+  geom_smooth(data = totco2_int %>% 
+                filter(t_co2g_day > 0),
+              aes(x = wshd_area_km2,
+                  y = t_co2g_day),
+              inherit.aes = FALSE)+
+  facet_wrap(~basin, ncol = 2)
+p
+
 
 nsi_rcm_phys_dat_m5 <- nsi_rcm_phys_dat_m4 %>%
-  select(-c(reach_slope,roughness)) %>% 
+  select(-c(reach_slope,roughness,t_co2g_day)) %>% 
   merge(.,
         roughness_int %>% 
           select(comid,
@@ -375,9 +407,16 @@ nsi_rcm_phys_dat_m5 <- nsi_rcm_phys_dat_m4 %>%
           select(comid,
                  reach_slope),
         by = "comid",
-        all.x = TRUE)
+        all.x = TRUE) %>% 
+  merge(.,
+        totco2_int %>% 
+          select(comid,
+                 t_co2g_day),
+        by = "comid",
+        all.x = TRUE) 
 
 summary(nsi_rcm_phys_dat_m5)
+
 
 # We observe a number of datapoints with reach_slope = 0.00000001. These correspond
 # to default values assigned at NHDPlus when no other values were available.  Let's
@@ -385,7 +424,7 @@ summary(nsi_rcm_phys_dat_m5)
 
 summary(filter(nsi_rcm_phys_dat_m5, reach_slope < 0.0000001))
 
-# We find 228 of these values in this dataset (~ 1%) which seems better than the updated
+# We find 229 of these values in this dataset (~ 1%) which seems better than the updated
 # version of NHDPlus 2.1. (~6%)
 
 # Recalculating wshd stream density, and cumulative variables
@@ -405,6 +444,7 @@ nsi_rcm_phys_dat_m6 <-  nsi_rcm_phys_dat_m5 %>%
                   ctch_stream_dens,
                   ctch_basin_slope,
                   reach_slope,
+                  t_co2g_day,
                   stream_area_m2), ~ calculate_arbolate_sum(data.frame(ID = comid,
                                                                        toID = tocomid,
                                                                        length = .x))) %>% 
@@ -472,14 +512,21 @@ nsi_rcm_phys_qaqc_dat <- nsi_rcm_phys_dat_m6 %>%
          roughness,
          d50_m,
          stream_area_m2,
-         pred_annual_doc,
-         pred_annual_do,
-         no3_conc_mg_l,
-         tot_rthz_s,
-         tot_qhz_ms,
-         totco2g_day,
-         totco2_o2g_day,
-         totco2_ang_day)
+         pd_ann_doc,
+         pd_ann_do,
+         no3_mg_l,
+         t_rthz_s,
+         t_qhz_ms,
+         t_co2g_day,
+         abco2g_day,
+         anco2g_day,
+         accm_stream_area_m2,
+         accm_wshd_stream_dens,
+         accm_ctch_stream_dens,
+         accm_tot_stream_length_km,
+         accm_wshd_area_km2,
+         accm_ctch_area_km2,
+         accm_t_co2g_day)
 
 write.csv(nsi_rcm_phys_qaqc_dat,
           paste(local_data,"qaqc_river_corridors_physical_hyporheic_char.csv", sep = '/'),
