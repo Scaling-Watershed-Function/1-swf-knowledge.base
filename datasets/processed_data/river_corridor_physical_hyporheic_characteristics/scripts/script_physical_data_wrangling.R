@@ -43,7 +43,7 @@ med_bed_part_dat <- read_csv(paste(source_data,"rcm_2022_hyporheic_provisional",
 # Checking stream network connectivity for RCM model data
 
 rcm_22_connectivity <- rcm_22_model_dat %>% 
-  filter(is.na(totco2g_day) == FALSE) %>% 
+  filter(is.na(totco2g_day) == FALSE) %>%
   select(comid) %>% 
   merge(.,
         enh_nhdplus21_dat %>% 
@@ -66,7 +66,8 @@ rcm_22_connectivity <- rcm_22_model_dat %>%
   ungroup()
 rcm_22_connectivity  
 
-# Connectivity index for Yakima River Basin is 85.02% Due to missing values in the
+
+# Connectivity index for Yakima River Basin is 87.02% Due to missing values in the
 # RF-gap filled values for totco2g_day
 
 # Connectivity index for Willamette River Basin is 97.40%

@@ -277,7 +277,7 @@ calculate_subsample <- function(data, column, i) {
 }
 
 # Main function to interpolate missing values
-interpolate_missing_values <- function(data, column) {
+interpolate_missing_values <- function(data, column, regression = TRUE) {
   
   column <- rlang::sym(column)
   
@@ -297,8 +297,8 @@ interpolate_missing_values <- function(data, column) {
         immediate_median <- median(subsample, na.rm = TRUE)
       }
       
-      # If the value is still NA, replace with the predicted value from the log-linear model
-      if (is.na(immediate_median)) {
+      # If the value is still NA and regression is TRUE, replace with the predicted value from the log-linear model
+      if (is.na(immediate_median) & regression) {
         # Make sure we only use rows with non-NA and positive values for 'mean_ann_pcpt_mm' and 'wshd_area_km2' 
         # to fit the model
         valid_rows <- !is.na(data[[rlang::as_string(column)]]) & data$mean_ann_pcpt_mm > 0 & data$wshd_area_km2 > 0
@@ -307,11 +307,11 @@ interpolate_missing_values <- function(data, column) {
         model <- lm(formula, data = data[valid_rows, ])
         # Predict the value for the current row
         immediate_median <- as.numeric(predict(model, newdata = data[i, ])[1])
-      }
-      
-      # If the predicted value is less than 0, replace with the minimum positive value in the column
-      if (immediate_median < 0) {
-        immediate_median <- min(data[[rlang::as_string(column)]][data[[rlang::as_string(column)]] > 0], na.rm = TRUE)
+        
+        # If the predicted value is less than 0, replace with the minimum positive value in the column
+        if (immediate_median < 0) {
+          immediate_median <- min(data[[rlang::as_string(column)]][data[[rlang::as_string(column)]] > 0], na.rm = TRUE)
+        }
       }
       
       # Assign the calculated value to the missing value
@@ -331,7 +331,8 @@ roughness_int <- interpolate_missing_values(data = nsi_rcm_phys_dat_m4 %>%
                                                      mean_ann_pcpt_mm,
                                                      wshd_area_km2,
                                                      roughness),
-                                            column = "roughness")
+                                            column = "roughness",
+                                            regression = TRUE)
 
 reach_slope_int <- interpolate_missing_values(data = nsi_rcm_phys_dat_m4 %>% 
                                               mutate(reach_slope = ifelse(reach_slope == 0.00000001,
@@ -344,7 +345,8 @@ reach_slope_int <- interpolate_missing_values(data = nsi_rcm_phys_dat_m4 %>%
                                                      mean_ann_pcpt_mm,
                                                      wshd_area_km2,
                                                      reach_slope),
-                                            "reach_slope")
+                                            "reach_slope",
+                                            regression = TRUE)
 
 summary(roughness_int)
 summary(reach_slope_int)
