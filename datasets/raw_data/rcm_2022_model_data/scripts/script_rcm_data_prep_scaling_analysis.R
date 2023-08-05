@@ -22,8 +22,17 @@ reference_comids <- read_csv(paste(source_data,"enhanced_nhdplus_21","data","enh
 nexss_inputs_dat <- read_csv(paste(local_data,"merged_nexss_inputs.csv", sep = '/'),
                              show_col_types = "FALSE")
 
-annual_resp_dat <- read_csv(paste(local_data,"nhd_CR_stream_annual_resp_inputs_outputs.csv", sep = '/'),
-                            show_col_types = "FALSE")
+no3_dat <- read_csv(paste(local_data,"merged_nhd_CR_stream_no3.csv", sep = "/"),
+                    show_col_types = FALSE)
+
+do_dat <- read_csv(paste(local_data,"merged_nhd_CR_stream_annual_DO.csv", sep = "/"),
+                    show_col_types = FALSE)
+
+doc_dat <- read_csv(paste(local_data,"merged_nhd_CR_stream_annual_DOC.csv", sep = "/"),
+                    show_col_types = FALSE)
+
+annual_resp_data <- read_csv(paste(local_data,"nhd_CR_stream_annual_resp_inputs_outputs.csv", sep = "/"),
+                             show_col_types = FALSE)
 
 resp_gap_filled_wrb_dat0 <- read_csv(paste(local_data,"son_etal_22_wrb_RF_resp_data.csv", sep = '/'),
                                 show_col_types = "FALSE") %>% select(-1)
@@ -32,6 +41,9 @@ resp_gap_filled_yrb_dat0 <- read_csv(paste(local_data,"son_etal_22_yrb_RF_resp_d
                                     show_col_types = "FALSE") %>% select(-1)
 
 nsi_ssn_ntwk_dat <- st_transform(st_read(paste(source_data,"nsi_ssn_network","data","nsi_network_ywrb.shp",sep = "/")),4326)
+
+
+summary(no3_dat)
 
 # Checking connectivity in datasets
 
@@ -43,20 +55,71 @@ reference_comids <- reference_comids %>%
                          "yakima",
                          "willamette"))
 
-annual_resp_dat <- annual_resp_dat %>% 
-  merge(.,
-        reference_comids %>% 
-          select(comid,basin),
-        by = "comid",
-        all.x = TRUE)
-
-
 nexss_inputs_dat <- nexss_inputs_dat %>% 
   merge(.,
         reference_comids %>% 
           select(comid,basin),
         by = "comid",
         all.x = TRUE)
+
+# Connectivity test
+test_dat_connectivity <- nexss_inputs_dat %>% 
+  group_by(basin)%>% 
+  mutate(inc_comid = 1,
+         tot_comid = sum(inc_comid),
+         accm_inc_comid = calculate_arbolate_sum(data.frame(ID = comid,
+                                                            toID = tocomid,
+                                                            length = inc_comid)),
+         connectivity_index = (max(accm_inc_comid)/tot_comid*100)) %>% 
+  summarise(across(c("tot_comid", "accm_inc_comid", "connectivity_index"), max)) %>% 
+  ungroup()
+test_dat_connectivity
+
+# Connectivity is 97.5% for Willamette and 95% for Yakima
+
+# We will use nexss inputs dataset as a comid reference to merge the subsequent 
+# data (e.g. no3, do, doc, etc...)
+
+rcm_dat <- nexss_inputs_dat %>% 
+  merge(.,
+        do_dat %>% 
+          select(comid,
+                 Stream_DO) %>% 
+          rename(do_stream_mg_l = Stream_DO),
+        by = "comid",
+        all.x = TRUE) %>% 
+  merge(.,
+        doc_dat %>% 
+          select(comid,
+                 Stream_DOC) %>% 
+          rename(doc_stream_mg_l = Stream_DOC),
+        by = "comid",
+        all.x = TRUE) %>% 
+  merge(.,
+        no3_dat %>% 
+          select(comid,
+                 no3_conc_mg_l) %>% 
+          rename(no3_stream_mg_l = no3_conc_mg_l),
+        by = "comid",
+        all.x = TRUE)
+
+# Connectivity test
+test_dat_connectivity <- rcm_dat %>% 
+  group_by(basin)%>% 
+  mutate(inc_comid = 1,
+         tot_comid = sum(inc_comid),
+         accm_inc_comid = calculate_arbolate_sum(data.frame(ID = comid,
+                                                            toID = tocomid,
+                                                            length = inc_comid)),
+         connectivity_index = (max(accm_inc_comid)/tot_comid*100)) %>% 
+  summarise(across(c("tot_comid", "accm_inc_comid", "connectivity_index"), max)) %>% 
+  ungroup()
+test_dat_connectivity
+
+# Connectivity is maintained
+
+################################################################################
+# Repiration Data
 
 resp_gap_filled_wrb_dat <- resp_gap_filled_wrb_dat0 %>% 
     select(comid,
@@ -73,16 +136,16 @@ summary(resp_gap_filled_yrb_dat)
 resp_gap_filled_dat <- rbind(resp_gap_filled_wrb_dat,
                              resp_gap_filled_yrb_dat)
 
-resp_dat <- annual_resp_dat %>% 
+# Merging nexss inputs data with gap filled respiration data
+
+rcm_gap_filled_dat <- rcm_dat %>% 
   merge(.,
         resp_gap_filled_dat,
         by = "comid",
         all.x = TRUE)
 
-summary(resp_dat)
-
 # Connectivity test
-test_dat_connectivity <- resp_dat %>% 
+test_dat_connectivity <- rcm_gap_filled_dat %>% 
   filter(is.na(totco2g_day)==FALSE) %>% 
   group_by(basin)%>% 
   mutate(inc_comid = 1,
@@ -95,64 +158,31 @@ test_dat_connectivity <- resp_dat %>%
   ungroup()
 test_dat_connectivity
 
-
-# Expressing all C fluxes as totco2g_day
-
-stream_area_dat <- nexss_inputs_dat %>% 
-  select(comid,
-         logw_m,
-         length_m) %>% 
-  mutate(stream_width_m = 10^logw_m,
-         stream_length_m = length_m,
-         stream_area_m2 = stream_width_m * stream_length_m) %>% 
-  select(comid,
-         stream_width_m,
-         stream_length_m,
-         stream_area_m2)
-
 # Removing NA's for totco2g_day does not affect network connectivity as these values
 # correspond to the Columbia River basin. Removing NA's from Yakima does decrease the
 # overall connectivity in ~ 10%
 
-willamette_clean <- resp_dat %>% 
-  filter(basin == "willamette" & is.na(totco2g_day) == FALSE)
-
-resp_dat_clean <- resp_dat %>% 
-  filter(basin == "yakima") %>% 
-  rbind(.,
-        willamette_clean) %>% 
+rcm_gap_filled_dat <-  rcm_gap_filled_dat %>% 
+  filter(!(basin == "willamette" & is.na(totco2g_day)))%>%
   merge(.,
-        stream_area_dat,
+        annual_resp_data %>% 
+          select(comid,
+                 logrt_total_hz_s,
+                 logq_hz_total_m_s),
         by = "comid",
-        all.x = TRUE)
-
-summary(resp_dat_clean)
-
-# Connectivity test
-test_dat_connectivity <- resp_dat_clean %>% 
-  group_by(basin)%>% 
-  mutate(inc_comid = 1,
-         tot_comid = sum(inc_comid),
-         accm_inc_comid = calculate_arbolate_sum(data.frame(ID = comid,
-                                                            toID = tocomid,
-                                                            length = inc_comid)),
-         connectivity_index = (max(accm_inc_comid)/tot_comid*100)) %>% 
-  summarise(across(c("tot_comid", "accm_inc_comid", "connectivity_index"), max)) %>% 
-  ungroup()
-test_dat_connectivity
-
-# Relabeling columns and converting all c fluxes to g/day
-
-resp_dat_clean <-  resp_dat_clean %>% 
+        all.x = TRUE) %>% 
   mutate(tot_rt_hz_s = 10^logrt_total_hz_s,
-         tot_q_hz_ms = 10^logq_hz_total_m_s,
-         totco2_o2g_day = 10^logtotco2_o2g_m2_day * stream_area_m2,
-         totco2_ang_day = 10^logtotco2_ang_m2_day * stream_area_m2) %>% 
-  select(-c(logrt_total_hz_s,
-            logq_hz_total_m_s,
-            logtotco2_o2g_m2_day,
-            logtotco2_ang_m2_day,
-            logtotco2g_m2_day))
+         tot_q_hz_ms = 10^logq_hz_total_m_s)# Expressing residence time and hyporheic exchange on arithmetic scale
+
+summary(rcm_gap_filled_dat)
+
+write.csv(rcm_gap_filled_dat,paste(local_data,"RF_filled_rcm_2022_model_data.csv", sep ='/'),
+          row.names = FALSE)
+
+
+
+
+rcmresp_dat_clean <-  resp_dat_clean 
 
 summary(resp_dat_clean)
 
@@ -245,5 +275,4 @@ st_write(nsi_rcm_ntwk_sto,
          delete_dsn = TRUE, 
          overwrite_layer = TRUE, 
          delete_layer = TRUE)
-
 
