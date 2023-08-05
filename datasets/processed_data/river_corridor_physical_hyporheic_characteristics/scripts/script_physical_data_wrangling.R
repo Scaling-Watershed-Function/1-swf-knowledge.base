@@ -55,7 +55,7 @@ rcm_22_connectivity <- rcm_22_model_dat %>%
 rcm_22_connectivity  
 
 
-# Connectivity index for Yakima River Basin is 97.1%
+# Connectivity index for Yakima River Basin is 95 %
 # Connectivity index for Willamette River Basin is 97.40%
 
 
@@ -283,22 +283,8 @@ phys_dat_ro <- phys_dat %>%
 
 # Merging with RCM input variables from NEXSS model (version 2020)
 
-nsi_rcm_phys_dat_0 <- nsi_rcm_ntwk_dat %>% 
-  filter(DUP_COMID == 0) %>% 
-  rename(no3_mg_l = no3_mgl,
-         t_co2g_day = t_co2_gday,
-         anco2g_day = anco2_gday,
-         abco2g_day = abco2_gday) %>% 
-  select(comid,
-         tocomid,
-         pd_ann_doc,
-         pd_ann_do,
-         no3_mg_l,
-         t_rthz_s,
-         t_qhz_ms,
-         t_co2g_day,
-         abco2g_day,
-         anco2g_day) %>% 
+nsi_rcm_phys_dat <- rcm_22_model_dat %>% 
+  select(-c(basin)) %>% 
   merge(.,
         phys_dat_ro %>% 
           select(-tocomid),
@@ -307,18 +293,13 @@ nsi_rcm_phys_dat_0 <- nsi_rcm_ntwk_dat %>%
   merge(.,
         med_bed_part_dat %>% 
           rename(d50_m = D50_m) %>% 
-          select(-tocomid,
-                 comid,
+          select(comid,
                  logK_m_div_s,
                  d50_m),
         by = "comid",
         all.x = TRUE) 
 
-# Saving data files as dataframe
-
-nsi_rcm_phys_dat <- nsi_rcm_phys_dat_0 %>% 
-  sf::st_drop_geometry() %>% 
-  as.data.frame()
+str(nsi_rcm_phys_dat)
 
 #checking connectivity
 
