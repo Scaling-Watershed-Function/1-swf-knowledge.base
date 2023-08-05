@@ -43,8 +43,6 @@ resp_gap_filled_yrb_dat0 <- read_csv(paste(local_data,"son_etal_22_yrb_RF_resp_d
 nsi_ssn_ntwk_dat <- st_transform(st_read(paste(source_data,"nsi_ssn_network","data","nsi_network_ywrb.shp",sep = "/")),4326)
 
 
-summary(no3_dat)
-
 # Checking connectivity in datasets
 
 reference_comids <- reference_comids %>% 
@@ -179,29 +177,21 @@ summary(rcm_gap_filled_dat)
 write.csv(rcm_gap_filled_dat,paste(local_data,"RF_filled_rcm_2022_model_data.csv", sep ='/'),
           row.names = FALSE)
 
-
-
-
-rcmresp_dat_clean <-  resp_dat_clean 
-
-summary(resp_dat_clean)
-
 # Generating shapefiles
 
 nsi_rcm_ntwk_dat <- nsi_ssn_ntwk_dat %>% 
   rename(comid = COMID) %>% 
   merge(.,
-        resp_dat_clean, 
+        rcm_gap_filled_dat, 
         by = "comid",
         all.x = TRUE) %>% 
   filter(!(basin == "willamette" & is.na(totco2g_day)))
-
 
 # Checking resulting network
 
 leaflet(nsi_rcm_ntwk_dat) %>% 
   addPolylines(weight = 2) %>% 
-  addPolylines(data = filter(nsi_rcm_ntwk_dat,is.na(totco2g_day)==TRUE),
+  addPolylines(data = filter(nsi_rcm_ntwk_dat,is.na(do_stream_mg_l)==TRUE),
                color = "magenta",
                opacity = 1,
                weight = 9) %>% 
@@ -212,17 +202,18 @@ leaflet(nsi_rcm_ntwk_dat) %>%
 
 # Rename columns so they meet the 10 character length ESRI format
 nsi_rcm_ntwk_sto <- nsi_rcm_ntwk_dat %>% 
-  rename(pd_ann_do = pred_annual_do,
-         pd_ann_doc = pred_annual_doc,
-         no3_mgl = no3_conc_mg_l,
+  rename(pd_ann_do = do_stream_mg_l,
+         pd_ann_doc = doc_stream_mg_l,
+         no3_mgl = no3_stream_mg_l,
          t_co2_gday = totco2g_day,
-         strm_wdthm = stream_width_m,
-         strm_lgthm = stream_length_m,
-         strm_arem2 = stream_area_m2,
          t_rthz_s = tot_rt_hz_s,
-         t_qhz_ms = tot_q_hz_ms,
-         abco2_gday = totco2_o2g_day,
-         anco2_gday = totco2_ang_day)
+         t_qhz_ms = tot_q_hz_ms) %>% 
+  select(-c(logRT_vertical_hz_s,
+            logRT_lateral_hz_s,
+            logq_hz_vertical_m_div_s,
+            logq_hz_lateral_m_div_s,
+            logrt_total_hz_s,
+            logq_hz_total_m_s))
 
 # Determine the maximum width required for the 'tocomid' field
 max_tocomid_width <- max(nchar(as.character(nsi_rcm_ntwk_sto$tocomid)))
@@ -237,39 +228,6 @@ nsi_rcm_ntwk_sto$tocomid <- as.numeric(nsi_rcm_ntwk_sto$tocomid)
 output_file <- paste(local_data,"shapefiles","river_corridors_respiration_geom.shp", sep = '/')
 
 # Write the 'nsi_rcm_phys_sto' data frame to a shapefile
-st_write(nsi_rcm_ntwk_sto, 
-         dsn = output_file, 
-         delete_dsn = TRUE, 
-         overwrite_layer = TRUE, 
-         delete_layer = TRUE)
-
-write.csv(resp_dat_clean,paste(local_data,"RF_filled_rcm_2022_model_data.csv", sep ='/'),
-          row.names = FALSE)
-
-
-
-library(sf)
-
-# Saving resulting shape files
-nsi_rcm_ntwk_sto <- nsi_rcm_ntwk_dat 
-
-# Check the maximum character length for each column in the dataframe
-max_char_length <- sapply(nsi_rcm_ntwk_sto, function(x) max(nchar(as.character(x))))
-
-# Print the maximum character length for each column
-print(max_char_length)
-
-
-# Assuming you want to set the maximum character width to 50
-max_char_width <- 50
-
-# Use st_as_sf with dim=TRUE to update the max character width for all columns
-nsi_rcm_ntwk_sto <- st_as_sf(nsi_rcm_ntwk_sto, dim = TRUE, max_length = max_char_width)
-
-# Specify the file path for saving the shapefile
-output_file <- paste(local_data, "shapefiles", "river_corridors_respiration_geom.shp", sep = '/')
-
-# Write the updated 'nsi_rcm_ntwk_sto' data frame to a shapefile
 st_write(nsi_rcm_ntwk_sto, 
          dsn = output_file, 
          delete_dsn = TRUE, 
