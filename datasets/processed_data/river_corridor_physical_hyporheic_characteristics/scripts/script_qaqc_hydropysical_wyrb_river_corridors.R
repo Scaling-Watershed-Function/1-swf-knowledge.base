@@ -238,7 +238,8 @@ print(report_data, row.names = FALSE)
 # we also have 259 NA's for catchment stream_density (probably related to 
 # 0 values in catchment area). Negative values in elevation could be expected (?)
 # given the resolution of the data, but we have negative values for reach_slope, 
-# in this case -99999 (i.e. missing data) and also 29 missing values for roughness. 
+# in this case -99999 (i.e. missing data), 29 missing values for roughness, ~230 
+# NAs for nutrient concentrations and only 10 for totco2g_day. 
 
 
 ############################# DATASET MODIFICATION #############################
@@ -304,14 +305,18 @@ nsi_rcm_phys_qaqc_dat <- nsi_rcm_phys_dat_m5 %>%
          roughness,
          d50_m,
          stream_area_m2,
-         pd_ann_doc,
-         pd_ann_do,
-         no3_mg_l,
-         t_rthz_s,
-         t_qhz_ms,
-         t_co2g_day,
-         abco2g_day,
-         anco2g_day)
+         do_stream_mg_l,
+         doc_stream_mg_l,
+         no3_stream_mg_l,
+         totco2g_day,
+         tot_rt_hz_s,
+         tot_q_hz_ms,
+         logrt_total_hz_s,
+         logq_hz_total_m_s,
+         logRT_vertical_hz_s,
+         logRT_lateral_hz_s,
+         logq_hz_vertical_m_div_s,
+         logq_hz_lateral_m_div_s)
 
 write.csv(nsi_rcm_phys_qaqc_dat,
           paste(local_data,"qaqc_river_corridors_physical_hyporheic_char.csv", sep = '/'),
