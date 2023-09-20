@@ -24,7 +24,7 @@ rcm_22_model_dat <- read_csv(paste(local_data,"model_inputs","raw_willamette_yak
                              show_col_types = FALSE)
 
 # RCM model data version 2023 (resp data estimated with NEXSS gap filling via random forest)
-rcm_23_model_dat <- read_csv(paste(local_data,"model_outputs","nhd_stream_annual_resp.csv", sep = '/'),
+o_rcm_23_model_dat <- read_csv(paste(local_data,"model_outputs","nhd_stream_annual_resp.csv", sep = '/'),
                              show_col_types = FALSE)
 
 #Hyporheic fluxes and residence times using random forest models (not included in rcm_23_model_dat)
@@ -130,7 +130,7 @@ p
 
 # Comparing total respiration data
 
-comparison_co2_dat <- rcm_23_model_dat %>% 
+comparison_co2_dat <- o_rcm_23_model_dat %>% 
   select(comid,
          basin,
          stream_order,
@@ -142,7 +142,10 @@ comparison_co2_dat <- rcm_23_model_dat %>%
                  totco2g_day) %>% 
           rename(totco2g_day_22 = totco2g_day),
         by = "comid",
-        all.x = TRUE)
+        all.x = TRUE) %>% 
+  mutate(resp_ratio = totco2g_day_22/totco2g_day_23)
+
+summary(comparison_co2_dat)
 
 p <- ggplot(data = comparison_co2_dat,
             aes(x = totco2g_day_22,
@@ -154,6 +157,96 @@ p <- ggplot(data = comparison_co2_dat,
   geom_abline()+
   facet_wrap(~basin, ncol = 2)
 p
+
+
+bp_22 <- ggplot(data = comparison_co2_dat,
+                aes(x = as.factor(stream_order),
+                    y = totco2g_day_22,
+                    color = as.factor(stream_order),
+                    fill = as.factor(stream_order)))+
+  geom_boxplot(alpha = 0.5)+
+  scale_y_log10(limits = c(0.0001,100000000))+
+  xlab("Stream order (Strahler)")+
+  facet_wrap(~basin, ncol = 2)+
+  ggtitle("RCM-22:Total respiration across stream orders (532 zero values)")+
+  theme(legend.position = "none")
+bp_22
+
+bp_23 <- ggplot(data = comparison_co2_dat,
+                aes(x = as.factor(stream_order),
+                    y = totco2g_day_23,
+                    color = as.factor(stream_order),
+                    fill = as.factor(stream_order)))+
+  geom_boxplot(alpha = 0.5)+
+  scale_y_log10(limits = c(0.0001,100000000))+
+  xlab("Stream order (Strahler)")+
+  facet_wrap(~basin, ncol = 2)+
+  ggtitle("RCM-23:Total respiration across stream orders (no zero values)")+
+  theme(legend.position = "none")
+bp_23
+  
+# Respiration ratios
+
+rr_22_23 <- ggplot(data = comparison_co2_dat,
+                   aes(x = as.factor(stream_order),
+                       y = resp_ratio,
+                       color = as.factor(stream_order),
+                       fill = as.factor(stream_order)))+
+  geom_boxplot(alpha = 0.5)+
+  geom_hline(yintercept = 1.0)+
+  geom_hline(yintercept = 44.1)+
+  scale_y_log10()+
+  xlab("Stream order (Strahler)")+
+  facet_wrap(~basin, ncol = 2)+
+  ggtitle("RCM-22/23 respiration ratios)")+
+  theme(legend.position = "none")
+rr_22_23
+
+################################################################################
+# assembling newest version or rmc_23 model data
+################################################################################
+
+rcm_23_model_in_out_dat <- rcm_23_model_inp_dat %>% 
+  rename(do_stream_mg_l_23 = do_stream_mg_l,
+         doc_stream_mg_l_23 = doc_stream_mg_l,
+         no3_stream_mg_l_23 = no3_stream_mg_l,
+         q_hz_lateral_m_s_23 = q_hz_lat_ms,
+         q_hz_vertical_m_s_23 = q_hz_ver_ms,
+         rt_hz_lateral_s_23 = rt_hz_lat_s,
+         rt_hz_vertical_s_23 = rt_hz_ver_s) %>% 
+  merge(.,
+        o_rcm_23_model_dat %>% 
+          select(comid,
+                 totco2_anaer_mol,
+                 totco2_ang,
+                 totco2_ang_day,
+                 totco2_ang_m2_day,
+                 totco2_o2_mol,
+                 totco2_o2g,
+                 totco2_o2g_day,
+                 totco2_o2g_m2_day,
+                 totco2g,
+                 totco2g_day,
+                 totco2g_m2_day),
+        by = "comid",
+        all.x = TRUE)
+
+
+
+
+
+rcm_23_model_dat <- o_rcm_23_model_dat %>% 
+  select(-c(tot_q_hz_ms,
+            tot_rt_hz_s,
+            logrt_total_hz_s,
+            logq_hz_total_m_s,
+            logRT_lateral_hz_s,
+            logRT_vertical_hz_s,
+            logq_hz_vertical_m_div_s,
+            logq_hz_lateral_m_div_s))
+
+
+
 
 ####################Pending edit##################################
 # Connectivity test
