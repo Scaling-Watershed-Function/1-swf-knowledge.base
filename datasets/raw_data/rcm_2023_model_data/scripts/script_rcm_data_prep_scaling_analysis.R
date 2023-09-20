@@ -229,21 +229,36 @@ rcm_23_model_in_out_dat <- rcm_23_model_inp_dat %>%
                  totco2g_day,
                  totco2g_m2_day),
         by = "comid",
-        all.x = TRUE)
-
-
-
-
+        all.x = TRUE) %>% 
+  rename(totco2g_day_23 = totco2g_day)
 
 rcm_23_model_dat <- o_rcm_23_model_dat %>% 
-  select(-c(tot_q_hz_ms,
-            tot_rt_hz_s,
-            logrt_total_hz_s,
-            logq_hz_total_m_s,
-            logRT_lateral_hz_s,
-            logRT_vertical_hz_s,
-            logq_hz_vertical_m_div_s,
-            logq_hz_lateral_m_div_s))
+  merge(.,
+        rcm_23_model_in_out_dat,
+        by = "comid",
+        all.x = TRUE) %>% 
+  mutate(totco2g_day = totco2g_day_23,
+         do_stream_mg_l = do_stream_mg_l_23,
+         doc_stream_mg_l = doc_stream_mg_l_23,
+         no3_stream_mg_l = no3_stream_mg_l_23,
+         tot_q_hz_ms = q_hz_lateral_m_s_23 + q_hz_vertical_m_s_23,
+         tot_rt_hz_s = rt_hz_lateral_s_23 + rt_hz_vertical_s_23,
+         logRT_vertical_hz_s = rt_hz_vertical_s_23,#change column name to just rt_hz_vertical_s
+         logRT_lateral_hz_s = rt_hz_lateral_s_23,#change column name to just rt_hz_lateral_s
+         logq_hz_vertical_m_div_s = q_hz_vertical_m_s_23,#change column name to just q_hz_vertical_ms
+         logq_hz_lateral_m_div_s = q_hz_lateral_m_s_23) %>% #change column name to just q_hz_lateral_ms
+  select(-c(totco2g_day_23,
+            do_stream_mg_l_23,
+            doc_stream_mg_l_23,
+            no3_stream_mg_l_23,
+            q_hz_lateral_m_s_23,
+            q_hz_vertical_m_s_23,
+            rt_hz_lateral_s_23,
+            rt_hz_vertical_s_23,)) %>% 
+  rename(logRT_vertical_hz_s = rt_hz_vertical_s,
+         logRT_lateral_hz_s = rt_hz_lateral_s,
+         logq_hz_vertical_m_div_s = q_hz_vertical_m_s,
+         logq_hz_lateral_m_div_s = q_hz_lateral_m_s)
 
 
 
