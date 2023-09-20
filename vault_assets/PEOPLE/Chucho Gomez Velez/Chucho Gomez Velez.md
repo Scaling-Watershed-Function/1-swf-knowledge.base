@@ -1,1 +1,0 @@
-# Chucho Gomez Velez 
