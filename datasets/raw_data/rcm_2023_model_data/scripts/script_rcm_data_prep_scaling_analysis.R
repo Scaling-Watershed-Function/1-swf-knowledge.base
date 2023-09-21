@@ -263,7 +263,8 @@ rcm_23_model_merge <- o_rcm_23_model_dat %>%
   merge(.,
         rcm_23_model_in_out_dat,
         by = "comid",
-        all.x = TRUE) 
+        all.x = TRUE) %>% 
+  mutate(water_exchng_kg_day = 997 * tot_q_hz_ms * 86400 * stream_area_m2)
 
 rcm_23_model_dat <- rcm_23_model_merge %>% 
   select(1:26,
@@ -272,6 +273,7 @@ rcm_23_model_dat <- rcm_23_model_merge %>%
          33:33,
          27:32,
          81:86,
+         98:98,
          78:80,
          46:63,
          64:77,
@@ -290,6 +292,33 @@ test_dat_connectivity <- rcm_23_model_dat %>%
   summarise(across(c("tot_comid", "accm_inc_comid", "connectivity_index"), max)) %>% 
   ungroup()
 test_dat_connectivity
+
+# Calculating cumulative values
+
+# Recalculating wshd stream density, and cumulative variables
+rcm_23_model_dat <- rcm_23_model_dat %>% 
+  group_by(basin) %>% 
+  mutate(across(c(totco2g_day,
+                  totco2_ang_day,
+                  totco2_o2g_day,
+                  tot_stream_length_km,
+                  tot_rt_hz_s,
+                  water_exchng_kg_day), ~ calculate_arbolate_sum(data.frame(ID = comid,
+                                                                       toID = tocomid,
+                                                                       length = .x))) %>% 
+           set_names(paste0("accm_", names(select(., totco2g_day:water_exchng_kg_day))))) %>% 
+  ungroup()
+
+p <- ggplot(data = rcm_23_model_dat,
+            aes(x = wshd_area_km2,
+                y = accm_totco2_ang_day/wshd_area_km2,
+                color = w_hrel))+
+  geom_point(alpha = 0.5)+
+  scale_x_log10()+
+  scale_y_log10()+
+  facet_wrap(~basin, ncol = 2)
+p
+
 
 # Saving the data
 
