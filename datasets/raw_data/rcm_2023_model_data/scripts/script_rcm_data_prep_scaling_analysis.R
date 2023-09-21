@@ -194,11 +194,10 @@ rr_22_23 <- ggplot(data = comparison_co2_dat,
                        fill = as.factor(stream_order)))+
   geom_boxplot(alpha = 0.5)+
   geom_hline(yintercept = 1.0)+
-  geom_hline(yintercept = 44.1)+
   scale_y_log10()+
   xlab("Stream order (Strahler)")+
   facet_wrap(~basin, ncol = 2)+
-  ggtitle("RCM-22/23 respiration ratios)")+
+  ggtitle("RCM-22/23 respiration ratios")+
   theme(legend.position = "none")
 rr_22_23
 
@@ -207,13 +206,6 @@ rr_22_23
 ################################################################################
 
 rcm_23_model_in_out_dat <- rcm_23_model_inp_dat %>% 
-  rename(do_stream_mg_l_23 = do_stream_mg_l,
-         doc_stream_mg_l_23 = doc_stream_mg_l,
-         no3_stream_mg_l_23 = no3_stream_mg_l,
-         q_hz_lateral_m_s_23 = q_hz_lat_ms,
-         q_hz_vertical_m_s_23 = q_hz_ver_ms,
-         rt_hz_lateral_s_23 = rt_hz_lat_s,
-         rt_hz_vertical_s_23 = rt_hz_ver_s) %>% 
   merge(.,
         o_rcm_23_model_dat %>% 
           select(comid,
@@ -229,44 +221,65 @@ rcm_23_model_in_out_dat <- rcm_23_model_inp_dat %>%
                  totco2g_day,
                  totco2g_m2_day),
         by = "comid",
-        all.x = TRUE) %>% 
-  rename(totco2g_day_23 = totco2g_day)
+        all.x = TRUE) 
 
-rcm_23_model_dat <- o_rcm_23_model_dat %>% 
+rcm_23_model_merge <- o_rcm_23_model_dat %>% 
+  select(-c(tot_q_hz_ms,
+            tot_rt_hz_s,
+            logrt_total_hz_s,
+            logRT_lateral_hz_s,
+            logRT_vertical_hz_s,
+            logq_hz_total_m_s,
+            logq_hz_vertical_m_div_s,
+            logq_hz_lateral_m_div_s,
+            logQ_m3_div_s,
+            logDA_km2,
+            logw_m,
+            length_m,
+            logwbkf_m,
+            logdbkf_m,
+            logSlope,
+            totco2g_day,
+            do_stream_mg_l,
+            doc_stream_mg_l,
+            no3_stream_mg_l,
+            totco2g,
+            totco2_o2g_day,
+            totco2_ang_day,
+            totco2g_m2_day,
+            totco2_ang_day,
+            totco2_o2g_m2_day,
+            totco2_ang_m2_day,
+            logtotco2g_m2_day,
+            logtotco2_o2g_m2_day,
+            logtotco2_ang_m2_day,
+            accm_totco2g_day,
+            basin_id,
+            totco2_o2_mol,
+            totco2_o2g,
+            totco2_anaer_mol,
+            totco2_ang,
+            D50_m)) %>% 
   merge(.,
         rcm_23_model_in_out_dat,
         by = "comid",
-        all.x = TRUE) %>% 
-  mutate(totco2g_day = totco2g_day_23,
-         do_stream_mg_l = do_stream_mg_l_23,
-         doc_stream_mg_l = doc_stream_mg_l_23,
-         no3_stream_mg_l = no3_stream_mg_l_23,
-         tot_q_hz_ms = q_hz_lateral_m_s_23 + q_hz_vertical_m_s_23,
-         tot_rt_hz_s = rt_hz_lateral_s_23 + rt_hz_vertical_s_23,
-         logRT_vertical_hz_s = rt_hz_vertical_s_23,#change column name to just rt_hz_vertical_s
-         logRT_lateral_hz_s = rt_hz_lateral_s_23,#change column name to just rt_hz_lateral_s
-         logq_hz_vertical_m_div_s = q_hz_vertical_m_s_23,#change column name to just q_hz_vertical_ms
-         logq_hz_lateral_m_div_s = q_hz_lateral_m_s_23) %>% #change column name to just q_hz_lateral_ms
-  select(-c(totco2g_day_23,
-            do_stream_mg_l_23,
-            doc_stream_mg_l_23,
-            no3_stream_mg_l_23,
-            q_hz_lateral_m_s_23,
-            q_hz_vertical_m_s_23,
-            rt_hz_lateral_s_23,
-            rt_hz_vertical_s_23,)) %>% 
-  rename(logRT_vertical_hz_s = rt_hz_vertical_s,
-         logRT_lateral_hz_s = rt_hz_lateral_s,
-         logq_hz_vertical_m_div_s = q_hz_vertical_m_s,
-         logq_hz_lateral_m_div_s = q_hz_lateral_m_s)
+        all.x = TRUE) 
 
+rcm_23_model_dat <- rcm_23_model_merge %>% 
+  select(1:26,
+         45:45,
+         34:36,
+         33:33,
+         27:32,
+         81:86,
+         78:80,
+         46:63,
+         64:77,
+         87:97,
+         37:ncol(rcm_23_model_merge))
 
-
-
-####################Pending edit##################################
 # Connectivity test
-test_dat_connectivity <- rcm_gap_filled_dat %>% 
-  filter(is.na(totco2g_day)==FALSE) %>% 
+test_dat_connectivity <- rcm_23_model_dat %>% 
   group_by(basin)%>% 
   mutate(inc_comid = 1,
          tot_comid = sum(inc_comid),
@@ -277,4 +290,7 @@ test_dat_connectivity <- rcm_gap_filled_dat %>%
   summarise(across(c("tot_comid", "accm_inc_comid", "connectivity_index"), max)) %>% 
   ungroup()
 test_dat_connectivity
+
+# Saving the data
+
 
