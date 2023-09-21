@@ -310,9 +310,9 @@ rcm_23_model_dat <- rcm_23_model_dat %>%
   ungroup()
 
 p <- ggplot(data = rcm_23_model_dat,
-            aes(x = wshd_area_km2,
-                y = accm_totco2_ang_day/wshd_area_km2,
-                color = w_hrel))+
+            aes(x = accm_water_exchng_kg_day,
+                y = accm_totco2_ang_day,
+                color = w_human_scp))+
   geom_point(alpha = 0.5)+
   scale_x_log10()+
   scale_y_log10()+
