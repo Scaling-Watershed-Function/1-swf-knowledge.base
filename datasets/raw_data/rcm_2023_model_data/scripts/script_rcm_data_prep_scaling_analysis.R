@@ -319,7 +319,7 @@ p <- ggplot(data = rcm_23_model_dat,
   facet_wrap(~basin, ncol = 2)
 p
 
-
 # Saving the data
 
-
+write.csv(rcm_23_model_dat,paste(local_data,"rcm_23_model_data.csv",sep = '/'),
+          row.names = FALSE)
