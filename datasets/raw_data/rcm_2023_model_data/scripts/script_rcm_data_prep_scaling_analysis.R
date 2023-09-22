@@ -16,6 +16,7 @@ librarian::shelf(tidyverse,
 # Local Import-Export
 source_data <- "../../raw_data"
 local_data <- "./data"
+export_data <- "/Users/guerrero-fj/Documents/GitHub/1_scaling_watershed_function/2-swf-analytical.engine/scaling_analysis_willamette_yakima_rcm_23/data"
 
 # Loading datasets
 
@@ -322,4 +323,7 @@ p
 # Saving the data
 
 write.csv(rcm_23_model_dat,paste(local_data,"rcm_23_model_data.csv",sep = '/'),
+          row.names = FALSE)
+
+write.csv(rcm_23_model_dat,paste(export_data,"rcm_23_model_data.csv",sep = '/'),
           row.names = FALSE)
