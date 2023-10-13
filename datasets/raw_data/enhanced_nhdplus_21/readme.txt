@@ -28,6 +28,6 @@ mostly in headwater catchments, that could be used as the initial elevation, fro
 which the slopes would be determined in the downstream direction. For more info
 on the revised method go to: https://pubs.usgs.gov/sir/2019/5127/sir20195127.pdf
 
-comit and to_comid
+comid and to_comid
 Blodgett eta al.'s dataset also includes a Cleaned up network, added tocomid from 
 tonode/fromnode topology, and removed unwanted modifications from E2NHDPlusV2 and NWMv2.1.

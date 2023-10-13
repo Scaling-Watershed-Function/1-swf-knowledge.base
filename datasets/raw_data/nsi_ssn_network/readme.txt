@@ -10,7 +10,4 @@ first four digits of the "reachcode" variable. Thus, most our datasets, unless i
 correspond the the huc_4 1703 and 1709 for the Yakima and Willamette River Basins
 respectively. 
 
-The NSI network is a conditioned set of flow lines that using the tools of the STARS Toolkit, ensures
-Connectivity and feasibility of the network to be used in spatial stream network statistical
-Analyses. We use these shape files as spatial reference for mapping our dataset and potentially
-For spatial interpolation of missing values from the River Corridors Model output. 
+The NSI network is a conditioned set of flow lines that using the tools of the STARS Toolkit, ensures Connectivity and feasibility of the network to be used in spatial stream network statistical Analyses. We use these shape files as spatial reference for mapping our dataset and potentially For spatial interpolation of missing values from the River Corridors Model output. 
