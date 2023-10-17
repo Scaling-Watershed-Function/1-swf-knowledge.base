@@ -130,12 +130,12 @@ for (my_row in 1:length(new_table_rows)) {
   }
 }
 
-################################################################################
-# Extracting Files
-################################################################################
 # Stop the Selenium server and close the browser
 rs_driver_object$server$stop()
 
+################################################################################
+# Extracting Files
+################################################################################
 retrieve_data <- function(downloads_folder) {
   # Get the current time
   current_time <- Sys.time()
@@ -210,6 +210,7 @@ result <- retrieve_data(paste(downloads_folder))
 extracted_files <- result$extracted_files
 extracted_files
 
+
 ################################################################################
 # Processing & Saving Files
 
@@ -227,27 +228,15 @@ process_files <- function(file_paths, temp_dir) {
       file.rename(file_path, new_file_path)
     } else {
       # Read the csv files
-      basin_data <- read_csv(file_path, show_col_types = FALSE)
-      
-      # Perform any necessary data processing/manipulation
-      
-      # Select columns of type double (dbl) to avoid parsing issues
-      # Select columns of type double (dbl)
-      selected_columns <- basin_data %>% 
-        select(1:43) %>% 
-        select(where(is.double)) %>% 
-        setNames(tolower(gsub(" ", "_", colnames(.)))) 
-      
-      # If you want to keep the original dataframe with only the double columns, you can reassign it like this:
-      basin_data <- selected_columns
-
-      pnw_basin_data <- merge(comid_reference,
-                              basin_data,
-                              by = "comid",
+      crosswalk_data <- read_csv(file_path, show_col_types = FALSE)
+      pnw_huc12_data <- merge(comid_reference,
+                              crosswalk_data,
+                              by.x = "comid",
+                              by.y = "FEATUREID",
                               all.x = TRUE) 
       project_name <- basename(getwd())
       csv_file_path <- file.path(destination_folder2, paste0(project_name, ".csv"))
-      write.csv(pnw_basin_data, file = csv_file_path, row.names = FALSE)
+      write.csv(pnw_huc12_data, file = csv_file_path, row.names = FALSE)
     }
   }
 }
@@ -256,19 +245,4 @@ temp_dir <- tempfile()
 
 outputs <- process_files(extracted_files,temp_dir)
 
-
-# Testing for any parsing issues (detected in a previous version of this code)
-
-# Read the CSV file using vroom
-data <- vroom("./data/ancillary_hydro_attributes_nhdplus_21.csv",
-              show_col_types = FALSE)
-
-# Check for parsing issues
-parsing_problems <- problems(data)
-
-# Print the parsing issues for inspection
-print(parsing_problems)
-
-data <- read_csv("./data/ancillary_hydro_attributes_nhdplus_21.csv", 
-                 show_col_types = FALSE)
 
