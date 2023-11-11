@@ -5,21 +5,41 @@
 gc()
 
 librarian::shelf(tidyverse,
+                 data.table,
                  utils,
                  nhdplusTools,
                  sp,
                  sf,
                  leaflet,
-                 stringr,
-                 GGally,
-                 entropy)
+                 stringr)
 
 # Local Import-Export
+shapes_data <- "../nsi_ssn_network/data"
 source_data <- "../../raw_data"
 local_data <- "./data"
 export_data <- "/Users/guerrero-fj/Documents/GitHub/1_scaling_watershed_function/2-swf-analytical.engine/scaling_analysis_willamette_yakima_rcm_23/data"
 
 # Loading datasets
+
+# NSI Stream Network template
+pnw_rivers_dat <- st_transform(st_read(paste(shapes_data,
+                                             "nsi_network_ywrb.shp",sep = "/")),4326)
+
+# Extracting geographic coordinates from NSI data
+# Convert LINESTRING geometries to POINT geometries
+pnw_rivers_dat_point <- as.data.table(st_cast(pnw_rivers_dat, "POINT", warn = TRUE))
+
+# Convert to data.table
+pnw_rivers_dat_dt <- as.data.table(pnw_rivers_dat_point)
+
+# Aggregate data for duplicated COMIDs
+comid_coordinates <- pnw_rivers_dat_dt[, .(x = mean(st_coordinates(geometry)[, "X"]),
+                                           y = mean(st_coordinates(geometry)[, "Y"])), 
+                                       by = .(COMID)]
+
+comid_coordinates <- comid_coordinates %>% 
+  rename(comid = COMID)
+
 
 # RCM model data version 2023 (resp data estimated with NEXSS gap filling via random forest)
 rcm_23_output_dat <- read_csv(paste(local_data,"model_outputs","nhd_stream_annual_resp.csv", sep = '/'),
@@ -124,15 +144,57 @@ rcm_23_all_inputs_outputs <- rcm_23_subs_dat %>%
            38,
            47,
            39:43))
+# Adding spatial coordinates to the dataset:
+
+rcm_23_all_inputs_outputs <- rcm_23_all_inputs_outputs %>% 
+  merge(.,
+        comid_coordinates,
+        by = "comid",
+        all.x = TRUE) %>% 
+  rename(latitude = y,
+         longitude = x)
+
+# Adding incremental comid's following the flow paths in the downstream direction
+
+rcm_23_all_inputs_outputs <- rcm_23_all_inputs_outputs %>% 
+  group_by(basin)%>% 
+  mutate(inc_comid = 1,
+         accm_inc_comid = calculate_arbolate_sum(data.frame(ID = comid,
+                                                            toID = tocomid,
+                                                            length = inc_comid)))
+
+# Looking at the spatial distribution of cumulative incremental id's
+
+space_accm_id <- ggplot(data = filter(rcm_23_all_inputs_outputs,
+                                      log(accm_inc_comid)>2.5),
+                        aes(x = longitude,
+                            y = latitude,
+                            color = log(accm_inc_comid)))+
+  geom_point()+
+  scale_color_viridis_c()+
+  facet_wrap(~basin, ncol = 2, scales = "free")
+space_accm_id
+
+
+# Plotting incremental comid vs. watershed area
+
+area_accm_id <- ggplot(data = rcm_23_all_inputs_outputs,
+                            aes(x = wshd_area_km2,
+                            y = accm_inc_comid,
+                            color = as.factor(stream_order)))+
+  geom_point()+
+  scale_x_log10()+
+  scale_y_log10()+
+  geom_abline()+
+  scale_color_viridis_d()+
+  facet_wrap(~basin, ncol = 2)
+area_accm_id
+
 
 # Connectivity test
 test_dat_connectivity <- rcm_23_all_inputs_outputs %>% 
   group_by(basin)%>% 
-  mutate(inc_comid = 1,
-         tot_comid = sum(inc_comid),
-         accm_inc_comid = calculate_arbolate_sum(data.frame(ID = comid,
-                                                            toID = tocomid,
-                                                            length = inc_comid)),
+  mutate(tot_comid = sum(inc_comid),
          connectivity_index = (max(accm_inc_comid)/tot_comid*100)) %>% 
   summarise(across(c("tot_comid", "accm_inc_comid", "connectivity_index"), max)) %>% 
   ungroup()
