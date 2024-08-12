@@ -1,0 +1,176 @@
+{
+  "main": {
+    "id": "78c787cf8a638981",
+    "type": "split",
+    "children": [
+      {
+        "id": "72f692f5f4261f51",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "934fd734e4edabc5",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "c_production/topic_reviews/Interpreting Cumulative Hyporheic Exchange Across Scales.md",
+                "mode": "source",
+                "source": false
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "0fddf69e78b6318a",
+    "type": "split",
+    "children": [
+      {
+        "id": "446ba4f8573902f4",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "e6aab21ecdd859fa",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical"
+              }
+            }
+          },
+          {
+            "id": "738b3f7eb6fa0fd0",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              }
+            }
+          },
+          {
+            "id": "9bd4b9506414b9ae",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {}
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "354dcf532c01e463",
+    "type": "split",
+    "children": [
+      {
+        "id": "d14dc0a7aeb586a0",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "0fea84ae3f930e84",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "c_production/topic_reviews/Interpreting Cumulative Hyporheic Exchange Across Scales.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              }
+            }
+          },
+          {
+            "id": "197e40e03e8e5824",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "c_production/topic_reviews/Interpreting Cumulative Hyporheic Exchange Across Scales.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              }
+            }
+          },
+          {
+            "id": "f81316c0fadce37c",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true
+              }
+            }
+          },
+          {
+            "id": "2b871cfdbef7540d",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "c_production/topic_reviews/Interpreting Cumulative Hyporheic Exchange Across Scales.md"
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false
+    }
+  },
+  "active": "934fd734e4edabc5",
+  "lastOpenFiles": [
+    "c_production/topic_reviews/Fractal and Multi-Fractal Approaches Network Studies.md",
+    "a_knowledge/lit_review/loveland_et_merchant_04_ecoregions_ecoregionalization.md",
+    "a_knowledge/lit_review/omernik_et_griffith_14_ecoregions.md",
+    "c_production/topic_reviews/Interpreting Cumulative Hyporheic Exchange Across Scales.md",
+    "c_production/topic_reviews/Cumulative Hyporheic Function and NEXSS.md",
+    "a_knowledge/lit_review/bayani_et_al_08_residence_time_bedforms.md",
+    "a_knowledge/lit_review/sawyer_et_cardenas_09_residence_time_distribution.md",
+    "a_knowledge/lit_review/haggerty_etal_02_power_law_residence_time.md",
+    "a_knowledge/lit_review/lee_etal_20_sensitivity_hyporheic_exchange_fractal_riverbeds.md",
+    "a_knowledge/lit_review/maxwell_etal_16_self-similarity_hyporheic_exchange.md",
+    "a_knowledge/lit_review/wollheim_etal_22_superlinear_scaling.md",
+    "c_production/topic_reviews/Fractals and Multi-fractals in Nature.md",
+    "c_production/drafts/draft-introduction.md",
+    "c_production/topic_reviews",
+    "c_production/drafts",
+    "c_production/topic_reviews/Multifractal Hyporheic Exchange.md",
+    "c_production/topic_reviews/Grain and Extent in Scaling Studies.md",
+    "Untitled.md",
+    "a_knowledge/lit_review",
+    "e_engagement",
+    "d_products",
+    "c_production",
+    "b_analyses",
+    "a_knowledge"
+  ]
+}
